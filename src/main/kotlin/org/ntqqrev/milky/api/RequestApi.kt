@@ -41,15 +41,43 @@ val RequestApi = Category("request") {
         }
     }
 
-    api("accept_request") {
+    api("accept_friend_request") {
+        describe("同意好友请求")
+        input {
+            field("request_id", StringType, "请求 ID")
+        }
+    }
+
+    api("accept_group_invite_request") {
+        describe("同意邀请入群请求")
+        input {
+            field("request_id", StringType, "请求 ID")
+        }
+    }
+
+    api("accept_group_join_request") {
         describe("同意请求")
         input {
             field("request_id", StringType, "请求 ID")
         }
     }
 
-    api("reject_request") {
-        describe("拒绝请求")
+    api("reject_friend_request") {
+        describe("拒绝好友请求")
+        input {
+            field("request_id", StringType, "请求 ID")
+        }
+    }
+
+    api("reject_group_invite_request") {
+        describe("拒绝邀请入群请求")
+        input {
+            field("request_id", StringType, "请求 ID")
+        }
+    }
+
+    api("reject_group_join_request") {
+        describe("拒绝入群请求")
         input {
             field("request_id", StringType, "请求 ID")
             field("reason", StringType, "拒绝理由") { optional() }
