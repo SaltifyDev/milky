@@ -8,6 +8,16 @@
     "main": "dist/index.js",
     "typings": "dist/index.d.ts"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./api": {
+      "import": "./dist/api-endpoints.js",
+      "types": "./dist/api-endpoints.d.ts"
+    }
+  },
   "files": [
     "dist"
   ],
