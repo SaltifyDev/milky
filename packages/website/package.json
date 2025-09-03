@@ -12,7 +12,7 @@
     "@fontsource-variable/noto-sans-sc": "^5.2.6",
     "@fontsource/inter": "^5.2.6",
     "@saltify/milky-types": "workspace:*",
-    "next": "15.4.6",
+    "next": "15.4.7",
     "nextra": "^4.3.0",
     "nextra-theme-docs": "^4.3.0",
     "react": "19.1.0",
