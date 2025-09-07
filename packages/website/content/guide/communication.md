@@ -134,12 +134,11 @@ data: }
 
 ### WebSocket 连接
 
-接受路径为 `/event` 的 WebSocket 连接请求，在建立连接后推送事件。为保证安全性，可以在配置文件中设置 `access_token`，协议端需要检查连接时的 `query` 参数 `access_token`，如果不匹配则拒绝连接。
+接受路径为 `/event` 的 WebSocket 连接请求，在建立连接后推送事件。为保证安全性，可以在配置文件中设置 `access_token`，协议端需要在请求头中检查 `Authorization` 字段，格式为 `Bearer {access_token}`。
 
-例如，如果 `access_token` 配置为 `123456`，则连接 URL 为
-
+连接 URL 为
 ```
-ws://{IP}:{端口}/event?access_token=123456
+ws://{IP}:{端口}/event
 ```
 
 产生事件时，协议端会推送一条 JSON 格式的消息，格式见 [Event](../struct/Event.md)。示例如下：
