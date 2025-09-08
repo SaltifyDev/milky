@@ -105,6 +105,14 @@ GET /event
 Authorization: Bearer 123456
 ```
 
+> [!tip]
+> 在不提供自定义头的应用中，应用端还可以通过 `?access_token={access_token}` 参数来提供 `access_token`。
+> 
+> 示例如下：
+> ```http
+> GET /event?access_token=123456
+> ```
+
 协议端需要给出 `Content-Type` 为 `text/event-stream` 的响应，且一直保持连接。产生事件时，协议端会推送一条内容格式是 JSON 的 SSE 消息，内容格式见 [Event](https://milky.ntqqrev.org/struct/Event)。示例如下：
 
 ```plain
@@ -140,6 +148,14 @@ data: }
 ```
 ws://{IP}:{端口}/event
 ```
+
+> [!tip]
+> 在不提供自定义头的应用中，应用端还可以通过 `?access_token={access_token}` 参数来提供 `access_token`。
+> 
+> 连接 URL 为
+> ```http
+> ws://{IP}:{端口}/event?access_token=123456
+> ```
 
 产生事件时，协议端会推送一条 JSON 格式的消息，格式见 [Event](../struct/Event.md)。示例如下：
 
