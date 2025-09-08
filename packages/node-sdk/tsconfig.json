@@ -6,7 +6,7 @@
     "module": "ESNext",
     "lib": ["ESNext"],
     "skipLibCheck": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,

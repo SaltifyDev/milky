@@ -9,8 +9,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "prepack": "npm run build"
+    "build": "npm run gen:apis && tsup",
+    "gen:apis": "tsx ./scripts/gen_code.ts",
+    "prepack": "npm run build",
+    "prepare": "npm run gen:apis"
   },
   "keywords": [],
   "author": "SaltifyDev",
@@ -24,7 +26,7 @@
     "eventsource-client": "^1.1.4"
   },
   "dependencies": {
-    "@saltify/milky-types": "^1.0.0-draft.12",
+    "@saltify/milky-types": "workspace:*",
     "zod": "^4.1.5"
   }
 }
