@@ -96,7 +96,7 @@ Authorization: Bearer 123456
 
 ## 事件推送
 
-事件推送服务支持三种方式：Server-Sent Events（SSE）、 WebSocket 和 WebHook。
+事件推送服务支持四种方式：Server-Sent Events（SSE）、WebSocket、StreamHTTP（基于 HTTP/1.1 的 NDJSON 行流）和 WebHook。
 
 ### SSE 连接
 
@@ -189,6 +189,33 @@ ws://{IP}:{端口}/event
 > [!tip]
 >
 > 由于 SSE 和 WebSocket 都是由 HTTP GET 请求升级而来，协议端在确定应当提供哪种连接时，应当优先检查应用端请求中的 `Upgrade` 头，如果存在且值为 `websocket`，则视为 WebSocket 连接请求，否则视为 SSE 连接请求。
+
+### StreamHTTP 连接
+
+接受路径为 `/event` 的 HTTP GET 请求，使用标准 HTTP/1.1 持久连接与分块传输（chunked），以 NDJSON（每行一个 JSON 对象）的形式持续推送事件。为保证安全性，可以在配置文件中设置 `access_token`，协议端需要在请求头中检查 `Authorization` 字段，格式为 `Bearer {access_token}`。
+
+客户端应发送：
+
+```http
+GET /event
+Accept: application/x-ndjson
+Authorization: Bearer 123456
+```
+
+> [!tip]
+> 无法自定义请求头时，也可以通过 `?access_token={access_token}` 参数提供鉴权。
+>
+> 示例：
+> ```http
+> GET /event?access_token=123456
+> Accept: application/x-ndjson
+> ```
+
+协议端应返回 `Content-Type: application/x-ndjson` 的响应，并保持连接不断开。每产生一个事件，输出一行完整的 JSON（紧随其后一个换行）。每行的 JSON 结构与 [Event](https://milky.ntqqrev.org/struct/Event) 一致。示例如下：
+
+```json
+{"time":1234567890,"self_id":123456789,"event_type":"message_receive","data":{"message_scene":"friend","peer_id":123456789,"message_seq":23333,"sender_id":123456789,"time":1234567890,"message":[{"type":"text","data":{"text":"Hello, world!"}}]}}
+```
 
 ### WebHook 推送
 

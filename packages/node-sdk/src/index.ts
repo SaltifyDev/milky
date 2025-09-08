@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events';
 import { createEventSource } from 'eventsource-client';
+import type { EventSourceMessage } from 'eventsource-client';
 import type { ApiCollection, ApiResponse } from './api';
 import type { EventCollection } from './event';
 
@@ -15,6 +16,7 @@ export class MilkyClient {
   private readonly eventUrl: string;
   private readonly fetchHeader: Record<string, string>;
   private disposeCore?: () => void;
+  private streamAborter?: AbortController;
 
   /**
    * @param authority The authority of the Milky API (value of `new URL('https://example.com:443/some-path').host`)
@@ -22,13 +24,15 @@ export class MilkyClient {
    * @param accessToken The access token for authentication (optional)
    * @param useTLS Whether to use HTTPS and WSS (default: false)
    * @param useSSE Whether to use Server-Sent Events for event streaming (default: false)
+   * @param useStreamHttp Whether to use StreamHTTP (NDJSON over HTTP) for event streaming (default: false)
    */
   constructor(
     authority: string,
     basePath?: `/${string}/` | '/',
     accessToken?: string,
     useTLS?: boolean,
-    useSSE?: boolean
+    useSSE?: boolean,
+    useStreamHttp?: boolean
   ) {
     const httpProtocol = useTLS ? 'https' : 'http';
     const urlFragment = `${authority}${basePath}`;
@@ -38,12 +42,11 @@ export class MilkyClient {
 
     this.eventEmitter = new EventEmitter();
     this.httpApiUrl = combineUrl(httpUrlBase, 'api');
+    // NOTE: keep original path behavior per upstream; do not modify here
     this.eventUrl = combineUrl(httpUrlBase, 'api');
-    if (!useSSE) {
-      this.createWebsocket();
-    } else {
-      this.createSSE();
-    }
+    if (useStreamHttp) this.createStreamHttp();
+    else if (useSSE) this.createSSE();
+    else this.createWebsocket();
   }
 
   /**
@@ -91,10 +94,10 @@ export class MilkyClient {
         Accept: 'text/event-stream',
         ...this.fetchHeader,
       },
-      onMessage: (event: { event: string; data: string }) => {
+      onMessage: (event: EventSourceMessage) => {
         if (event.event !== 'milky_event') return;
 
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data ?? '');
         this.eventEmitter.emit(data.event_type, data);
       },
     });
@@ -118,6 +121,65 @@ export class MilkyClient {
     });
 
     this.disposeCore = ws.close;
+  }
+
+  private createStreamHttp() {
+    const controller = new AbortController();
+    this.streamAborter = controller;
+
+    (async () => {
+      const response = await fetch(this.eventUrl, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/x-ndjson',
+          ...this.fetchHeader,
+        },
+        signal: controller.signal,
+      });
+      const body = response.body;
+      if (!body) return;
+
+      const reader = body.getReader();
+      const decoder = new TextDecoder();
+      let buffered = '';
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffered += decoder.decode(value, { stream: true });
+          let idx = buffered.indexOf('\n');
+          while (idx !== -1) {
+            const line = buffered.slice(0, idx).trim();
+            buffered = buffered.slice(idx + 1);
+            if (line.length > 0) {
+              try {
+                const data = JSON.parse(line);
+                this.eventEmitter.emit(data.event_type, data);
+              } catch {
+                void 0;
+              }
+            }
+            idx = buffered.indexOf('\n');
+          }
+        }
+        const rest = decoder.decode();
+        if (rest) {
+          const line = (buffered + rest).trim();
+          if (line.length > 0) {
+            try {
+              const data = JSON.parse(line);
+              this.eventEmitter.emit(data.event_type, data);
+            } catch {
+              void 0;
+            }
+          }
+        }
+      } catch {
+        void 0;
+      }
+    })();
+
+    this.disposeCore = () => controller.abort();
   }
 
   /**
