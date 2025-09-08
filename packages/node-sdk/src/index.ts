@@ -17,15 +17,6 @@ export class MilkyClient {
   private disposeCore?: () => void;
 
   /**
-   * @param address The address of the Milky API server
-   * @param port The port of the Milky API server
-   * @param base The base path for the Milky API
-   * @param accessToken The access token for authentication (optional)
-   * @param useHttps Whether to use HTTPS (default: false)
-   * @deprecated Use the overload with `authority` instead. This will be removed in a future version.
-   */
-  constructor(address: string, port: number, base: string, accessToken?: string, useHttps?: boolean);
-  /**
    * @param authority The authority of the Milky API (value of `new URL('https://example.com:443/some-path').host`)
    * @param basePath The base path for the Milky API
    * @param accessToken The access token for authentication (optional)
@@ -38,26 +29,7 @@ export class MilkyClient {
     accessToken?: string,
     useTLS?: boolean,
     useSSE?: boolean
-  );
-
-  constructor(arg1: string, arg2?: number | string, arg3?: string, arg4?: string | boolean, arg5?: boolean) {
-    const { authority, basePath, accessToken, useTLS, useSSE } =
-      typeof arg2 === 'number'
-        ? {
-            authority: `${arg1}:${arg2}`,
-            basePath: arg3 ?? '/',
-            accessToken: arg4,
-            useTLS: arg5,
-            useSSE: false,
-          }
-        : {
-            authority: arg1,
-            basePath: arg2 ?? '/',
-            accessToken: arg3,
-            useTLS: !!arg4,
-            useSSE: !!arg5,
-          };
-
+  ) {
     const httpProtocol = useTLS ? 'https' : 'http';
     const urlFragment = `${authority}${basePath}`;
     const httpUrlBase = `${httpProtocol}://${urlFragment}`;
@@ -119,7 +91,7 @@ export class MilkyClient {
         Accept: 'text/event-stream',
         ...this.fetchHeader,
       },
-      onMessage: (event) => {
+      onMessage: (event: { event: string; data: string }) => {
         if (event.event !== 'milky_event') return;
 
         const data = JSON.parse(event.data);
