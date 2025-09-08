@@ -31,8 +31,7 @@ export class MilkyClient {
     basePath?: `/${string}/` | '/',
     accessToken?: string,
     useTLS?: boolean,
-    useSSE?: boolean,
-    useStreamHttp?: boolean
+    eventMode?: 'websocket' | 'sse' | 'ndjson' = 'websocket'
   ) {
     const httpProtocol = useTLS ? 'https' : 'http';
     const urlFragment = `${authority}${basePath}`;
@@ -44,9 +43,23 @@ export class MilkyClient {
     this.httpApiUrl = combineUrl(httpUrlBase, 'api');
     // NOTE: keep original path behavior per upstream; do not modify here
     this.eventUrl = combineUrl(httpUrlBase, 'api');
-    if (useStreamHttp) this.createStreamHttp();
-    else if (useSSE) this.createSSE();
-    else this.createWebsocket();
+    switch (eventMode) {
+    case 'websocket':
+      this.createWebsocket();
+      break;
+
+    case 'sse':
+      this.createSSE();
+      break;
+
+    case 'ndjson':
+      this.createStreamHttp();
+      break;
+    
+    default:
+      this.createWebsocket();
+      break;
+    }
   }
 
   /**
