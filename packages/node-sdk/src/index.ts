@@ -38,7 +38,7 @@ export class MilkyClient {
 
     this.eventEmitter = new EventEmitter();
     this.httpApiUrl = combineUrl(httpUrlBase, 'api');
-    this.eventUrl = combineUrl(httpUrlBase, 'api');
+    this.eventUrl = combineUrl(httpUrlBase, 'event');
     if (!useSSE) {
       this.createWebsocket();
     } else {
