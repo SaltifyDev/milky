@@ -19,10 +19,11 @@
 
 以下是由 Milky 官方和社区发布的类型定义包，可以在项目中直接引用：
 
-| 语言       | 包名                                                                       | License |
-| ---------- | -------------------------------------------------------------------------- | ------- |
-| TypeScript | [@saltify/milky-types](https://www.npmjs.com/package/@saltify/milky-types) | CC0-1.0 |
-| .NET       | [Milky.Net.Model](https://www.nuget.org/packages/Milky.Net.Model)          | MIT     |
+| 语言       | 包名                                                                       | License               |
+| ---------- | -------------------------------------------------------------------------- | --------------------- |
+| TypeScript | [@saltify/milky-types](https://www.npmjs.com/package/@saltify/milky-types) | CC0-1.0               |
+| .NET       | [Milky.Net.Model](https://www.nuget.org/packages/Milky.Net.Model)          | MIT                   |
+| Rust       | [milky-types](https://crates.io/crates/milky-types)                        | MIT **or** Apache 2.0 |
 
 同时，Milky 官方通过一系列自行编写的工具和社区工具将 Zod 定义转化为其他语言的类型定义，托管在 `/raw` 端点下，可以直接通过 `GET` 请求获取。目前支持的语言有：
 
@@ -38,7 +39,7 @@
 | 语言       | 包名                                                                             | License               |
 | ---------- | -------------------------------------------------------------------------------- | --------------------- |
 | TypeScript | [@saltify/milky-node-sdk](https://www.npmjs.com/package/@saltify/milky-node-sdk) | CC0-1.0               |
-| Rust       | [vivian-rs](https://crates.io/crates/vivian)                                     | MIT **or** Apache 2.0 |
+| Rust       | [milky-rust-sdk](https://crates.io/crates/milky-rust-sdk)                        | MIT **or** Apache 2.0 |
 | .NET       | [Milky.Net.Client](https://www.nuget.org/packages/Milky.Net.Client)              | MIT                   |
 | Go         | [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk)                          | MIT                   |
 | Kotlin     | [milky-kt-sdk](https://github.com/Wesley-Young/milky-kt-sdk)                     | MIT                   |
