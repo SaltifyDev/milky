@@ -43,6 +43,14 @@ Milk 戳了戳 Shama 的……。不许戳啦！
 - `record`：QQ 使用的语音格式是 [SILK](https://zh.wikipedia.org/wiki/SILK)。在发送时，协议端至少需要支持 `WAV` 和 `MP3` 格式到 `SILK` 的转码；
 - `video`：协议端至少需要支持 `MP4` 格式的视频，并且在用户未提供 `thumb_uri` 时从视频中截取一帧作为缩略图。
 
+## `face_id` 都有哪些？
+
+以下页面整理了可用的 QQ 表情 ID 列表，供参考：
+
+- [Koishi QFace](https://koishi.js.org/QFace/#/qqnt)
+- [QQ 机器人文档的表情对象](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html)
+- [表情 CQ 码 ID 表](https://github.com/kyubotics/coolq-http-api/wiki/%E8%A1%A8%E6%83%85-CQ-%E7%A0%81-ID-%E8%A1%A8)
+
 <!--
 ## `client_seq` 是什么？为什么在有的 API 中我必须提供它？
 
