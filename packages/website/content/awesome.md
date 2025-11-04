@@ -38,6 +38,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **TypeScript** - [@saltify/milky-types](https://www.npmjs.com/package/@saltify/milky-types) (CC0-1.0)
 - **.NET** - [Milky.Net.Model](https://www.nuget.org/packages/Milky.Net.Model) (MIT)
 - **Rust** - [milky-types](https://crates.io/crates/milky-types) (MIT **or** Apache 2.0)
+- **Kotlin** - [milky-kt-types](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-types) (MIT)
 
 以下是未发布到中心仓库的类型定义代码，可以直接从 `/raw` 端点下获取，同样可用于编写协议实现或 SDK，通过 CC0-1.0 许可发布。
 
