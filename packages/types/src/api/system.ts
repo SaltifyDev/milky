@@ -92,6 +92,18 @@ export const GetGroupMemberInfoOutput = z.object({
   member: z.lazy(() => GroupMemberEntity).describe('群成员信息'),
 });
 
+export const SetAvatarInput = z.object({
+  uri: ZString.describe('头像文件 URI，支持 `file://` `http(s)://` `base64://` 三种格式'),
+});
+
+export const SetNicknameInput = z.object({
+  new_card: ZString.describe('新昵称'),
+});
+
+export const SetBioInput = z.object({
+  new_bio: ZString.describe('新个性签名'),
+});
+
 export const GetCookiesInput = z.object({
   domain: ZString.describe('需要获取 Cookies 的域名'),
 });

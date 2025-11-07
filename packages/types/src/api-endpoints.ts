@@ -91,6 +91,24 @@ export const apiCategories: Record<string, ApiCategory> = {
         outputStruct: 'GetGroupMemberInfoOutput',
       },
       {
+        endpoint: 'set_avatar',
+        description: '设置 QQ 账号头像',
+        inputStruct: 'SetAvatarInput',
+        outputStruct: null,
+      },
+      {
+        endpoint: 'set_nickname',
+        description: '设置 QQ 账号昵称',
+        inputStruct: 'SetNicknameInput',
+        outputStruct: null,
+      },
+      {
+        endpoint: 'set_bio',
+        description: '设置 QQ 账号个性签名',
+        inputStruct: 'SetBioInput',
+        outputStruct: null,
+      },
+      {
         endpoint: 'get_cookies',
         description: '获取 Cookies',
         inputStruct: 'GetCookiesInput',
