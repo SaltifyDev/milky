@@ -160,8 +160,8 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('image'),
     data: OutgoingResourceSegmentBase.extend({
-      summary: ZString.nullish().describe('图片预览文本'),
       sub_type: z.enum(['normal', 'sticker']).describe('图片类型'),
+      summary: ZString.nullish().describe('图片预览文本'),
     }).describe('图片消息段'),
   }).describe('图片消息段'),
 
