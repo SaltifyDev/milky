@@ -9,7 +9,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 以下项目实现了 Milky 协议，提供了与 QQ 平台交互的能力。
 
 - [Lagrange.Milky](https://github.com/LagrangeDev/LagrangeV2/tree/main/Lagrange.Milky) (GPL-3.0)
-- [Yogurt](https://github.com/LagrangeDev/acidify/tree/main/yogurt) (GPL-3.0)
+- [Yogurt](https://acidify.ntqqrev.org/yogurt/start) (GPL-3.0)
 - [tanebi-milky](https://github.com/SaltifyDev/tanebi/tree/v2/packages/milky) (GPL-3.0)
 
 ## 协议 SDK
