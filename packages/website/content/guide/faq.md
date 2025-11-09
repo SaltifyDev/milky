@@ -2,6 +2,15 @@
 
 以下内容是针对一些问题的解答。未尽之处，欢迎加入 [QQ 群](https://qm.qq.com/q/C04kPQzayk)讨论相关细节。
 
+## WebHook 真的没办法鉴权吗？
+
+虽然上一页的标准中提到了 WebHook 不支持鉴权，但**应用端**仍然可以通过一些变通的方式在 URL 中包含认证信息，例如：
+
+- 包含在随机端点中，例如监听 `/webhook/e596b5e596b5efbc8ce59295e5999ce59295e5999c`；
+- 包含在 URL query 中，例如检查 `/webhook?access_token=5Za15Za177yM5ZKV5Zmc5ZKV5Zmc` 中的 `access_token` 字段。
+
+无论采用何种方式，认证信息应该以 URL 的形式写入**协议端**的相关配置文件。
+
 ## `message_seq` 是否相当于 OneBot 11 中的 `message_id`？
 
 省流：`message_scene` + `peer_id` + `message_seq` = 完整版 `message_id`。
