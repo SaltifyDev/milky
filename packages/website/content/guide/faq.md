@@ -22,6 +22,12 @@
 
 OneBot 11 则使用 `message_id` 来唯一标识一条消息。
 
+<details>
+  <summary>那我实在需要一个消息 ID 该怎么办？</summary>
+
+  可以通过拼接字符串的方式来实现，但这样的消息 ID 只适用于内部表示，在发送 Milky API 请求时仍然需要从消息 ID 中还原出真实信息。例如，一个来自好友 `12345` 的序列号为 `42` 的消息的 ID 可以是 `friend|12345|42`，在调用 `get_message` API 时通过 `String.split` 等方法还原出 `message_scene`、`peer_id` 和 `message_seq`。
+</details>
+
 ## 消息撤回（`recall`）和戳一戳（`nudge`）的事件推送中 `display_` 开头的字段指的是什么？
 
 假如一条消息撤回的提示如下：
