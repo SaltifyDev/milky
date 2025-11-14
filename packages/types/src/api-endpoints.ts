@@ -197,6 +197,12 @@ export const apiCategories: Record<string, ApiCategory> = {
         outputStruct: null,
       },
       {
+        endpoint: 'delete_friend',
+        description: '删除好友',
+        inputStruct: 'DeleteFriendInput',
+        outputStruct: null,
+      },
+      {
         endpoint: 'get_friend_requests',
         description: '获取好友请求列表',
         inputStruct: 'GetFriendRequestsInput',

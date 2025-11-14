@@ -12,6 +12,10 @@ export const SendProfileLikeInput = z.object({
   count: ZInt32WithDefault(1).describe('点赞数量'),
 });
 
+export const DeleteFriendInput = z.object({
+  user_id: ZInt64.describe('好友 QQ 号'),
+});
+
 export const GetFriendRequestsInput = z.object({
   limit: ZInt32WithDefault(20).describe('获取的最大请求数量'),
   is_filtered: ZBooleanWithDefault(false).describe('`true` 表示只获取被过滤（由风险账号发起）的通知，`false` 表示只获取未被过滤的通知'),
