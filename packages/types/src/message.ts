@@ -95,6 +95,10 @@ export const IncomingSegment = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('market_face'),
     data: z.object({
+      emoji_package_id: ZInt32.describe('市场表情包 ID'),
+      emoji_id: ZInt32.describe('市场表情 ID'),
+      key: ZString.describe('市场表情 Key'),
+      summary: ZString.describe('市场表情预览文本'),
       url: ZString.describe('市场表情 URL'),
     }).describe('市场表情消息段'),
   }).describe('市场表情消息段'),
