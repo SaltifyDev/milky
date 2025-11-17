@@ -38,6 +38,7 @@ export const RejectFriendRequestInput = z.object({
 
 export type SendFriendNudgeInput = z.infer<typeof SendFriendNudgeInput>;
 export type SendProfileLikeInput = z.infer<typeof SendProfileLikeInput>;
+export type DeleteFriendInput = z.infer<typeof DeleteFriendInput>;
 export type GetFriendRequestsInput = z.infer<typeof GetFriendRequestsInput>;
 export type GetFriendRequestsOutput = z.infer<typeof GetFriendRequestsOutput>;
 export type AcceptFriendRequestInput = z.infer<typeof AcceptFriendRequestInput>;
