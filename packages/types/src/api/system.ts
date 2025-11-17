@@ -104,6 +104,10 @@ export const SetBioInput = z.object({
   new_bio: ZString.describe('新个性签名'),
 });
 
+export const GetCustomFaceUrlListOutput = z.object({
+  urls: z.array(ZString).describe('自定义表情 URL 列表'),
+});
+
 export const GetCookiesInput = z.object({
   domain: ZString.describe('需要获取 Cookies 的域名'),
 });
@@ -135,6 +139,7 @@ export type GetGroupMemberInfoOutput = z.infer<typeof GetGroupMemberInfoOutput>;
 export type SetAvatarInput = z.infer<typeof SetAvatarInput>;
 export type SetNicknameInput = z.infer<typeof SetNicknameInput>;
 export type SetBioInput = z.infer<typeof SetBioInput>;
+export type GetCustomFaceUrlListOutput = z.infer<typeof GetCustomFaceUrlListOutput>;
 export type GetCookiesInput = z.infer<typeof GetCookiesInput>;
 export type GetCookiesOutput = z.infer<typeof GetCookiesOutput>;
 export type GetCSRFTokenOutput = z.infer<typeof GetCSRFTokenOutput>;

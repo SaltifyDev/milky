@@ -109,6 +109,12 @@ export const apiCategories: Record<string, ApiCategory> = {
         outputStruct: null,
       },
       {
+        endpoint: 'get_custom_face_url_list',
+        description: '获取自定义表情 URL 列表',
+        inputStruct: null,
+        outputStruct: 'GetCustomFaceUrlListOutput',
+      },
+      {
         endpoint: 'get_cookies',
         description: '获取 Cookies',
         inputStruct: 'GetCookiesInput',
