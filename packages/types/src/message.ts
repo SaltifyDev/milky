@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ZInt32, ZInt64, ZString } from './scalar';
+import { ZBoolean, ZInt32, ZInt64, ZString } from './scalar';
 import { FriendEntity, GroupEntity, GroupMemberEntity } from './common';
 
 export const SharedSegment = z.object({
@@ -39,6 +39,7 @@ export const IncomingSegment = z.discriminatedUnion('type', [
     type: z.literal('face'),
     data: z.object({
       face_id: ZString.describe('表情 ID'),
+      is_large: ZBoolean.describe('是否为超级表情'),
     }).describe('表情消息段'),
   }).describe('表情消息段'),
 
@@ -151,6 +152,7 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
     type: z.literal('face'),
     data: z.object({
       face_id: ZString.describe('表情 ID'),
+      is_large: ZBoolean.default(false).describe('是否为超级表情'),
     }).describe('表情消息段'),
   }).describe('表情消息段'),
 
