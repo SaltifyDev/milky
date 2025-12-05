@@ -4,15 +4,15 @@
     "website:dev": "pnpm --filter @saltify/milky-website dev"
   },
   "license": "CC0-1.0",
-  "packageManager": "pnpm@10.20.0",
+  "packageManager": "pnpm@10.24.0",
   "devDependencies": {
-    "@eslint/js": "^9.38.0",
+    "@eslint/js": "^9.39.1",
     "@typescript/native-preview": "latest",
-    "eslint": "^9.38.0",
-    "globals": "^16.4.0",
-    "tsup": "^8.5.0",
-    "tsx": "^4.20.6",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.48.1"
   }
 }
