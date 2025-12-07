@@ -47,3 +47,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Kotlin** - [`/raw/kotlin/kotlinx-serialization.txt`](/raw/kotlin/kotlinx-serialization.txt.txt)
 
 请注意，以上由社区工具生成的类型定义是**实验性**的。如对生成的类型定义有疑问，请以文档提供的定义为准，并且及时反馈。
+
+### Roadmap
+
+Milky 官网在 `/raw` 端点下还提供了一个 [Markdown 格式的 Roadmap 模板](/raw/markdown/roadmap.txt.txt)，用于帮助社区成员规划和自查项目对 Milky 协议的支持进度，通过 CC0-1.0 许可发布。
