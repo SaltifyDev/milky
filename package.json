@@ -1,7 +1,7 @@
 {
   "name": "milky",
   "scripts": {
-    "website:dev": "pnpm --filter @saltify/milky-website dev"
+    "docs:dev": "pnpm --filter @saltify/milky-docs dev"
   },
   "license": "CC0-1.0",
   "packageManager": "pnpm@10.25.0",

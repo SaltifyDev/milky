@@ -65,7 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               })),
             },
           ]}
-          docsRepositoryBase="https://github.com/SaltifyDev/milky/tree/main/packages/website/"
+          docsRepositoryBase="https://github.com/SaltifyDev/milky/tree/main/docs/"
           search={
             <Search
               placeholder="搜索内容..."

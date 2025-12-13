@@ -1,5 +1,5 @@
 {
-  "name": "@saltify/milky-website",
+  "name": "@saltify/milky-docs",
   "private": true,
   "scripts": {
     "dev": "next dev",
