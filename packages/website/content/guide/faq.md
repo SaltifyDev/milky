@@ -67,6 +67,16 @@ Milk 戳了戳 Shama 的……。不许戳啦！
 - [QQ 机器人文档的表情对象](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html)
 - [表情 CQ 码 ID 表](https://github.com/kyubotics/coolq-http-api/wiki/%E8%A1%A8%E6%83%85-CQ-%E7%A0%81-ID-%E8%A1%A8)
 
+## 如何获取用户或群的头像？
+
+QQ 有一些公开的 API 可以用来获取头像：
+
+- 用户头像：`https://q1.qlogo.cn/g?b=qq&nk=${user_id}&s=${quality}`
+  - `user_id`：用户 QQ 号；
+  - `quality`：图片质量，可选值为 `100`（100x100）、`640`（640x640）等。
+- 群头像：`https://p.qlogo.cn/gh/${group_id}/${group_id}/0/`
+  - `group_id`：群号。
+
 <!--
 ## `client_seq` 是什么？为什么在有的 API 中我必须提供它？
 
