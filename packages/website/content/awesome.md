@@ -23,13 +23,17 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Koishi** - [koishi-plugin-adapter-milky](https://github.com/idranme/koishi-plugin-adapter-milky) (MIT)
 - **Karin** - [karin-plugin-adapter-milky](https://github.com/KarinJS/karin-plugin-adapter-milky) (MIT)
 
-### 作为独立项目发布
+### 作为依赖库发布
 
 - **Node.js** - [@saltify/milky-node-sdk](https://www.npmjs.com/package/@saltify/milky-node-sdk) (CC0-1.0)
 - **Rust** - [milky-rust-sdk](https://crates.io/crates/milky-rust-sdk) (MIT **or** Apache 2.0)
 - **.NET** - [Milky.Net.Client](https://www.nuget.org/packages/Milky.Net.Client) (MIT)
 - **Go** - [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk) (MIT)
 - **Kotlin** - [milky-kt-sdk](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-sdk) (MIT)
+
+### 作为独立项目发布
+
+- [yuyubot](https://github.com/xiaoyu19960507/yuyubot) (Unlicense)
 
 ## 其他项目
 
