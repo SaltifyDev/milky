@@ -12,6 +12,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - [Yogurt](https://acidify.ntqqrev.org/yogurt/start) (GPL-3.0)
 - [tanebi-milky](https://github.com/SaltifyDev/tanebi/tree/v2/packages/milky) (GPL-3.0)
 - [LuckyLilliaBot](https://github.com/LLOneBot/LLOneBot) (GPL-2.0)
+- [yuyubot](https://github.com/xiaoyu19960507/yuyubot) (Unlicense)
 
 ## 协议 SDK
 
