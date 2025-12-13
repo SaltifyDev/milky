@@ -144,7 +144,7 @@ data:     "peer_id": 123456789,
 data:     "message_seq": 23333,
 data:     "sender_id": 123456789,
 data:     "time": 1234567890,
-data:     "message": [
+data:     "segments": [
 data:       {
 data:         "type": "text",
 data:         "data": {
@@ -188,7 +188,7 @@ ws://{IP}:{端口}/event
     "message_seq": 23333,
     "sender_id": 123456789,
     "time": 1234567890,
-    "message": [
+    "segments": [
       {
         "type": "text",
         "data": {
@@ -222,7 +222,7 @@ Content-Type: application/json
     "message_seq": 23333,
     "sender_id": 123456789,
     "time": 1234567890,
-    "message": [
+    "segments": [
       {
         "type": "text",
         "data": {
