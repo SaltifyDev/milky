@@ -2,6 +2,15 @@
 
 以下内容是针对一些问题的解答。未尽之处，欢迎加入 [QQ 群](https://qm.qq.com/q/C04kPQzayk)讨论相关细节。
 
+## `xxx` 字段是用 `null`/`undefined` 还是用 `0`/空字符串表示“无值”？
+
+省流：如果这个字段被标记了 optional，那么就大大方方用 `null`/`undefined` 表示“无值”；否则就用 `0`/空字符串表示“无值”。
+
+至于为什么有的字段被标记为 optional，有的没有，这与 Milky 的可空性设计哲学有关，具体如下：
+
+- 如果 `null`/`undefined` 和 `0`/空字符串在语义上是等价的，则不标记为 optional，使用 `0`/空字符串表示“无值”；
+- 如果 `null`/`undefined` 和 `0`/空字符串在语义上不等价，或 `0`/空字符串是不合法的值（例如时间戳、QQ 号），则标记为 optional，使用 `null`/`undefined` 表示“无值”。
+
 ## `message_seq` 是否相当于 OneBot 11 中的 `message_id`？
 
 省流：`message_scene` + `peer_id` + `message_seq` = 完整版 `message_id`。
@@ -12,6 +21,13 @@
 - `peer_id` 是一个数字，表示会话的 ID。对于好友消息，`peer_id` 是好友的 QQ 号；对于群消息，`peer_id` 是群号。
 
 OneBot 11 则使用 `message_id` 来唯一标识一条消息。
+
+<details>
+<summary>那我实在需要一个消息 ID 该怎么办？</summary>
+
+可以通过拼接字符串的方式来实现，但这样的消息 ID 只适用于内部表示，在发送 Milky API 请求时仍然需要从消息 ID 中还原出真实信息。例如，一个来自好友 `12345` 的序列号为 `42` 的消息的 ID 可以是 `friend|12345|42`，在调用 `get_message` API 时通过 `String.split` 等方法还原出 `message_scene`、`peer_id` 和 `message_seq`。
+
+</details>
 
 ## 消息撤回（`recall`）和戳一戳（`nudge`）的事件推送中 `display_` 开头的字段指的是什么？
 
@@ -50,6 +66,16 @@ Milk 戳了戳 Shama 的……。不许戳啦！
 - [Koishi QFace](https://koishi.js.org/QFace/#/qqnt)
 - [QQ 机器人文档的表情对象](https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html)
 - [表情 CQ 码 ID 表](https://github.com/kyubotics/coolq-http-api/wiki/%E8%A1%A8%E6%83%85-CQ-%E7%A0%81-ID-%E8%A1%A8)
+
+## 如何获取用户或群的头像？
+
+QQ 有一些公开的 API 可以用来获取头像：
+
+- 用户头像：`https://q1.qlogo.cn/g?b=qq&nk=${user_id}&s=${quality}`
+  - `user_id`：用户 QQ 号；
+  - `quality`：图片质量，可选值为 `100`（100x100）、`640`（640x640）等。
+- 群头像：`https://p.qlogo.cn/gh/${group_id}/${group_id}/0/`
+  - `group_id`：群号。
 
 <!--
 ## `client_seq` 是什么？为什么在有的 API 中我必须提供它？

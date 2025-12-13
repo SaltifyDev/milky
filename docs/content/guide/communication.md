@@ -144,7 +144,7 @@ data:     "peer_id": 123456789,
 data:     "message_seq": 23333,
 data:     "sender_id": 123456789,
 data:     "time": 1234567890,
-data:     "message": [
+data:     "segments": [
 data:       {
 data:         "type": "text",
 data:         "data": {
@@ -188,7 +188,7 @@ ws://{IP}:{端口}/event
     "message_seq": 23333,
     "sender_id": 123456789,
     "time": 1234567890,
-    "message": [
+    "segments": [
       {
         "type": "text",
         "data": {
@@ -204,6 +204,10 @@ ws://{IP}:{端口}/event
 
 以 POST 方式向给定的 WebHook 地址推送事件。POST 请求的 body 与 WebSocket 推送的格式相同。示例如下：
 
+> [!note]
+>
+> WebHook 不支持任何方式的鉴权；请自行保证 POST 内容的来源可信。
+
 ```http
 POST http://example.com/webhook
 Content-Type: application/json
@@ -218,7 +222,7 @@ Content-Type: application/json
     "message_seq": 23333,
     "sender_id": 123456789,
     "time": 1234567890,
-    "message": [
+    "segments": [
       {
         "type": "text",
         "data": {
