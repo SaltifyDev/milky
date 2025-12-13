@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - packages/types/**
-      - packages/website/**
+      - types/**
+      - docs/**
       - .github/workflows/deploy-pages.yml
   workflow_dispatch:
 
@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            packages/website/.next/cache
+            docs/.next/cache
           # Generate a new cache whenever packages or source files change.
           key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
           # If source files changed but packages didn't, rebuild from a prior cache.
@@ -58,7 +58,7 @@ jobs:
 
       - name: Build with Next.js
         run: |
-          cd packages/website
+          cd docs
           pnpm run build
         env:
           PAGES_BASE_PATH: ${{ steps.setup_pages.outputs.base_path }}
@@ -66,7 +66,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./packages/website/out
+          path: ./docs/out
 
   # 部署工作
   deploy:

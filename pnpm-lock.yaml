@@ -33,29 +33,7 @@ importers:
         specifier: ^8.48.1
         version: 8.48.1(eslint@9.39.1)(typescript@5.9.3)
 
-  packages/node-sdk:
-    dependencies:
-      '@saltify/milky-types':
-        specifier: ^1.0.0
-        version: 1.0.0
-      eventsource-client:
-        specifier: ^1.2.0
-        version: 1.2.0
-      zod:
-        specifier: ^4.1.13
-        version: 4.1.13
-    devDependencies:
-      '@types/node':
-        specifier: ^22.19.1
-        version: 22.19.1
-
-  packages/types:
-    dependencies:
-      zod:
-        specifier: ^4.1.13
-        version: 4.1.13
-
-  packages/website:
+  docs:
     dependencies:
       '@fontsource-variable/noto-sans-sc':
         specifier: ^5.2.9
@@ -109,6 +87,12 @@ importers:
       pagefind:
         specifier: ^1.4.0
         version: 1.4.0
+
+  types:
+    dependencies:
+      zod:
+        specifier: ^4.1.13
+        version: 4.1.13
 
 packages:
 
@@ -912,9 +896,6 @@ packages:
   '@rushstack/eslint-patch@1.15.0':
     resolution: {integrity: sha512-ojSshQPKwVvSMR8yT2L/QtUkV5SXi/IfDiJ4/8d6UbTPjiHVmxZzUAzGD8Tzks1b9+qQkZa0isUOvYObedITaw==}
 
-  '@saltify/milky-types@1.0.0':
-    resolution: {integrity: sha512-2xaPdHUM/gdqyZXkmv26/NIXZn1Snlsb/50zto8zXp3soNKlUQCfoRZRpQdD3auEqs686ol7TIqIemlxxDgySA==}
-
   '@shikijs/core@3.19.0':
     resolution: {integrity: sha512-L7SrRibU7ZoYi1/TrZsJOFAnnHyLTE1SwHG1yNWjZIVCqjOEmCSuK2ZO9thnRbJG6TOkPp+Z963JmpCNw5nzvA==}
 
@@ -1101,9 +1082,6 @@ packages:
 
   '@types/node@20.19.25':
     resolution: {integrity: sha512-ZsJzA5thDQMSQO788d7IocwwQbI8B5OPzmqNvpf3NY/+MHDAS759Wo0gd2WQeXYt5AAAQjzcrTVC6SKCuYgoCQ==}
-
-  '@types/node@22.19.1':
-    resolution: {integrity: sha512-LCCV0HdSZZZb34qifBsyWlUmok6W7ouER+oQIGBScS8EsZsQbrtFTUrDX4hOl+CS6p7cnNC4td+qrSVGSCTUfQ==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -2003,14 +1981,6 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
-
-  eventsource-client@1.2.0:
-    resolution: {integrity: sha512-kDI75RSzO3TwyG/K9w1ap8XwqSPcwi6jaMkNulfVeZmSeUM49U8kUzk1s+vKNt0tGrXgK47i+620Yasn1ccFiw==}
-    engines: {node: '>=18.0.0'}
-
-  eventsource-parser@3.0.6:
-    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
-    engines: {node: '>=18.0.0'}
 
   execa@8.0.1:
     resolution: {integrity: sha512-VyhnebXciFV2DESc+p6B+y0LjSm0krU4OgJN44qFAhBY0TJ+1V61tYD2+wHusZ6F9n5K+vl8k0sTy7PEfV4qpg==}
@@ -4246,10 +4216,6 @@ snapshots:
 
   '@rushstack/eslint-patch@1.15.0': {}
 
-  '@saltify/milky-types@1.0.0':
-    dependencies:
-      zod: 4.1.13
-
   '@shikijs/core@3.19.0':
     dependencies:
       '@shikijs/types': 3.19.0
@@ -4482,10 +4448,6 @@ snapshots:
       '@types/unist': 3.0.3
 
   '@types/node@20.19.25':
-    dependencies:
-      undici-types: 6.21.0
-
-  '@types/node@22.19.1':
     dependencies:
       undici-types: 6.21.0
 
@@ -5589,12 +5551,6 @@ snapshots:
       '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
-
-  eventsource-client@1.2.0:
-    dependencies:
-      eventsource-parser: 3.0.6
-
-  eventsource-parser@3.0.6: {}
 
   execa@8.0.1:
     dependencies:
