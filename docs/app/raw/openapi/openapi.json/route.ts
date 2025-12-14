@@ -32,15 +32,12 @@ function buildComponents(registry: typeof z.globalRegistry) {
       status: {
         type: 'string',
         enum: ['ok', 'failed'],
-        description: '请求状态，ok 表示成功，failed 表示失败',
       },
       retcode: {
         type: 'integer',
-        description: '业务状态码，0 表示成功，其余由协议端定义',
+        description: '业务状态码，0 表示成功',
       },
-      data: {
-        description: '业务数据，与具体 API 对应的输出结构一致',
-      },
+      data: {},
       message: {
         type: 'string',
         nullable: true,
@@ -85,7 +82,6 @@ function buildPaths(registry: typeof z.globalRegistry) {
           },
           responses: {
             '200': {
-              description: '业务响应，status/retcode 表示操作结果',
               content: {
                 'application/json': {
                   schema: {

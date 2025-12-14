@@ -35,14 +35,32 @@ export const apiCategories = Object.fromEntries(
 ) as Record<string, ApiCategory>;
 
 Object.entries(commonStructs).forEach(([name, schema]) => {
-  z.globalRegistry.add(schema, { id: name, description: schema.description });
+  z.globalRegistry.add(schema, {
+    id: name,
+    title: schema.description,
+  });
+
+  if (schema instanceof z.ZodDiscriminatedUnion) {
+    schema.options.forEach((option) => {
+      const optionAsZodObject = option as z.ZodObject<any>;
+      z.globalRegistry.add(optionAsZodObject, {
+        title: optionAsZodObject.description,
+      });
+    });
+  }
 });
 
 Object.entries(apiCategories).forEach(([, category]) => {
   category.apis.forEach((api) => {
-    z.globalRegistry.add(api.inputStruct, { id: `Api_${api.endpoint}_input` });
+    z.globalRegistry.add(api.inputStruct, {
+      id: `Api_${api.endpoint}_input`,
+      title: `${api.endpoint} 请求参数`,
+    });
     if (!(api.outputStruct instanceof ZodVoid)) {
-      z.globalRegistry.add(api.outputStruct, { id: `Api_${api.endpoint}_output` });
+      z.globalRegistry.add(api.outputStruct, {
+        id: `Api_${api.endpoint}_output`,
+        title: `${api.endpoint} 响应数据`,
+      });
     }
   });
 });
