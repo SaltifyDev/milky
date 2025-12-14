@@ -1,14 +1,13 @@
 import { z } from 'zod';
 
-export const ZInt32 = z.number().int().min(-2147483648).max(2147483647).meta({ scalarType: 'int32' });
-export const ZInt64 = z.number().int().meta({ scalarType: 'int64' });
+export const ZInt32 = z.number().int().positive().meta({ scalarType: 'int32' });
+export const ZInt64 = z.number().int().positive().meta({ scalarType: 'int64' });
 export const ZBoolean = z.boolean().meta({ scalarType: 'boolean' });
 export const ZString = z.string().meta({ scalarType: 'string' });
 
 export const ZInt32WithDefault = (defaultValue: number) => z.number()
     .int()
-    .min(-2147483648)
-    .max(2147483647)
+    .positive()
     .nullish()
     .default(defaultValue)
     .transform<number>((v) => v ?? defaultValue)
@@ -16,6 +15,7 @@ export const ZInt32WithDefault = (defaultValue: number) => z.number()
 
 export const ZInt64WithDefault = (defaultValue: number) => z.number()
     .int()
+    .positive()
     .nullish()
     .default(defaultValue)
     .transform<number>((v) => v ?? defaultValue)
