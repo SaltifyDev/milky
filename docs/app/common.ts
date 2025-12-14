@@ -48,11 +48,3 @@ Object.entries(apiCategories).forEach(([, category]) => {
 });
 
 export * from '@saltify/milky-types/api';
-export const jsonSchemas = {
-  milkyVersion: types.milkyVersion,
-  packageVersion: types.milkyPackageVersion,
-  schemas: z.toJSONSchema(z.globalRegistry, {
-    metadata: z.globalRegistry,
-    io: 'input',
-  }).schemas,
-};
