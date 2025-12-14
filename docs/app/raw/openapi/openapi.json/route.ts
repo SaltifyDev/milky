@@ -18,6 +18,7 @@ function buildComponents(registry: typeof z.globalRegistry) {
   const jsonSchemas = z.toJSONSchema(registry, {
     metadata: registry,
     io: 'input',
+    target: 'openapi-3.0',
   }).schemas;
 
   const schemas = Object.fromEntries(
