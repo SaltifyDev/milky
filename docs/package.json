@@ -12,20 +12,20 @@
     "@fontsource-variable/noto-sans-sc": "^5.2.9",
     "@fontsource/inter": "^5.2.8",
     "@saltify/milky-types": "workspace:*",
-    "next": "15.5.2",
+    "next": "^15.5.9",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@next/eslint-plugin-next": "^15.5.9",
-    "@types/node": "^20.19.26",
+    "@types/node": "^20.19.27",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "eslint-config-next": "15.5.2",
+    "eslint-config-next": "^15.5.9",
     "eslint-plugin-react-hooks": "^5.2.0",
     "pagefind": "^1.4.0"
   }
