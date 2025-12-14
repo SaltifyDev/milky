@@ -19,6 +19,7 @@ function buildComponents(registry: typeof z.globalRegistry) {
     metadata: registry,
     io: 'input',
     target: 'openapi-3.0',
+    uri: (id) => `#/components/schemas/${id}`,
   }).schemas;
 
   const schemas = Object.fromEntries(
