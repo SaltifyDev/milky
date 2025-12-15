@@ -46,13 +46,11 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Rust** - [milky-types](https://crates.io/crates/milky-types) (MIT **or** Apache 2.0)
 - **Kotlin** - [milky-kt-types](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-types) (MIT)
 
-以下是未发布到中心仓库的类型定义代码，可以直接从 `/raw` 端点下获取，同样可用于编写协议实现或 SDK，通过 CC0-1.0 许可发布。
+### Raw Files
 
-- **JSON Schema** - [`/raw/json-schema/schema.json`](/raw/json-schema/schema.json.txt)
-- **Kotlin** - [`/raw/kotlin/kotlinx-serialization.txt`](/raw/kotlin/kotlinx-serialization.txt.txt)
+Milky 官网在 `/raw` 端点下提供了一些有用的原始文件，供社区成员使用，均通过 CC0-1.0 许可发布：
 
-请注意，以上由社区工具生成的类型定义是**实验性**的。如对生成的类型定义有疑问，请以文档提供的定义为准，并且及时反馈。
-
-### Roadmap
-
-Milky 官网在 `/raw` 端点下还提供了一个 [Markdown 格式的 Roadmap 模板](/raw/markdown/roadmap.txt.txt)，用于帮助社区成员规划和自查项目对 Milky 协议的支持进度，通过 CC0-1.0 许可发布。
+- **JSON Schema** - [`schema.json`](/raw/json-schema/schema.json.txt)
+- **Kotlin 类型定义 (kotlinx.serialization)** - [`kotlinx-serialization.txt`](/raw/kotlin/kotlinx-serialization.txt.txt)
+- **OpenAPI Specification v3.1** - [`openapi.json`](/raw/openapi/openapi.json.txt)
+- **Roadmap 模板** - [`roadmap.txt`](/raw/markdown/roadmap.txt.txt)
