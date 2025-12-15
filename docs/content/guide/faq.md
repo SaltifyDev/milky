@@ -47,6 +47,19 @@ Milk 戳了戳 Shama 的……。不许戳啦！
 
 那么其对应的 `message_nudge` 事件中的 `display_action` 字段是 `戳了戳`，`display_suffix` 字段是 `的……。不许戳啦！`。
 
+## `forward` 消息段中的 `title`、`preview` 和 `summary` 分别指的是什么？
+
+这些是用户在接收到合并转发消息但未展开查看时，看到的预览信息。例如这样一条合并转发消息的预览信息：
+
+```
+群聊的聊天记录      // title
+Salt: [动画表情]   // preview[0]
+Milk: [图片]      // preview[1]
+Shama: [视频]     // preview[2]
+---
+查看3条转发消息     // summary
+```
+
 ## `file` 消息段和 `file_upload` 事件是同一个东西吗？
 
 是的，包含在消息中的 [`file` 消息段](../struct/IncomingSegment#type-file)和 [`friend_file_upload`](../struct/Event#type-friend_file_upload)、[`group_file_upload`](../struct/Event#type-group_file_upload) 事件上报的内容是相同的，都是表示好友 / 群成员上传了文件，两者的字段和含义也完全一致。协议端在收到文件消息后，需要**同时**推送包含 `file` 消息段的 [IncomingMessage](../struct/IncomingMessage) 和 `{friend,group}_file_upload` 事件，应用端可以按需处理。
