@@ -86,6 +86,9 @@ export const IncomingSegment = z.discriminatedUnion('type', [
     type: z.literal('forward'),
     data: z.object({
       forward_id: ZString.describe('合并转发 ID'),
+      title: ZString.describe('合并转发标题'),
+      preview: z.array(ZString).describe('合并转发预览文本'),
+      summary: ZString.describe('合并转发摘要'),
     }),
   }).describe('合并转发消息段'),
 
