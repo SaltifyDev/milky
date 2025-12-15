@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { ZInt64, ZString, ZStringWithDefault } from '../scalar';
+import { ZString, ZStringWithDefault, ZUin } from '../scalar';
 import { GroupFileEntity, GroupFolderEntity } from '../common';
 
 export const UploadPrivateFileInput = z.object({
-  user_id: ZInt64.describe('好友 QQ 号'),
+  user_id: ZUin.describe('好友 QQ 号'),
   file_uri: ZString.describe('文件 URI，支持 `file://` `http(s)://` `base64://` 三种格式'),
   file_name: ZString.describe('文件名称'),
 });
@@ -13,7 +13,7 @@ export const UploadPrivateFileOutput = z.object({
 });
 
 export const UploadGroupFileInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   parent_folder_id: ZStringWithDefault('/').describe('目标文件夹 ID'),
   file_uri: ZString.describe('文件 URI，支持 `file://` `http(s)://` `base64://` 三种格式'),
   file_name: ZString.describe('文件名称'),
@@ -24,7 +24,7 @@ export const UploadGroupFileOutput = z.object({
 });
 
 export const GetPrivateFileDownloadUrlInput = z.object({
-  user_id: ZInt64.describe('好友 QQ 号'),
+  user_id: ZUin.describe('好友 QQ 号'),
   file_id: ZString.describe('文件 ID'),
   file_hash: ZString.describe('文件的 TriSHA1 哈希值'),
 });
@@ -34,7 +34,7 @@ export const GetPrivateFileDownloadUrlOutput = z.object({
 });
 
 export const GetGroupFileDownloadUrlInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   file_id: ZString.describe('文件 ID'),
 });
 
@@ -43,7 +43,7 @@ export const GetGroupFileDownloadUrlOutput = z.object({
 });
 
 export const GetGroupFilesInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   parent_folder_id: ZStringWithDefault('/').describe('父文件夹 ID'),
 });
 
@@ -53,26 +53,26 @@ export const GetGroupFilesOutput = z.object({
 });
 
 export const MoveGroupFileInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   file_id: ZString.describe('文件 ID'),
   parent_folder_id: ZStringWithDefault('/').describe('文件所在的文件夹 ID'),
   target_folder_id: ZStringWithDefault('/').describe('目标文件夹 ID'),
 });
 
 export const RenameGroupFileInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   file_id: ZString.describe('文件 ID'),
   parent_folder_id: ZStringWithDefault('/').describe('文件所在的文件夹 ID'),
   new_file_name: ZString.describe('新文件名称'),
 });
 
 export const DeleteGroupFileInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   file_id: ZString.describe('文件 ID'),
 });
 
 export const CreateGroupFolderInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   folder_name: ZString.describe('文件夹名称'),
 });
 
@@ -81,13 +81,13 @@ export const CreateGroupFolderOutput = z.object({
 });
 
 export const RenameGroupFolderInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   folder_id: ZString.describe('文件夹 ID'),
   new_folder_name: ZString.describe('新文件夹名'),
 });
 
 export const DeleteGroupFolderInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   folder_id: ZString.describe('文件夹 ID'),
 });
 

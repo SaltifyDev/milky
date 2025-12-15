@@ -5,6 +5,8 @@ export const ZInt64 = z.number().int().positive().meta({ scalarType: 'int64' });
 export const ZBoolean = z.boolean().meta({ scalarType: 'boolean' });
 export const ZString = z.string().meta({ scalarType: 'string' });
 
+export const ZUin = ZInt32.min(10001).max(4294967295);
+
 export const ZInt32WithDefault = (defaultValue: number) => z.number()
     .int()
     .positive()

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ZBoolean, ZInt32, ZInt64, ZString } from './scalar';
+import { ZBoolean, ZInt32, ZInt64, ZString, ZUin } from './scalar';
 import { FriendEntity, GroupEntity, GroupMemberEntity } from './common';
 
 export const SharedSegment = z.object({
@@ -26,7 +26,7 @@ export const IncomingSegment = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('mention'),
     data: z.object({
-      user_id: ZInt64.describe('提及的 QQ 号'),
+      user_id: ZUin.describe('提及的 QQ 号'),
     }).describe('提及消息段'),
   }).describe('提及消息段'),
 
@@ -139,7 +139,7 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('mention'),
     data: z.object({
-      user_id: ZInt64.describe('提及的 QQ 号'),
+      user_id: ZUin.describe('提及的 QQ 号'),
     }).describe('提及消息段'),
   }).describe('提及消息段'),
 
@@ -194,7 +194,7 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
 ]).describe('发送消息段');
 
 export const OutgoingForwardedMessage = z.object({
-  user_id: ZInt64.describe('发送者 QQ 号'),
+  user_id: ZUin.describe('发送者 QQ 号'),
   sender_name: ZString.describe('发送者名称'),
   segments: z.array(z.lazy(() => OutgoingSegment)).describe('消息段列表'),
 }).describe('发送转发消息');
@@ -202,9 +202,9 @@ export const OutgoingForwardedMessage = z.object({
 export const IncomingMessage = z.discriminatedUnion('message_scene', [
   z.object({
     message_scene: z.literal('friend'),
-    peer_id: ZInt64.describe('好友 QQ 号或群号'),
+    peer_id: ZUin.describe('好友 QQ 号或群号'),
     message_seq: ZInt64.describe('消息序列号'),
-    sender_id: ZInt64.describe('发送者 QQ 号'),
+    sender_id: ZUin.describe('发送者 QQ 号'),
     time: ZInt64.describe('消息 Unix 时间戳（秒）'),
     segments: z.array(z.lazy(() => IncomingSegment)).describe('消息段列表'),
     friend: z.lazy(() => FriendEntity).describe('好友信息'),
@@ -212,9 +212,9 @@ export const IncomingMessage = z.discriminatedUnion('message_scene', [
 
   z.object({
     message_scene: z.literal('group'),
-    peer_id: ZInt64.describe('好友 QQ 号或群号'),
+    peer_id: ZUin.describe('好友 QQ 号或群号'),
     message_seq: ZInt64.describe('消息序列号'),
-    sender_id: ZInt64.describe('发送者 QQ 号'),
+    sender_id: ZUin.describe('发送者 QQ 号'),
     time: ZInt64.describe('消息 Unix 时间戳（秒）'),
     segments: z.array(z.lazy(() => IncomingSegment)).describe('消息段列表'),
     group: z.lazy(() => GroupEntity).describe('群信息'),
@@ -223,9 +223,9 @@ export const IncomingMessage = z.discriminatedUnion('message_scene', [
 
   z.object({
     message_scene: z.literal('temp'),
-    peer_id: ZInt64.describe('好友 QQ 号或群号'),
+    peer_id: ZUin.describe('好友 QQ 号或群号'),
     message_seq: ZInt64.describe('消息序列号'),
-    sender_id: ZInt64.describe('发送者 QQ 号'),
+    sender_id: ZUin.describe('发送者 QQ 号'),
     time: ZInt64.describe('消息 Unix 时间戳（秒）'),
     segments: z.array(z.lazy(() => IncomingSegment)).describe('消息段列表'),
     group: z.lazy(() => GroupEntity).nullish().describe('临时会话发送者的所在的群信息'),
@@ -233,12 +233,12 @@ export const IncomingMessage = z.discriminatedUnion('message_scene', [
 ]).describe('接收消息');
 
 export const GroupEssenceMessage = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   message_seq: ZInt64.describe('消息序列号'),
   message_time: ZInt64.describe('消息发送时的 Unix 时间戳（秒）'),
-  sender_id: ZInt64.describe('发送者 QQ 号'),
+  sender_id: ZUin.describe('发送者 QQ 号'),
   sender_name: ZString.describe('发送者名称'),
-  operator_id: ZInt64.describe('设置精华的操作者 QQ 号'),
+  operator_id: ZUin.describe('设置精华的操作者 QQ 号'),
   operator_name: ZString.describe('设置精华的操作者名称'),
   operation_time: ZInt64.describe('消息被设置精华时的 Unix 时间戳（秒）'),
   segments: z.array(z.lazy(() => IncomingSegment)).describe('消息段列表'),
