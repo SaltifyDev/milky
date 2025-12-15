@@ -34,6 +34,8 @@ export const apiCategories = Object.fromEntries(
   ])
 ) as Record<string, ApiCategory>;
 
+z.globalRegistry._idmap.clear();
+
 Object.entries(commonStructs).forEach(([name, schema]) => {
   z.globalRegistry.add(schema, {
     id: name,
