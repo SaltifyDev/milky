@@ -1,4 +1,4 @@
-import {} from '../../../common';
+import {} from '@/app/common';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import z from 'zod';
 

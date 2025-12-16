@@ -1,6 +1,5 @@
-import { commonStructs, apiCategories } from '../../../common';
+import { commonStructs, apiCategories } from '@/app/common';
 import { ZodDiscriminatedUnion, ZodObject, ZodLiteral } from 'zod';
-import { $ZodType } from 'zod/v4/core';
 import { milkyVersion, milkyPackageVersion } from '@saltify/milky-types';
 
 export const dynamic = 'force-static';
