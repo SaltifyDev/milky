@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ZInt32, ZInt64, ZString, ZUin } from '../scalar';
+import { ZInt64, ZString, ZUin } from '../scalar';
 import { OutgoingSegment, IncomingMessage, IncomingForwardedMessage } from '../message';
 
 const SendMessageApiBase = z.object({

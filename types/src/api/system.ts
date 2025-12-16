@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ZInt32, ZInt64, ZString, ZBoolean, ZBooleanWithDefault, ZUin } from '../scalar';
+import { ZInt32, ZString, ZBooleanWithDefault, ZUin } from '../scalar';
 import { FriendEntity, GroupEntity, GroupMemberEntity } from '../common';
 import { milkyVersion } from '../constants';
 
