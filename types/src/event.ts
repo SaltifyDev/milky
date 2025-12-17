@@ -64,12 +64,14 @@ export const FriendFileUploadEvent = z.object({
 export const GroupAdminChangeEvent = z.object({
   group_id: ZUin.describe('群号'),
   user_id: ZUin.describe('发生变更的用户 QQ 号'),
+  operator_id: ZUin.describe('操作者 QQ 号'),
   is_set: ZBoolean.describe('是否被设置为管理员，`false` 表示被取消管理员'),
 });
 
 export const GroupEssenceMessageChangeEvent = z.object({
   group_id: ZUin.describe('群号'),
   message_seq: ZInt64.describe('发生变更的消息序列号'),
+  operator_id: ZUin.describe('操作者 QQ 号'),
   is_set: ZBoolean.describe('是否被设置为精华，`false` 表示被取消精华'),
 });
 
