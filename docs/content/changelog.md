@@ -27,6 +27,7 @@
   - `title`
   - `preview`
   - `summary`
+- 给 `GroupAdminChangeEvent` 和 `GroupEssenceMessageChangeEvent` 补充 `operator_id` 字段，表示操作者 QQ 号 via #37
 
 ### 其他更改
 
