@@ -10,7 +10,7 @@
     "@typescript/native-preview": "latest",
     "eslint": "^9.39.2",
     "globals": "^16.5.0",
-    "tsup": "^8.5.1",
+    "tsdown": "^0.18.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.49.0"
