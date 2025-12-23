@@ -97,7 +97,7 @@ export const SetAvatarInput = z.object({
 });
 
 export const SetNicknameInput = z.object({
-  new_card: ZString.describe('新昵称'),
+  new_nickname: ZString.describe('新昵称'),
 });
 
 export const SetBioInput = z.object({
