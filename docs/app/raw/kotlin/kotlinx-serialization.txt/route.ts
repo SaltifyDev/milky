@@ -25,6 +25,23 @@ function indentLines(text: string, indent: string = '    '): string {
     .join('\n');
 }
 
+function extractDefaultValue(type: $ZodType): string | null {
+  if (type instanceof z.ZodDefault) {
+    return JSON.stringify(type.def.defaultValue);
+  } else if (type instanceof z.ZodOptional || type instanceof z.ZodNullable) {
+    return extractDefaultValue(type.unwrap());
+  } else if (type instanceof z.ZodPipe) {
+    return extractDefaultValue(type.def.in);
+  } else if (type instanceof z.ZodLazy) {
+    return extractDefaultValue(type.unwrap());
+  }
+  return null;
+}
+
+function escapeString(str: string): string {
+  return str.replace(/"/g, '\\"');
+}
+
 function getKotlinTypeSpec(type: $ZodType): string {
   if (type instanceof z.ZodArray) {
     return `List<${getKotlinTypeSpec(type.element)}>`;
@@ -59,7 +76,8 @@ function getKotlinTypeSpec(type: $ZodType): string {
     if (unwrapped instanceof z.ZodNullable) {
       unwrapped = unwrapped.unwrap();
     }
-    return `${getKotlinTypeSpec(unwrapped)} = ${JSON.stringify(type.def.defaultValue)}`;
+    const defaultValueLiteral = JSON.stringify(type.def.defaultValue);
+    return `${getKotlinTypeSpec(unwrapped)} = ${defaultValueLiteral}`;
   }
   if (type instanceof z.ZodLazy) {
     return getKotlinTypeSpec(type.unwrap());
@@ -93,8 +111,11 @@ function renderZodObject(
     if (filterOutKeys.includes(key)) {
       return;
     }
+    const defaultValue = extractDefaultValue(value);
     l(`    /** ${value.description ?? ''} */`);
-    l(`    @SerialName("${key}") val ${toLowerCamelCase(key)}: ${getKotlinTypeSpec(value)},`);
+    l(`    @SerialName("${key}")${
+      defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
+    } val ${toLowerCamelCase(key)}: ${getKotlinTypeSpec(value)},`);
   });
   l(')');
   return lines.join('\n');
@@ -192,9 +213,6 @@ function generateKotlinSpec(): string {
   function l(line: string = '') {
     lines.push(line);
   }
-  function a(line: string = '') {
-    lines[lines.length - 1] += line;
-  }
   l('// Auto-generated file');
   l('@file:OptIn(ExperimentalSerializationApi::class)');
   l('');
@@ -207,6 +225,10 @@ function generateKotlinSpec(): string {
 
   l(`const val milkyVersion = "${milkyVersion}"`);
   l(`const val milkyPackageVersion = "${milkyPackageVersion}"`);
+  l('');
+
+  l('@Target(AnnotationTarget.PROPERTY)');
+  l('annotation class LiteralDefault(val value: String)');
   l('');
 
   l('val milkyJsonModule = Json {');
