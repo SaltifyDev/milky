@@ -10,7 +10,6 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 - [Lagrange.Milky](https://github.com/LagrangeDev/LagrangeV2/tree/main/Lagrange.Milky) (GPL-3.0)
 - [Yogurt](https://acidify.ntqqrev.org/yogurt/start) (GPL-3.0)
-- [tanebi-milky](https://github.com/SaltifyDev/tanebi/tree/v2/packages/milky) (GPL-3.0)
 - [LuckyLilliaBot](https://github.com/LLOneBot/LLOneBot) (GPL-2.0)
 
 ## 协议 SDK
@@ -25,7 +24,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 ### 作为依赖库发布
 
-- **Node.js** - [@saltify/milky-node-sdk](https://www.npmjs.com/package/@saltify/milky-node-sdk) (CC0-1.0)
+- **Node.js** - [@saltify/milky-node-sdk](https://www.npmjs.com/package/@saltify/milky-node-sdk) (MIT)
 - **Rust** - [milky-rust-sdk](https://crates.io/crates/milky-rust-sdk) (MIT **or** Apache 2.0)
 - **.NET** - [Milky.Net.Client](https://www.nuget.org/packages/Milky.Net.Client) (MIT)
 - **Go** - [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk) (MIT)
