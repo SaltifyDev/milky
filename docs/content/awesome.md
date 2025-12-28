@@ -51,5 +51,6 @@ Milky 官网在 `/raw` 端点下提供了一些有用的原始文件，供社区
 
 - **JSON Schema** - [`schema.json`](/raw/json-schema/schema.json.txt)
 - **Kotlin 类型定义 (kotlinx.serialization)** - [`kotlinx-serialization.txt`](/raw/kotlin/kotlinx-serialization.txt.txt)
+- **Dart 类型定义 (freezed + json_serializable)** - [`json_serializable.txt`](/raw/dart/json_serializable.txt.txt)
 - **OpenAPI Specification v3.1** - [`openapi.json`](/raw/openapi/openapi.json.txt)
 - **Roadmap 模板** - [`roadmap.txt`](/raw/markdown/roadmap.txt.txt)
