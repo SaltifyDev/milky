@@ -176,7 +176,7 @@ function renderZodDiscriminatedUnion(name: string, struct: z.ZodDiscriminatedUni
         l('    }');
       }
       if (index !== struct.options.length - 1) {
-        l('');
+        l();
       }
     });
   } else {
@@ -198,7 +198,7 @@ function renderZodDiscriminatedUnion(name: string, struct: z.ZodDiscriminatedUni
         ) + ` : ${toUpperCamelCase(name)}()`
       );
       if (index !== struct.options.length - 1) {
-        l('');
+        l();
       }
     });
   }
@@ -213,34 +213,30 @@ function generateKotlinSpec(): string {
   function l(line: string = '') {
     lines.push(line);
   }
-  l('// Auto-generated file');
+  l(`// Generated from Milky ${milkyVersion} (${milkyPackageVersion})`);
   l('@file:OptIn(ExperimentalSerializationApi::class)');
-  l('');
+  l();
   l('package org.ntqqrev.milky');
-  l('');
+  l();
   l('import kotlinx.serialization.Serializable');
   l('import kotlinx.serialization.*');
   l('import kotlinx.serialization.json.*');
-  l('');
-
+  l();
   l(`const val milkyVersion = "${milkyVersion}"`);
   l(`const val milkyPackageVersion = "${milkyPackageVersion}"`);
-  l('');
-
+  l();
   l('@Target(AnnotationTarget.PROPERTY)');
   l('annotation class LiteralDefault(val value: String)');
-  l('');
-
+  l();
   l('val milkyJsonModule = Json {');
   l('    ignoreUnknownKeys = true');
   l('    explicitNulls = false');
   l('}');
-  l('');
-
+  l();
   l('// ####################################');
   l('// Common Structs');
   l('// ####################################');
-  l('');
+  l();
   Object.entries(commonStructs).forEach(([name, schema]) => {
     if (schema instanceof z.ZodObject) {
       l(renderZodObject(name, schema));
@@ -248,13 +244,12 @@ function generateKotlinSpec(): string {
     if (schema instanceof z.ZodDiscriminatedUnion) {
       l(renderZodDiscriminatedUnion(name, schema));
     }
-    l('');
+    l();
   });
-
   l('// ####################################');
   l('// API Input and Output Structs');
   l('// ####################################');
-  l('');
+  l();
   l('@Serializable');
   l('class ApiGeneralResponse(');
   l('    @SerialName("status") val status: String,');
@@ -262,13 +257,13 @@ function generateKotlinSpec(): string {
   l('    @SerialName("data") val data: JsonElement? = null,');
   l('    @SerialName("message") val message: String? = null,');
   l(')');
-  l('');
+  l();
   l('@Serializable');
   l('class ApiEmptyStruct');
-  l('');
+  l();
   Object.entries(apiCategories).forEach(([, category]) => {
     l(`// ---- ${category.name} ----`);
-    l('');
+    l();
     category.apis.forEach((api) => {
       if (api.inputStruct instanceof z.ZodObject) {
         if (Object.keys(api.inputStruct.shape).length > 0) {
@@ -277,20 +272,19 @@ function generateKotlinSpec(): string {
           l(`typealias ${toUpperCamelCase(api.endpoint)}Input = ApiEmptyStruct`);
         }
       }
-      l('');
+      l();
       if (api.outputStruct instanceof z.ZodObject) {
         l(renderZodObject(`${toUpperCamelCase(api.endpoint)}Output`, api.outputStruct, false));
       } else {
         l(`typealias ${toUpperCamelCase(api.endpoint)}Output = ApiEmptyStruct`);
       }
-      l('');
+      l();
     });
   });
-
   l('// ####################################');
   l('// API Endpoint Constants');
   l('// ####################################');
-  l('');
+  l();
   l('sealed class ApiEndpoint<T : Any, R : Any>(val path: String) {');
   Object.entries(apiCategories).forEach(([, category]) => {
     category.apis.forEach((api) => {

@@ -251,19 +251,17 @@ function generateDartSpec(): string {
     lines.push(line);
   }
 
-  l('// Auto-generated file');
   l('// ignore_for_file: invalid_annotation_target');
   l(`// Generated from Milky ${milkyVersion} (${milkyPackageVersion})`);
-  l('');
+  l();
   l("import 'package:freezed_annotation/freezed_annotation.dart';");
-  l('');
+  l();
   l("part 'milky_types.freezed.dart';");
   l("part 'milky_types.g.dart';");
-  l('');
+  l();
   l(`const milkyVersion = "${milkyVersion}";`);
   l(`const milkyPackageVersion = "${milkyPackageVersion}";`);
-  l('');
-
+  l();
   l('@freezed');
   l('abstract class ApiGeneralResponse with _$ApiGeneralResponse {');
   l('  const factory ApiGeneralResponse({');
@@ -272,23 +270,21 @@ function generateDartSpec(): string {
   l('    @JsonKey(name: "data") Object? data,');
   l('    @JsonKey(name: "message") String? message,');
   l('  }) = _ApiGeneralResponse;');
-  l('');
+  l();
   l('  factory ApiGeneralResponse.fromJson(Map<String, dynamic> json) => _$ApiGeneralResponseFromJson(json);');
   l('}');
-  l('');
-
+  l();
   l('@freezed');
   l('abstract class ApiEmptyStruct with _$ApiEmptyStruct {');
   l('  const factory ApiEmptyStruct() = _ApiEmptyStruct;');
-  l('');
+  l();
   l('  factory ApiEmptyStruct.fromJson(Map<String, dynamic> json) => _$ApiEmptyStructFromJson(json);');
   l('}');
-  l('');
-
+  l();
   l('// ####################################');
   l('// Common Structs');
   l('// ####################################');
-  l('');
+  l();
   Object.entries(commonStructs).forEach(([name, schema]) => {
     if (schema instanceof z.ZodObject) {
       l(renderZodObject(name, schema));
@@ -296,27 +292,26 @@ function generateDartSpec(): string {
       const rendered = renderZodDiscriminatedUnion(name, schema);
       l(rendered.union);
       if (rendered.extraDefs.length > 0) {
-        l('');
+        l();
         rendered.extraDefs.forEach((def) => {
           l(def);
-          l('');
+          l();
         });
       } else {
-        l('');
+        l();
       }
     } else {
       throw new Error('Unsupported schema type');
     }
-    l('');
+    l();
   });
-
   l('// ####################################');
   l('// API Input and Output Structs');
   l('// ####################################');
-  l('');
+  l();
   Object.entries(apiCategories).forEach(([, category]) => {
     l(`// ---- ${category.name} ----`);
-    l('');
+    l();
     category.apis.forEach((api) => {
       const inputName = `${toUpperCamelCase(api.endpoint)}Input`;
       if (api.inputStruct instanceof z.ZodObject) {
@@ -328,8 +323,7 @@ function generateDartSpec(): string {
       } else {
         throw new Error('Unsupported input schema type');
       }
-      l('');
-
+      l();
       const outputName = `${toUpperCamelCase(api.endpoint)}Output`;
       if (api.outputStruct instanceof z.ZodObject) {
         if (Object.keys(api.outputStruct.shape).length > 0) {
@@ -342,7 +336,7 @@ function generateDartSpec(): string {
       } else {
         throw new Error('Unsupported output schema type');
       }
-      l('');
+      l();
     });
   });
 
