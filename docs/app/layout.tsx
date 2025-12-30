@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             ></Navbar>
           }
           pageMap={[
-            ...(await getPageMap()),
+            ...(await getPageMap()).filter(p => !('route' in p) || p.route !== '/raw-preview'),
             {
               name: 'api',
               route: '/api',
