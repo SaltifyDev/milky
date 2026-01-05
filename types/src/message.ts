@@ -187,7 +187,11 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
     data: z.object({
       get messages() {
         return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('合并转发消息段');
-      }
+      },
+      title: ZString.nullish().describe('合并转发标题'),
+      preview: z.array(z.object({ text: ZString })).nullish().describe('合并转发预览文本'),
+      summary: ZString.nullish().describe('合并转发摘要'),
+      prompt: ZString.nullish().describe('合并转发外显文本'),
     }),
   }).describe('合并转发消息段'),
 ]).describe('发送消息段');
