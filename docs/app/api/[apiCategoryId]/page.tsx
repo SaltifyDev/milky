@@ -1,6 +1,6 @@
 import StructRenderer from '@/component/StructRenderer';
 import { apiCategories } from '@/app/common';
-import { useMDXComponents as getMDXComponents } from '../../../mdx-components';
+import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { ZodVoid } from 'zod';
 import { Metadata } from 'next';
 

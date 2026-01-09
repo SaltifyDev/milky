@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ZInt32, ZInt64, ZString } from '../scalar';
+import { ZInt64, ZString, ZUin } from '../scalar';
 import { OutgoingSegment, IncomingMessage, IncomingForwardedMessage } from '../message';
 
 const SendMessageApiBase = z.object({
@@ -12,30 +12,30 @@ const SendMessageApiCommonOutput = z.object({
 });
 
 export const SendPrivateMessageInput = z.object({
-  user_id: ZInt64.describe('好友 QQ 号'),
+  user_id: ZUin.describe('好友 QQ 号'),
 }).extend(SendMessageApiBase.shape);
 
 export const SendPrivateMessageOutput = SendMessageApiCommonOutput;
 
 export const SendGroupMessageInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
 }).extend(SendMessageApiBase.shape);
 
 export const SendGroupMessageOutput = SendMessageApiCommonOutput;
 
 export const RecallPrivateMessageInput = z.object({
-  user_id: ZInt64.describe('好友 QQ 号'),
+  user_id: ZUin.describe('好友 QQ 号'),
   message_seq: ZInt64.describe('消息序列号'),
 });
 
 export const RecallGroupMessageInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
   message_seq: ZInt64.describe('消息序列号'),
 });
 
 export const GetMessageInput = z.object({
   message_scene: z.enum(['friend', 'group', 'temp']).describe('消息场景'),
-  peer_id: ZInt64.describe('好友 QQ 号或群号'),
+  peer_id: ZUin.describe('好友 QQ 号或群号'),
   message_seq: ZInt64.describe('消息序列号'),
 });
 
@@ -45,7 +45,7 @@ export const GetMessageOutput = z.object({
 
 export const GetHistoryMessagesInput = z.object({
   message_scene: z.enum(['friend', 'group', 'temp']).describe('消息场景'),
-  peer_id: ZInt64.describe('好友 QQ 号或群号'),
+  peer_id: ZUin.describe('好友 QQ 号或群号'),
   start_message_seq: ZInt64.nullish().describe('起始消息序列号，由此开始从新到旧查询，不提供则从最新消息开始'),
   limit: z.number()
     .int()
@@ -81,7 +81,7 @@ export const GetForwardedMessagesOutput = z.object({
 
 export const MarkMessageAsReadInput = z.object({
   message_scene: z.enum(['friend', 'group', 'temp']).describe('消息场景'),
-  peer_id: ZInt64.describe('好友 QQ 号或群号'),
+  peer_id: ZUin.describe('好友 QQ 号或群号'),
   message_seq: ZInt64.describe('标为已读的消息序列号，该消息及更早的消息将被标记为已读'),
 });
 

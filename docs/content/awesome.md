@@ -48,9 +48,10 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 ### Raw Files
 
-Milky 官网在 `/raw` 端点下提供了一些有用的原始文件，供社区成员使用，均通过 CC0-1.0 许可发布：
+Milky 官网在 `/raw` 端点下提供了一些有用的原始文件，供社区成员使用，均通过 CC0-1.0 许可发布。点击以下链接可进入预览页面：
 
-- **JSON Schema** - [`schema.json`](/raw/json-schema/schema.json.txt)
-- **Kotlin 类型定义 (kotlinx.serialization)** - [`kotlinx-serialization.txt`](/raw/kotlin/kotlinx-serialization.txt.txt)
-- **OpenAPI Specification v3.1** - [`openapi.json`](/raw/openapi/openapi.json.txt)
-- **Roadmap 模板** - [`roadmap.txt`](/raw/markdown/roadmap.txt.txt)
+- [JSON Schema](/raw-preview?path=json-schema/schema.json)
+- [Kotlin 类型定义 (kotlinx.serialization)](/raw-preview?path=kotlin/kotlinx-serialization.txt)
+- [Dart 类型定义 (freezed + json_serializable)](/raw-preview?path=dart/json_serializable.txt)
+- [OpenAPI Specification v3.1](/raw-preview?path=openapi/openapi.json)
+- [Roadmap 模板](/raw-preview?path=markdown/roadmap.txt)

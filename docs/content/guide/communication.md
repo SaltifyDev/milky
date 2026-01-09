@@ -171,7 +171,7 @@ ws://{IP}:{端口}/event
 >
 > 在不支持提供自定义 Header 的环境中，应用端还可以通过在 query 中携带 `access_token` 参数来提供 `access_token`，例如：
 >
-> ```http
+> ```
 > ws://{IP}:{端口}/event?access_token=123456
 > ```
 
@@ -232,4 +232,12 @@ Content-Type: application/json
     ]
   }
 }
+```
+
+为保证安全性，可以在**协议端**的配置文件中设置 `access_token`。应用端需要在请求头中检查 `Authorization` 字段，格式为 `Bearer {access_token}`。例如：
+
+```http
+POST http://example.com/webhook
+Content-Type: application/json
+Authorization: Bearer 123456
 ```

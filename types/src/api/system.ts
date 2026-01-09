@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ZInt32, ZInt64, ZString, ZBoolean, ZBooleanWithDefault } from '../scalar';
+import { ZInt32, ZString, ZBooleanWithDefault, ZUin } from '../scalar';
 import { FriendEntity, GroupEntity, GroupMemberEntity } from '../common';
 import { milkyVersion } from '../constants';
 
@@ -8,7 +8,7 @@ const CachedApiBase = z.object({
 });
 
 export const GetLoginInfoOutput = z.object({
-  uin: ZInt64.describe('登录 QQ 号'),
+  uin: ZUin.describe('登录 QQ 号'),
   nickname: ZString.describe('登录昵称'),
 });
 
@@ -31,7 +31,7 @@ export const GetImplInfoOutput = z.object({
 });
 
 export const GetUserProfileInput = z.object({
-  user_id: ZInt64.describe('用户 QQ 号'),
+  user_id: ZUin.describe('用户 QQ 号'),
 });
 
 export const GetUserProfileOutput = z.object({
@@ -54,7 +54,7 @@ export const GetFriendListOutput = z.object({
 });
 
 export const GetFriendInfoInput = z.object({
-  user_id: ZInt64.describe('好友 QQ 号'),
+  user_id: ZUin.describe('好友 QQ 号'),
 }).extend(CachedApiBase.shape);
 
 export const GetFriendInfoOutput = z.object({
@@ -68,7 +68,7 @@ export const GetGroupListOutput = z.object({
 });
 
 export const GetGroupInfoInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
 }).extend(CachedApiBase.shape);
 
 export const GetGroupInfoOutput = z.object({
@@ -76,7 +76,7 @@ export const GetGroupInfoOutput = z.object({
 });
 
 export const GetGroupMemberListInput = z.object({
-  group_id: ZInt64.describe('群号'),
+  group_id: ZUin.describe('群号'),
 }).extend(CachedApiBase.shape);
 
 export const GetGroupMemberListOutput = z.object({
@@ -84,12 +84,28 @@ export const GetGroupMemberListOutput = z.object({
 });
 
 export const GetGroupMemberInfoInput = z.object({
-  group_id: ZInt64.describe('群号'),
-  user_id: ZInt64.describe('群成员 QQ 号'),
+  group_id: ZUin.describe('群号'),
+  user_id: ZUin.describe('群成员 QQ 号'),
 }).extend(CachedApiBase.shape);
 
 export const GetGroupMemberInfoOutput = z.object({
   member: z.lazy(() => GroupMemberEntity).describe('群成员信息'),
+});
+
+export const SetAvatarInput = z.object({
+  uri: ZString.describe('头像文件 URI，支持 `file://` `http(s)://` `base64://` 三种格式'),
+});
+
+export const SetNicknameInput = z.object({
+  new_nickname: ZString.describe('新昵称'),
+});
+
+export const SetBioInput = z.object({
+  new_bio: ZString.describe('新个性签名'),
+});
+
+export const GetCustomFaceUrlListOutput = z.object({
+  urls: z.array(ZString).describe('自定义表情 URL 列表'),
 });
 
 export const GetCookiesInput = z.object({
@@ -120,6 +136,10 @@ export type GetGroupMemberListInput = z.infer<typeof GetGroupMemberListInput>;
 export type GetGroupMemberListOutput = z.infer<typeof GetGroupMemberListOutput>;
 export type GetGroupMemberInfoInput = z.infer<typeof GetGroupMemberInfoInput>;
 export type GetGroupMemberInfoOutput = z.infer<typeof GetGroupMemberInfoOutput>;
+export type SetAvatarInput = z.infer<typeof SetAvatarInput>;
+export type SetNicknameInput = z.infer<typeof SetNicknameInput>;
+export type SetBioInput = z.infer<typeof SetBioInput>;
+export type GetCustomFaceUrlListOutput = z.infer<typeof GetCustomFaceUrlListOutput>;
 export type GetCookiesInput = z.infer<typeof GetCookiesInput>;
 export type GetCookiesOutput = z.infer<typeof GetCookiesOutput>;
 export type GetCSRFTokenOutput = z.infer<typeof GetCSRFTokenOutput>;

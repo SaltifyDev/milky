@@ -45,7 +45,7 @@ Object.entries(commonStructs).forEach(([name, schema]) => {
 
   if (schema instanceof z.ZodDiscriminatedUnion) {
     schema.options.forEach((option) => {
-      const optionAsZodObject = option as z.ZodObject<any>;
+      const optionAsZodObject = option as z.ZodObject;
       z.globalRegistry.add(optionAsZodObject, {
         title: optionAsZodObject.description,
         description: optionAsZodObject.description,

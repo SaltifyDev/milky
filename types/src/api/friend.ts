@@ -1,15 +1,19 @@
 import { z } from 'zod';
-import { ZInt32, ZInt64, ZBoolean, ZString, ZInt32WithDefault, ZBooleanWithDefault } from '../scalar';
+import { ZString, ZInt32WithDefault, ZBooleanWithDefault, ZUin } from '../scalar';
 import { FriendRequest } from '../common';
 
 export const SendFriendNudgeInput = z.object({
-  user_id: ZInt64.describe('好友 QQ 号'),
+  user_id: ZUin.describe('好友 QQ 号'),
   is_self: ZBooleanWithDefault(false).describe('是否戳自己'),
 });
 
 export const SendProfileLikeInput = z.object({
-  user_id: ZInt64.describe('好友 QQ 号'),
+  user_id: ZUin.describe('好友 QQ 号'),
   count: ZInt32WithDefault(1).describe('点赞数量'),
+});
+
+export const DeleteFriendInput = z.object({
+  user_id: ZUin.describe('好友 QQ 号'),
 });
 
 export const GetFriendRequestsInput = z.object({
@@ -34,6 +38,7 @@ export const RejectFriendRequestInput = z.object({
 
 export type SendFriendNudgeInput = z.infer<typeof SendFriendNudgeInput>;
 export type SendProfileLikeInput = z.infer<typeof SendProfileLikeInput>;
+export type DeleteFriendInput = z.infer<typeof DeleteFriendInput>;
 export type GetFriendRequestsInput = z.infer<typeof GetFriendRequestsInput>;
 export type GetFriendRequestsOutput = z.infer<typeof GetFriendRequestsOutput>;
 export type AcceptFriendRequestInput = z.infer<typeof AcceptFriendRequestInput>;
