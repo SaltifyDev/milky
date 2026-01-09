@@ -29,7 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <Layout
           banner={
-            <Banner storageKey={'milky-1.0-draft'}>🎉 Milky 1.0.0 已发布！ 🎉</Banner>
+            <Banner storageKey={'milky-1.1.0'}>🎉 Milky 1.1 已发布！ 🎉</Banner>
           }
           navbar={
             <Navbar
