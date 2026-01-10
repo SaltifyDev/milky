@@ -9,8 +9,6 @@
     "postbuild": "pagefind --site .next/server/app --output-path out/_pagefind"
   },
   "dependencies": {
-    "@fontsource-variable/noto-sans-sc": "^5.2.9",
-    "@fontsource/inter": "^5.2.8",
     "@saltify/milky-types": "workspace:*",
     "next": "^16.1.1",
     "nextra": "^4.6.1",
