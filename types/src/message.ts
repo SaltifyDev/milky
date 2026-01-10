@@ -185,12 +185,12 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('forward'),
     data: z.object({
+      get messages() {
+        return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('合并转发消息内容');
+      },
       title: ZString.nullish().describe('合并转发标题'),
       preview: z.array(ZString).min(1).max(4).nullish().describe('合并转发预览文本，若提供，至少 1 条，至多 4 条'),
       summary: ZString.nullish().describe('合并转发摘要'),
-      get messages() {
-        return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('合并转发消息内容');
-      }
     }),
   }).describe('合并转发消息段'),
 ]).describe('发送消息段');
