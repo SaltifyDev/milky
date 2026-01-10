@@ -43,6 +43,10 @@ export const IncomingSegment = z.discriminatedUnion('type', [
     type: z.literal('reply'),
     data: z.object({
       message_seq: ZInt64.describe('被引用的消息序列号'),
+      sender_id: ZUin.describe('被引用的消息发送者 QQ 号'),
+      get segments() {
+        return z.array(z.lazy(() => IncomingSegment)).describe('被引用的消息内容');
+      }
     }),
   }).describe('回复消息段'),
 
