@@ -202,7 +202,7 @@ ws://{IP}:{端口}/event
 
 ### WebHook 推送
 
-以 POST 方式向给定的 WebHook 地址推送事件。POST 请求的 body 与 WebSocket 推送的格式相同。示例如下：
+以 POST 方式向给定的 WebHook 地址推送事件。为保证安全性，可以在**协议端**的配置文件中设置 `access_token`。应用端需要在请求头中检查 `Authorization` 字段，格式为 `Bearer {access_token}`。POST 请求的 body 与 WebSocket 推送的格式相同。示例如下：
 
 ```http
 POST http://example.com/webhook
@@ -228,12 +228,4 @@ Content-Type: application/json
     ]
   }
 }
-```
-
-为保证安全性，可以在**协议端**的配置文件中设置 `access_token`。应用端需要在请求头中检查 `Authorization` 字段，格式为 `Bearer {access_token}`。例如：
-
-```http
-POST http://example.com/webhook
-Content-Type: application/json
-Authorization: Bearer 123456
 ```
