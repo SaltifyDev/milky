@@ -1,13 +1,7 @@
-import { commonStructs, apiCategories } from '@/app/common';
-import { z } from 'zod';
-import { $ZodType } from 'zod/v4/core';
+import { generateIR, IRField, IRStruct } from '@/app/ir';
 import { milkyVersion, milkyPackageVersion } from '@saltify/milky-types';
 
 export const dynamic = 'force-static';
-
-const commonStructNames = new Map<$ZodType, string>(
-  Object.entries(commonStructs).map(([name, struct]) => [struct, name])
-);
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -25,103 +19,74 @@ function indentLines(text: string, indent: string = '    '): string {
     .join('\n');
 }
 
-function extractDefaultValue(type: $ZodType): string | null {
-  if (type instanceof z.ZodDefault) {
-    return JSON.stringify(type.def.defaultValue);
-  } else if (type instanceof z.ZodOptional || type instanceof z.ZodNullable) {
-    return extractDefaultValue(type.unwrap());
-  } else if (type instanceof z.ZodPipe) {
-    return extractDefaultValue(type.def.in);
-  } else if (type instanceof z.ZodLazy) {
-    return extractDefaultValue(type.unwrap());
-  }
-  return null;
-}
-
 function escapeString(str: string): string {
   return str.replace(/"/g, '\\"');
 }
 
-function getKotlinTypeSpec(type: $ZodType): string {
-  if (type instanceof z.ZodArray) {
-    return `List<${getKotlinTypeSpec(type.element)}>`;
-  }
-  if (type instanceof z.ZodNumber) {
-    if (type.meta()?.scalarType === 'int64') {
-      return 'Long';
+function getKotlinTypeSpec(field: IRField): string {
+  let baseType: string;
+  if (field.fieldType === 'scalar') {
+    if (field.scalarType === 'bool') {
+      baseType = 'Boolean';
+    } else if (field.scalarType === 'string') {
+      baseType = 'String';
+    } else if (field.scalarType === 'int64') {
+      baseType = 'Long';
+    } else {
+      baseType = 'Int';
     }
-    return 'Int';
-    //throw new Error('Unsupported number type');
-  }
-  if (type instanceof z.ZodBoolean) {
-    return 'Boolean';
-  }
-  if (type instanceof z.ZodString || type instanceof z.ZodEnum) {
-    return 'String';
-  }
-  if (type instanceof z.ZodNullable) {
-    return getKotlinTypeSpec(type.unwrap()); // unwrap only once, since we only use z.nullish()
-  }
-  if (type instanceof z.ZodPipe) {
-    return getKotlinTypeSpec(type.def.in);
-  }
-  if (type instanceof z.ZodOptional) {
-    return `${getKotlinTypeSpec(type.unwrap())}? = null`;
-  }
-  if (type instanceof z.ZodDefault) {
-    let unwrapped = type.unwrap();
-    if (unwrapped instanceof z.ZodOptional) {
-      unwrapped = unwrapped.unwrap();
-    }
-    if (unwrapped instanceof z.ZodNullable) {
-      unwrapped = unwrapped.unwrap();
-    }
-    const defaultValueLiteral = JSON.stringify(type.def.defaultValue);
-    return `${getKotlinTypeSpec(unwrapped)} = ${defaultValueLiteral}`;
-  }
-  if (type instanceof z.ZodLazy) {
-    return getKotlinTypeSpec(type.unwrap());
-  }
-  if (commonStructNames.has(type)) {
-    return toUpperCamelCase(commonStructNames.get(type)!);
+  } else if (field.fieldType === 'enum') {
+    baseType = 'String';
+  } else {
+    baseType = toUpperCamelCase(field.refStructName);
   }
 
-  throw new Error('Unsupported schema type');
+  const typeSpec = field.isArray ? `List<${baseType}>` : baseType;
+  if (field.defaultValue !== undefined) {
+    return `${typeSpec} = ${JSON.stringify(field.defaultValue)}`;
+  }
+  if (field.isOptional) {
+    return `${typeSpec}? = null`;
+  }
+  return typeSpec;
 }
 
-function renderZodObject(
+function renderIRObject(
   name: string,
-  schema: z.ZodObject,
+  fields: IRField[],
+  description: string,
   includeDesc = true,
-  filterOutKeys: string[] = [],
   additionalAnnotations: string[] = []
 ): string {
   const lines: string[] = [];
   function l(line: string = '') {
     lines.push(line);
   }
-  if (includeDesc) {
-    l(`/** ${schema.description} */`);
+  if (includeDesc && description) {
+    l(`/** ${description} */`);
   }
   l('@Serializable');
   additionalAnnotations.forEach((annotation) => l(annotation));
   l(`class ${toUpperCamelCase(name)}(`);
-  const shape = schema.shape;
-  Object.entries(shape).forEach(([key, value]) => {
-    if (filterOutKeys.includes(key)) {
-      return;
-    }
-    const defaultValue = extractDefaultValue(value);
-    l(`    /** ${value.description ?? ''} */`);
-    l(`    @SerialName("${key}")${
-      defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
-    } val ${toLowerCamelCase(key)}: ${getKotlinTypeSpec(value)},`);
+  fields.forEach((field) => {
+    const defaultValue = field.defaultValue !== undefined ? JSON.stringify(field.defaultValue) : null;
+    l(`    /** ${field.description ?? ''} */`);
+    l(
+      `    @SerialName("${field.name}")${
+        defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
+      } val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field)},`
+    );
   });
   l(')');
   return lines.join('\n');
 }
 
-function renderZodDiscriminatedUnion(name: string, struct: z.ZodDiscriminatedUnion): string {
+function renderIRUnionStruct(struct: IRStruct): string {
+  if (struct.structType !== 'union') {
+    throw new Error('Expected union struct');
+  }
+
+  const name = struct.name;
   const lines: string[] = [];
   function l(line: string = '') {
     lines.push(line);
@@ -130,74 +95,53 @@ function renderZodDiscriminatedUnion(name: string, struct: z.ZodDiscriminatedUni
     lines[lines.length - 1] += line;
   }
 
-  l(`/** ${struct.description} */`);
+  if (struct.description) {
+    l(`/** ${struct.description} */`);
+  }
   l('@Serializable');
 
-  const keysList = struct.options.map((option) => {
-    if (option instanceof z.ZodObject) {
-      return Object.keys(option.shape);
-    } else {
-      throw new Error('Expected ZodDiscriminatedUnion to contain ZodObject');
-    }
-  });
-
-  l(`@JsonClassDiscriminator("${struct.def.discriminator}")`);
+  l(`@JsonClassDiscriminator("${struct.tagFieldName}")`);
   l(`sealed class ${toUpperCamelCase(name)} {`);
-  if (keysList.every((keys) => keys.length === keysList[0].length && keys.every((key) => keysList[0].includes(key)))) {
-    if (!keysList[0].includes('data')) {
-      throw new Error('Expected all options to have a "data" field');
-    }
-    const commonKeys = keysList[0].filter((key) => key !== 'data' && key !== struct.def.discriminator);
-    const firstOption = struct.options[0];
-    if (!(firstOption instanceof z.ZodObject)) {
-      throw new Error('Expected first option to be a ZodObject');
-    }
-
-    struct.options.forEach((option, index) => {
-      if (!(option instanceof z.ZodObject)) {
-        throw new Error('Expected option to be a ZodObject');
+  if (struct.unionType === 'withData') {
+    struct.derivedTypes.forEach((derivedType, index) => {
+      const variantName = toUpperCamelCase(derivedType.tagValue);
+      const dataTypeName = derivedType.derivingType === 'ref' ? toUpperCamelCase(derivedType.refStructName) : 'Data';
+      if (derivedType.description) {
+        l(`    /** ${derivedType.description} */`);
       }
-      const dataField = option.shape['data'];
-      l(`    /** ${option.description} */`);
       l('    @Serializable');
-      l(`    @SerialName("${(option.shape[struct.def.discriminator] as z.ZodLiteral).value}")`);
-      l(`    class ${toUpperCamelCase((option.shape[struct.def.discriminator] as z.ZodLiteral).value as string)}(`);
-      commonKeys.forEach((key) => {
-        const field = firstOption.shape[key];
+      l(`    @SerialName("${derivedType.tagValue}")`);
+      l(`    class ${variantName}(`);
+      struct.baseFields.forEach((field) => {
         l(`        /** ${field.description ?? ''} */`);
-        l(`        @SerialName("${key}") val ${toLowerCamelCase(key)}: ${getKotlinTypeSpec(field)},`);
+        l(`        @SerialName("${field.name}") val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field)},`);
       });
       l(`        /** 数据字段 */`);
-      l(`        @SerialName("data") val data: ${commonStructNames.get(dataField) ?? 'Data'}`);
+      l(`        @SerialName("data") val data: ${dataTypeName}`);
       l(`    ) : ${toUpperCamelCase(name)}()`);
-      if (!commonStructNames.has(dataField)) {
+      if (derivedType.derivingType === 'struct') {
         a(' {');
-        l(indentLines(renderZodObject('Data', dataField as z.ZodObject, false), '        '));
+        l(indentLines(renderIRObject('Data', derivedType.fields, '', false), '        '));
         l('    }');
       }
-      if (index !== struct.options.length - 1) {
+      if (index !== struct.derivedTypes.length - 1) {
         l();
       }
     });
   } else {
-    struct.options.forEach((option, index) => {
-      if (!(option instanceof z.ZodObject)) {
-        throw new Error('Expected option to be a ZodObject');
+    struct.derivedStructs.forEach((derivedStruct, index) => {
+      if (derivedStruct.description) {
+        l(`    /** ${derivedStruct.description} */`);
       }
-      l(`    /** ${option.description} */`);
       l(
         indentLines(
-          renderZodObject(
-            (option.shape[struct.def.discriminator] as z.ZodLiteral).value as string,
-            option,
-            false,
-            [struct.def.discriminator],
-            [`@SerialName("${(option.shape[struct.def.discriminator] as z.ZodLiteral).value}")`]
-          ),
+          renderIRObject(derivedStruct.tagValue, derivedStruct.fields, '', false, [
+            `@SerialName("${derivedStruct.tagValue}")`,
+          ]),
           '    '
         ) + ` : ${toUpperCamelCase(name)}()`
       );
-      if (index !== struct.options.length - 1) {
+      if (index !== struct.derivedStructs.length - 1) {
         l();
       }
     });
@@ -210,6 +154,7 @@ function renderZodDiscriminatedUnion(name: string, struct: z.ZodDiscriminatedUni
 
 function generateKotlinSpec(): string {
   const lines: string[] = [];
+  const ir = generateIR();
   function l(line: string = '') {
     lines.push(line);
   }
@@ -237,12 +182,11 @@ function generateKotlinSpec(): string {
   l('// Common Structs');
   l('// ####################################');
   l();
-  Object.entries(commonStructs).forEach(([name, schema]) => {
-    if (schema instanceof z.ZodObject) {
-      l(renderZodObject(name, schema));
-    }
-    if (schema instanceof z.ZodDiscriminatedUnion) {
-      l(renderZodDiscriminatedUnion(name, schema));
+  ir.commonStructs.forEach((struct) => {
+    if (struct.structType === 'simple') {
+      l(renderIRObject(struct.name, struct.fields, struct.description));
+    } else {
+      l(renderIRUnionStruct(struct));
     }
     l();
   });
@@ -261,20 +205,18 @@ function generateKotlinSpec(): string {
   l('@Serializable');
   l('class ApiEmptyStruct');
   l();
-  Object.entries(apiCategories).forEach(([, category]) => {
+  ir.apiCategories.forEach((category) => {
     l(`// ---- ${category.name} ----`);
     l();
     category.apis.forEach((api) => {
-      if (api.inputStruct instanceof z.ZodObject) {
-        if (Object.keys(api.inputStruct.shape).length > 0) {
-          l(renderZodObject(`${toUpperCamelCase(api.endpoint)}Input`, api.inputStruct, false));
-        } else {
-          l(`typealias ${toUpperCamelCase(api.endpoint)}Input = ApiEmptyStruct`);
-        }
+      if (api.requestFields && api.requestFields.length > 0) {
+        l(renderIRObject(`${toUpperCamelCase(api.endpoint)}Input`, api.requestFields, '', false));
+      } else {
+        l(`typealias ${toUpperCamelCase(api.endpoint)}Input = ApiEmptyStruct`);
       }
       l();
-      if (api.outputStruct instanceof z.ZodObject) {
-        l(renderZodObject(`${toUpperCamelCase(api.endpoint)}Output`, api.outputStruct, false));
+      if (api.responseFields) {
+        l(renderIRObject(`${toUpperCamelCase(api.endpoint)}Output`, api.responseFields, '', false));
       } else {
         l(`typealias ${toUpperCamelCase(api.endpoint)}Output = ApiEmptyStruct`);
       }
@@ -286,7 +228,7 @@ function generateKotlinSpec(): string {
   l('// ####################################');
   l();
   l('sealed class ApiEndpoint<T : Any, R : Any>(val path: String) {');
-  Object.entries(apiCategories).forEach(([, category]) => {
+  ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
       l(`    /** ${api.description} */`);
       l(
