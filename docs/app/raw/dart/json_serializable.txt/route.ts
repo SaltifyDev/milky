@@ -1,13 +1,7 @@
-import { apiCategories, commonStructs } from '@/app/common';
-import { z } from 'zod';
-import { $ZodType } from 'zod/v4/core';
+import { generateIR, IRField, IRStruct } from '@/app/ir';
 import { milkyVersion, milkyPackageVersion } from '@saltify/milky-types';
 
 export const dynamic = 'force-static';
-
-const commonStructNames = new Map<$ZodType, string>(
-  Object.entries(commonStructs).map(([name, struct]) => [struct, name])
-);
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -30,83 +24,39 @@ function formatDocComment(text: string): string[] {
   return lines.map((line) => `/// ${line}`);
 }
 
-function unwrapZodType(type: $ZodType): {
-  type: $ZodType;
-  isOptional: boolean;
-  isNullable: boolean;
-  defaultValue?: unknown;
-} {
-  let current: $ZodType = type;
-  let isOptional = false;
-  let isNullable = false;
-  let defaultValue: unknown = undefined;
-
-  while (true) {
-    if (current instanceof z.ZodOptional) {
-      isOptional = true;
-      current = current.unwrap();
-      continue;
-    }
-    if (current instanceof z.ZodNullable) {
-      isNullable = true;
-      current = current.unwrap();
-      continue;
-    }
-    if (current instanceof z.ZodDefault) {
-      defaultValue =
-        typeof current.def.defaultValue === 'function' ? current.def.defaultValue() : current.def.defaultValue;
-      current = current.unwrap();
-      continue;
-    }
-    if (current instanceof z.ZodPipe) {
-      current = current.def.in;
-      continue;
-    }
-    if ('innerType' in current && typeof current.innerType === 'function') {
-      current = current.innerType();
-      continue;
-    }
-    if (current instanceof z.ZodLazy) {
-      current = current.unwrap();
-      continue;
-    }
-    break;
+function resolveDefaultValue(value: unknown): unknown {
+  if (typeof value === 'function') {
+    return (value as () => unknown)();
   }
-
-  return { type: current, isOptional, isNullable, defaultValue };
+  return value;
 }
 
-function getDartTypeSpec(type: $ZodType): string {
-  if (type instanceof z.ZodArray) {
-    return `List<${getDartTypeSpec(type.element)}>`;
-  }
-  if (type instanceof z.ZodNumber) {
-    return 'int';
-  }
-  if (type instanceof z.ZodBoolean) {
-    return 'bool';
-  }
-  if (type instanceof z.ZodString || type instanceof z.ZodEnum) {
-    return 'String';
-  }
-  if (type instanceof z.ZodLazy) {
-    return getDartTypeSpec(type.unwrap());
-  }
-  if (commonStructNames.has(type)) {
-    return toUpperCamelCase(commonStructNames.get(type)!);
+function getDartTypeSpec(field: IRField): string {
+  let baseType: string;
+  if (field.fieldType === 'scalar') {
+    if (field.scalarType === 'bool') {
+      baseType = 'bool';
+    } else if (field.scalarType === 'string') {
+      baseType = 'String';
+    } else {
+      baseType = 'int';
+    }
+  } else if (field.fieldType === 'enum') {
+    baseType = 'String';
+  } else {
+    baseType = toUpperCamelCase(field.refStructName);
   }
 
-  throw new Error('Unsupported schema type');
+  return field.isArray ? `List<${baseType}>` : baseType;
 }
 
-function renderFieldLines(key: string, schema: z.ZodType, typeOverride?: string): string[] {
+function renderFieldLines(key: string, field: IRField, typeOverride?: string): string[] {
   const lines: string[] = [];
   const fieldName = toLowerCamelCase(key);
-  const unwrapped = unwrapZodType(schema);
-  const description = schema.description ?? (unwrapped.type as z.ZodType).description;
-  const baseType = typeOverride ?? getDartTypeSpec(unwrapped.type);
-  const hasDefault = unwrapped.defaultValue !== undefined;
-  const isNullable = (unwrapped.isOptional || unwrapped.isNullable) && !hasDefault;
+  const description = field.description;
+  const baseType = typeOverride ?? getDartTypeSpec(field);
+  const hasDefault = field.defaultValue !== undefined;
+  const isNullable = field.isOptional && !hasDefault;
   const dartType = isNullable ? `${baseType}?` : baseType;
   const isRequired = !isNullable && !hasDefault;
 
@@ -114,7 +64,7 @@ function renderFieldLines(key: string, schema: z.ZodType, typeOverride?: string)
     formatDocComment(description).forEach((line) => lines.push(line));
   }
   if (hasDefault) {
-    lines.push(`@Default(${formatDartLiteral(unwrapped.defaultValue)})`);
+    lines.push(`@Default(${formatDartLiteral(resolveDefaultValue(field.defaultValue))})`);
   }
   lines.push(`@JsonKey(name: "${key}")`);
   lines.push(`${isRequired ? 'required ' : ''}${dartType} ${fieldName},`);
@@ -122,9 +72,9 @@ function renderFieldLines(key: string, schema: z.ZodType, typeOverride?: string)
   return lines;
 }
 
-function renderZodObject(name: string, schema: z.ZodObject): string {
+function renderIRSimpleStruct(name: string, fields: IRField[], description: string): string {
   const className = toUpperCamelCase(name);
-  const entries = Object.entries(schema.shape);
+  const entries = fields;
   const lines: string[] = [];
 
   lines.push('@freezed');
@@ -133,8 +83,8 @@ function renderZodObject(name: string, schema: z.ZodObject): string {
     lines.push(`  const factory ${className}() = _${className};`);
   } else {
     lines.push(`  const factory ${className}({`);
-    entries.forEach(([key, value]) => {
-      renderFieldLines(key, value).forEach((line) => {
+    entries.forEach((field) => {
+      renderFieldLines(field.name, field).forEach((line) => {
         lines.push(`    ${line}`);
       });
     });
@@ -147,92 +97,72 @@ function renderZodObject(name: string, schema: z.ZodObject): string {
   return lines.join('\n');
 }
 
-function renderZodDiscriminatedUnion(
-  name: string,
-  struct: z.ZodDiscriminatedUnion
-): { union: string; extraDefs: string[] } {
+function renderIRUnionStruct(struct: IRStruct): { union: string; extraDefs: string[] } {
+  if (struct.structType !== 'union') {
+    throw new Error('Expected union struct');
+  }
+
+  const name = struct.name;
   const className = toUpperCamelCase(name);
   const lines: string[] = [];
   const extraDefs: string[] = [];
-  const options = struct.options;
-  const discriminator = struct.def.discriminator;
-
-  const keysList = options.map((option) => {
-    if (option instanceof z.ZodObject) {
-      return Object.keys(option.shape);
-    }
-    throw new Error('Expected ZodDiscriminatedUnion to contain ZodObject');
-  });
-
-  const hasCommonKeys =
-    keysList.length > 0 &&
-    keysList.every((keys) => keys.length === keysList[0].length && keys.every((key) => keysList[0].includes(key)));
+  const discriminator = struct.tagFieldName;
 
   lines.push(`@Freezed(unionKey: "${discriminator}")`);
   lines.push(`abstract class ${className} with _$${className} {`);
 
-  if (hasCommonKeys) {
-    if (!keysList[0].includes('data')) {
-      throw new Error('Expected all options to have a "data" field');
-    }
-    const commonKeys = keysList[0].filter((key) => key !== 'data' && key !== discriminator);
-    const firstOption = options[0] as z.ZodObject;
-
-    options.forEach((option, index) => {
-      if (!(option instanceof z.ZodObject)) {
-        throw new Error('Expected option to be a ZodObject');
-      }
-      const variantValue = (option.shape[discriminator] as z.ZodLiteral).value as string;
+  if (struct.unionType === 'withData') {
+    struct.derivedTypes.forEach((derivedType, index) => {
+      const variantValue = derivedType.tagValue;
       const variantConstructor = toLowerCamelCase(variantValue);
       const variantClassName = `${className}${toUpperCamelCase(variantValue)}`;
-      const dataField = option.shape['data'];
       let dataTypeName: string;
 
-      if (commonStructNames.has(dataField)) {
-        dataTypeName = toUpperCamelCase(commonStructNames.get(dataField)!);
-      } else if (dataField instanceof z.ZodObject) {
-        dataTypeName = `${className}${toUpperCamelCase(variantValue)}Data`;
-        extraDefs.push(renderZodObject(dataTypeName, dataField));
+      if (derivedType.derivingType === 'ref') {
+        dataTypeName = toUpperCamelCase(derivedType.refStructName);
       } else {
-        dataTypeName = getDartTypeSpec(unwrapZodType(dataField).type);
+        dataTypeName = `${className}${toUpperCamelCase(variantValue)}Data`;
+        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, ''));
       }
 
       lines.push(`  @FreezedUnionValue("${variantValue}")`);
       lines.push(`  const factory ${className}.${variantConstructor}({`);
-      commonKeys.forEach((key) => {
-        renderFieldLines(key, firstOption.shape[key]).forEach((line) => {
+      struct.baseFields.forEach((field) => {
+        renderFieldLines(field.name, field).forEach((line) => {
           lines.push(`    ${line}`);
         });
       });
+      const dataField: IRField = {
+        fieldType: 'ref',
+        name: 'data',
+        description: '',
+        isArray: false,
+        isOptional: false,
+        refStructName: dataTypeName,
+      };
       renderFieldLines('data', dataField, dataTypeName).forEach((line) => {
         lines.push(`    ${line}`);
       });
       lines.push(`  }) = ${variantClassName};`);
-      if (index !== options.length - 1) {
+      if (index !== struct.derivedTypes.length - 1) {
         lines.push('');
       }
     });
   } else {
-    options.forEach((option, index) => {
-      if (!(option instanceof z.ZodObject)) {
-        throw new Error('Expected option to be a ZodObject');
-      }
-      const variantValue = (option.shape[discriminator] as z.ZodLiteral).value as string;
+    struct.derivedStructs.forEach((derivedStruct, index) => {
+      const variantValue = derivedStruct.tagValue;
       const variantConstructor = toLowerCamelCase(variantValue);
       const variantClassName = `${className}${toUpperCamelCase(variantValue)}`;
 
       lines.push(`  @FreezedUnionValue("${variantValue}")`);
       lines.push(`  const factory ${className}.${variantConstructor}({`);
-      Object.entries(option.shape).forEach(([key, value]) => {
-        if (key === discriminator) {
-          return;
-        }
-        renderFieldLines(key, value).forEach((line) => {
+      derivedStruct.fields.forEach((field) => {
+        renderFieldLines(field.name, field).forEach((line) => {
           lines.push(`    ${line}`);
         });
       });
       lines.push(`  }) = ${variantClassName};`);
-      if (index !== options.length - 1) {
+      if (index !== struct.derivedStructs.length - 1) {
         lines.push('');
       }
     });
@@ -247,6 +177,7 @@ function renderZodDiscriminatedUnion(
 
 function generateDartSpec(): string {
   const lines: string[] = [];
+  const ir = generateIR();
   function l(line: string = '') {
     lines.push(line);
   }
@@ -285,11 +216,11 @@ function generateDartSpec(): string {
   l('// Common Structs');
   l('// ####################################');
   l();
-  Object.entries(commonStructs).forEach(([name, schema]) => {
-    if (schema instanceof z.ZodObject) {
-      l(renderZodObject(name, schema));
-    } else if (schema instanceof z.ZodDiscriminatedUnion) {
-      const rendered = renderZodDiscriminatedUnion(name, schema);
+  ir.commonStructs.forEach((struct) => {
+    if (struct.structType === 'simple') {
+      l(renderIRSimpleStruct(struct.name, struct.fields, struct.description));
+    } else {
+      const rendered = renderIRUnionStruct(struct);
       l(rendered.union);
       if (rendered.extraDefs.length > 0) {
         l();
@@ -300,8 +231,6 @@ function generateDartSpec(): string {
       } else {
         l();
       }
-    } else {
-      throw new Error('Unsupported schema type');
     }
     l();
   });
@@ -309,32 +238,24 @@ function generateDartSpec(): string {
   l('// API Input and Output Structs');
   l('// ####################################');
   l();
-  Object.entries(apiCategories).forEach(([, category]) => {
+  ir.apiCategories.forEach((category) => {
     l(`// ---- ${category.name} ----`);
     l();
     category.apis.forEach((api) => {
       const inputName = `${toUpperCamelCase(api.endpoint)}Input`;
-      if (api.inputStruct instanceof z.ZodObject) {
-        if (Object.keys(api.inputStruct.shape).length > 0) {
-          l(renderZodObject(inputName, api.inputStruct));
-        } else {
-          l(`typedef ${inputName} = ApiEmptyStruct;`);
-        }
+      if (api.requestFields && api.requestFields.length > 0) {
+        l(renderIRSimpleStruct(inputName, api.requestFields, ''));
       } else {
-        throw new Error('Unsupported input schema type');
+        l(`typedef ${inputName} = ApiEmptyStruct;`);
       }
       l();
       const outputName = `${toUpperCamelCase(api.endpoint)}Output`;
-      if (api.outputStruct instanceof z.ZodObject) {
-        if (Object.keys(api.outputStruct.shape).length > 0) {
-          l(renderZodObject(outputName, api.outputStruct));
-        } else {
-          l(`typedef ${outputName} = ApiEmptyStruct;`);
-        }
-      } else if (api.outputStruct instanceof z.ZodVoid) {
+      if (api.responseFields && api.responseFields.length > 0) {
+        l(renderIRSimpleStruct(outputName, api.responseFields, ''));
+      } else if (api.responseFields) {
         l(`typedef ${outputName} = ApiEmptyStruct;`);
       } else {
-        throw new Error('Unsupported output schema type');
+        l(`typedef ${outputName} = ApiEmptyStruct;`);
       }
       l();
     });

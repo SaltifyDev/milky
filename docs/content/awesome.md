@@ -46,12 +46,18 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Rust** - [milky-types](https://crates.io/crates/milky-types) (MIT **or** Apache 2.0)
 - **Kotlin** - [milky-kt-types](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-types) (MIT)
 
-### Raw Files
+### Type Definition 原始文件
 
-Milky 官网在 `/raw` 端点下提供了一些有用的原始文件，供社区成员使用，均通过 CC0-1.0 许可发布。点击以下链接可进入预览页面：
+Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件，方便开发者直接下载和使用，通过 CC0-1.0 许可证发布。点击以下链接可进行预览。
 
-- [JSON Schema](/raw-preview?path=json-schema/schema.json)
 - [Kotlin 类型定义 (kotlinx.serialization)](/raw-preview?path=kotlin/kotlinx-serialization.txt)
 - [Dart 类型定义 (freezed + json_serializable)](/raw-preview?path=dart/json_serializable.txt)
+
+### 实用资源
+
+以下是一些与 Milky 协议相关的实用资源，方便参考和使用，同样通过 CC0-1.0 许可证发布。
+
+- [JSON Schema](/raw-preview?path=json-schema/schema.json)
 - [OpenAPI Specification v3.1](/raw-preview?path=openapi/openapi.json)
-- [Roadmap 模板](/raw-preview?path=markdown/roadmap.txt)
+- [Milky IR](/raw-preview?path=milky-ir/ir.json) - 更简洁、对 Codegen 更友好的 Milky API 中间表示形式
+- [Roadmap](/raw-preview?path=markdown/roadmap.txt) - Markdown 格式的模板，用于规划你的 Milky 实现或 SDK 项目
