@@ -204,10 +204,6 @@ ws://{IP}:{端口}/event
 
 以 POST 方式向给定的 WebHook 地址推送事件。POST 请求的 body 与 WebSocket 推送的格式相同。示例如下：
 
-> [!note]
->
-> WebHook 不支持任何方式的鉴权；请自行保证 POST 内容的来源可信。
-
 ```http
 POST http://example.com/webhook
 Content-Type: application/json
