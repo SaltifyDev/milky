@@ -260,6 +260,29 @@ function generateDartSpec(): string {
       l();
     });
   });
+  l('// ####################################');
+  l('// API Endpoint Constants');
+  l('// ####################################');
+  l();
+  l('class ApiEndpoint<T, R> {');
+  l('  final String endpoint;');
+  l('  final T Function(Map<String, dynamic>) fromJsonInput;');
+  l('  final Map<String, dynamic> Function(R) toJsonOutput;');
+  l();
+  l('  const ApiEndpoint(this.endpoint, this.fromJsonInput, this.toJsonOutput);');
+  l();
+  ir.apiCategories.forEach((category) => {
+    category.apis.forEach((api) => {
+      l(`  /// ${api.description}`);
+      l(`  static final ${toLowerCamelCase(api.endpoint)} = ApiEndpoint(`);
+      l(`    "/${api.endpoint}",`);
+      l(`    ${toUpperCamelCase(api.endpoint)}Input.fromJson,`);
+      l(`    (${toUpperCamelCase(api.endpoint)}Output output) => output.toJson(),`);
+      l('  );');
+    });
+  });
+  l('}');
+  l();
 
   return lines.join('\n');
 }
