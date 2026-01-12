@@ -16,7 +16,7 @@ function buildComponents(registry: typeof z.globalRegistry) {
   }).schemas;
 
   const schemas = Object.fromEntries(
-    Object.entries(jsonSchemas ?? {}).map(([name, schema]) => [name, sanitizeSchema(schema as Record<string, unknown>)])
+    Object.entries(jsonSchemas ?? {}).map(([name, schema]) => [name, sanitizeSchema(schema)])
   );
 
   schemas.ApiResponse = {
@@ -54,11 +54,8 @@ function buildPaths() {
 
   apiSpecCategories.forEach((category) => {
     category.apiSpecs.forEach((spec) => {
-      const requestId = spec.inputStructName && `Api_${spec.inputStructName}_input`;
-      const responseId = spec.outputStructName && `Api_${spec.outputStructName}_output`;
-      const dataSchema = responseId
-        ? { $ref: `#/components/schemas/${responseId}` }
-        : { $ref: '#/components/schemas/ApiEmptyObject' };
+      const requestIdOrNull = spec.inputStructName && `Api_${spec.endpoint}_input`;
+      const responseIdOrNull = spec.outputStructName && `Api_${spec.endpoint}_output`;
 
       paths[`/api/${spec.endpoint}`] = {
         post: {
@@ -70,7 +67,11 @@ function buildPaths() {
             required: true,
             content: {
               'application/json': {
-                schema: { $ref: `#/components/schemas/${requestId}` },
+                schema: {
+                  $ref: requestIdOrNull
+                    ? `#/components/schemas/${requestIdOrNull}`
+                    : '#/components/schemas/ApiEmptyObject',
+                },
               },
             },
           },
@@ -83,7 +84,11 @@ function buildPaths() {
                       { $ref: '#/components/schemas/ApiResponse' },
                       {
                         properties: {
-                          data: dataSchema,
+                          data: {
+                            $ref: responseIdOrNull
+                              ? `#/components/schemas/${responseIdOrNull}`
+                              : '#/components/schemas/ApiEmptyObject',
+                          },
                         },
                       },
                     ],
@@ -113,7 +118,7 @@ function buildWebhooks() {
           required: true,
           content: {
             'application/json': {
-              $ref: `#/components/schemas/Event`,
+              schema: { $ref: '#/components/schemas/Event' },
             },
           },
         },
