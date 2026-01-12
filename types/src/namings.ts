@@ -1,7 +1,8 @@
-import type * as types from '.';
-type TypeName = keyof typeof types;
+import type * as schema from '.';
 
-export const commonStructs: TypeName[] = [
+export type MilkyStructName = keyof typeof schema;
+
+export const commonStructNames: MilkyStructName[] = [
   'Event',
   'FriendEntity',
   'FriendCategoryEntity',
@@ -20,414 +21,420 @@ export const commonStructs: TypeName[] = [
   'OutgoingSegment',
 ];
 
-export interface Api {
+export interface ApiSpecCategory {
+  key: string;
+  name: string;
+  apiSpecs: ApiSpec[];
+}
+
+export interface ApiSpec {
   endpoint: string;
   description: string;
-  inputStruct: TypeName | null;
-  outputStruct: TypeName | null;
+  inputStructName: MilkyStructName | null;
+  outputStructName: MilkyStructName | null;
 }
 
-export interface ApiCategory {
-  name: string;
-  apis: Api[];
-}
-
-export const apiCategories: Record<string, ApiCategory> = {
-  system: {
+export const apiSpecCategories: ApiSpecCategory[] = [
+  {
+    key: 'system',
     name: '系统 API',
-    apis: [
+    apiSpecs: [
       {
         endpoint: 'get_login_info',
         description: '获取登录信息',
-        inputStruct: null,
-        outputStruct: 'GetLoginInfoOutput',
+        inputStructName: null,
+        outputStructName: 'GetLoginInfoOutput',
       },
       {
         endpoint: 'get_impl_info',
         description: '获取协议端信息',
-        inputStruct: null,
-        outputStruct: 'GetImplInfoOutput',
+        inputStructName: null,
+        outputStructName: 'GetImplInfoOutput',
       },
       {
         endpoint: 'get_user_profile',
         description: '获取用户个人信息',
-        inputStruct: 'GetUserProfileInput',
-        outputStruct: 'GetUserProfileOutput',
+        inputStructName: 'GetUserProfileInput',
+        outputStructName: 'GetUserProfileOutput',
       },
       {
         endpoint: 'get_friend_list',
         description: '获取好友列表',
-        inputStruct: 'GetFriendListInput',
-        outputStruct: 'GetFriendListOutput',
+        inputStructName: 'GetFriendListInput',
+        outputStructName: 'GetFriendListOutput',
       },
       {
         endpoint: 'get_friend_info',
         description: '获取好友信息',
-        inputStruct: 'GetFriendInfoInput',
-        outputStruct: 'GetFriendInfoOutput',
+        inputStructName: 'GetFriendInfoInput',
+        outputStructName: 'GetFriendInfoOutput',
       },
       {
         endpoint: 'get_group_list',
         description: '获取群列表',
-        inputStruct: 'GetGroupListInput',
-        outputStruct: 'GetGroupListOutput',
+        inputStructName: 'GetGroupListInput',
+        outputStructName: 'GetGroupListOutput',
       },
       {
         endpoint: 'get_group_info',
         description: '获取群信息',
-        inputStruct: 'GetGroupInfoInput',
-        outputStruct: 'GetGroupInfoOutput',
+        inputStructName: 'GetGroupInfoInput',
+        outputStructName: 'GetGroupInfoOutput',
       },
       {
         endpoint: 'get_group_member_list',
         description: '获取群成员列表',
-        inputStruct: 'GetGroupMemberListInput',
-        outputStruct: 'GetGroupMemberListOutput',
+        inputStructName: 'GetGroupMemberListInput',
+        outputStructName: 'GetGroupMemberListOutput',
       },
       {
         endpoint: 'get_group_member_info',
         description: '获取群成员信息',
-        inputStruct: 'GetGroupMemberInfoInput',
-        outputStruct: 'GetGroupMemberInfoOutput',
+        inputStructName: 'GetGroupMemberInfoInput',
+        outputStructName: 'GetGroupMemberInfoOutput',
       },
       {
         endpoint: 'set_avatar',
         description: '设置 QQ 账号头像',
-        inputStruct: 'SetAvatarInput',
-        outputStruct: null,
+        inputStructName: 'SetAvatarInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_nickname',
         description: '设置 QQ 账号昵称',
-        inputStruct: 'SetNicknameInput',
-        outputStruct: null,
+        inputStructName: 'SetNicknameInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_bio',
         description: '设置 QQ 账号个性签名',
-        inputStruct: 'SetBioInput',
-        outputStruct: null,
+        inputStructName: 'SetBioInput',
+        outputStructName: null,
       },
       {
         endpoint: 'get_custom_face_url_list',
         description: '获取自定义表情 URL 列表',
-        inputStruct: null,
-        outputStruct: 'GetCustomFaceUrlListOutput',
+        inputStructName: null,
+        outputStructName: 'GetCustomFaceUrlListOutput',
       },
       {
         endpoint: 'get_cookies',
         description: '获取 Cookies',
-        inputStruct: 'GetCookiesInput',
-        outputStruct: 'GetCookiesOutput',
+        inputStructName: 'GetCookiesInput',
+        outputStructName: 'GetCookiesOutput',
       },
       {
         endpoint: 'get_csrf_token',
         description: '获取 CSRF Token',
-        inputStruct: null,
-        outputStruct: 'GetCSRFTokenOutput',
+        inputStructName: null,
+        outputStructName: 'GetCSRFTokenOutput',
       },
     ],
   },
-  message: {
+  {
+    key: 'message',
     name: '消息 API',
-    apis: [
+    apiSpecs: [
       {
         endpoint: 'send_private_message',
         description: '发送私聊消息',
-        inputStruct: 'SendPrivateMessageInput',
-        outputStruct: 'SendPrivateMessageOutput',
+        inputStructName: 'SendPrivateMessageInput',
+        outputStructName: 'SendPrivateMessageOutput',
       },
       {
         endpoint: 'send_group_message',
         description: '发送群聊消息',
-        inputStruct: 'SendGroupMessageInput',
-        outputStruct: 'SendGroupMessageOutput',
+        inputStructName: 'SendGroupMessageInput',
+        outputStructName: 'SendGroupMessageOutput',
       },
       {
         endpoint: 'recall_private_message',
         description: '撤回私聊消息',
-        inputStruct: 'RecallPrivateMessageInput',
-        outputStruct: null,
+        inputStructName: 'RecallPrivateMessageInput',
+        outputStructName: null,
       },
       {
         endpoint: 'recall_group_message',
         description: '撤回群聊消息',
-        inputStruct: 'RecallGroupMessageInput',
-        outputStruct: null,
+        inputStructName: 'RecallGroupMessageInput',
+        outputStructName: null,
       },
       {
         endpoint: 'get_message',
         description: '获取消息',
-        inputStruct: 'GetMessageInput',
-        outputStruct: 'GetMessageOutput',
+        inputStructName: 'GetMessageInput',
+        outputStructName: 'GetMessageOutput',
       },
       {
         endpoint: 'get_history_messages',
         description: '获取历史消息列表',
-        inputStruct: 'GetHistoryMessagesInput',
-        outputStruct: 'GetHistoryMessagesOutput',
+        inputStructName: 'GetHistoryMessagesInput',
+        outputStructName: 'GetHistoryMessagesOutput',
       },
       {
         endpoint: 'get_resource_temp_url',
         description: '获取临时资源链接',
-        inputStruct: 'GetResourceTempUrlInput',
-        outputStruct: 'GetResourceTempUrlOutput',
+        inputStructName: 'GetResourceTempUrlInput',
+        outputStructName: 'GetResourceTempUrlOutput',
       },
       {
         endpoint: 'get_forwarded_messages',
         description: '获取合并转发消息内容',
-        inputStruct: 'GetForwardedMessagesInput',
-        outputStruct: 'GetForwardedMessagesOutput',
+        inputStructName: 'GetForwardedMessagesInput',
+        outputStructName: 'GetForwardedMessagesOutput',
       },
       {
         endpoint: 'mark_message_as_read',
         description: '标记消息为已读',
-        inputStruct: 'MarkMessageAsReadInput',
-        outputStruct: null,
+        inputStructName: 'MarkMessageAsReadInput',
+        outputStructName: null,
       },
     ],
   },
-  friend: {
+  {
+    key: 'friend',
     name: '好友 API',
-    apis: [
+    apiSpecs: [
       {
         endpoint: 'send_friend_nudge',
         description: '发送好友戳一戳',
-        inputStruct: 'SendFriendNudgeInput',
-        outputStruct: null,
+        inputStructName: 'SendFriendNudgeInput',
+        outputStructName: null,
       },
       {
         endpoint: 'send_profile_like',
         description: '发送名片点赞',
-        inputStruct: 'SendProfileLikeInput',
-        outputStruct: null,
+        inputStructName: 'SendProfileLikeInput',
+        outputStructName: null,
       },
       {
         endpoint: 'delete_friend',
         description: '删除好友',
-        inputStruct: 'DeleteFriendInput',
-        outputStruct: null,
+        inputStructName: 'DeleteFriendInput',
+        outputStructName: null,
       },
       {
         endpoint: 'get_friend_requests',
         description: '获取好友请求列表',
-        inputStruct: 'GetFriendRequestsInput',
-        outputStruct: 'GetFriendRequestsOutput',
+        inputStructName: 'GetFriendRequestsInput',
+        outputStructName: 'GetFriendRequestsOutput',
       },
       {
         endpoint: 'accept_friend_request',
         description: '同意好友请求',
-        inputStruct: 'AcceptFriendRequestInput',
-        outputStruct: null,
+        inputStructName: 'AcceptFriendRequestInput',
+        outputStructName: null,
       },
       {
         endpoint: 'reject_friend_request',
         description: '拒绝好友请求',
-        inputStruct: 'RejectFriendRequestInput',
-        outputStruct: null,
+        inputStructName: 'RejectFriendRequestInput',
+        outputStructName: null,
       },
     ],
   },
-  group: {
+  {
+    key: 'group',
     name: '群聊 API',
-    apis: [
+    apiSpecs: [
       {
         endpoint: 'set_group_name',
         description: '设置群名称',
-        inputStruct: 'SetGroupNameInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupNameInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_group_avatar',
         description: '设置群头像',
-        inputStruct: 'SetGroupAvatarInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupAvatarInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_group_member_card',
         description: '设置群名片',
-        inputStruct: 'SetGroupMemberCardInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupMemberCardInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_group_member_special_title',
         description: '设置群成员专属头衔',
-        inputStruct: 'SetGroupMemberSpecialTitleInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupMemberSpecialTitleInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_group_member_admin',
         description: '设置群管理员',
-        inputStruct: 'SetGroupMemberAdminInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupMemberAdminInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_group_member_mute',
         description: '设置群成员禁言',
-        inputStruct: 'SetGroupMemberMuteInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupMemberMuteInput',
+        outputStructName: null,
       },
       {
         endpoint: 'set_group_whole_mute',
         description: '设置群全员禁言',
-        inputStruct: 'SetGroupWholeMuteInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupWholeMuteInput',
+        outputStructName: null,
       },
       {
         endpoint: 'kick_group_member',
         description: '踢出群成员',
-        inputStruct: 'KickGroupMemberInput',
-        outputStruct: null,
+        inputStructName: 'KickGroupMemberInput',
+        outputStructName: null,
       },
       {
         endpoint: 'get_group_announcements',
         description: '获取群公告列表',
-        inputStruct: 'GetGroupAnnouncementsInput',
-        outputStruct: 'GetGroupAnnouncementsOutput',
+        inputStructName: 'GetGroupAnnouncementsInput',
+        outputStructName: 'GetGroupAnnouncementsOutput',
       },
       {
         endpoint: 'send_group_announcement',
         description: '发送群公告',
-        inputStruct: 'SendGroupAnnouncementInput',
-        outputStruct: null,
+        inputStructName: 'SendGroupAnnouncementInput',
+        outputStructName: null,
       },
       {
         endpoint: 'delete_group_announcement',
         description: '删除群公告',
-        inputStruct: 'DeleteGroupAnnouncementInput',
-        outputStruct: null,
+        inputStructName: 'DeleteGroupAnnouncementInput',
+        outputStructName: null,
       },
       {
         endpoint: 'get_group_essence_messages',
         description: '获取群精华消息列表',
-        inputStruct: 'GetGroupEssenceMessagesInput',
-        outputStruct: 'GetGroupEssenceMessagesOutput',
+        inputStructName: 'GetGroupEssenceMessagesInput',
+        outputStructName: 'GetGroupEssenceMessagesOutput',
       },
       {
         endpoint: 'set_group_essence_message',
         description: '设置群精华消息',
-        inputStruct: 'SetGroupEssenceMessageInput',
-        outputStruct: null,
+        inputStructName: 'SetGroupEssenceMessageInput',
+        outputStructName: null,
       },
       {
         endpoint: 'quit_group',
         description: '退出群',
-        inputStruct: 'QuitGroupInput',
-        outputStruct: null,
+        inputStructName: 'QuitGroupInput',
+        outputStructName: null,
       },
       {
         endpoint: 'send_group_message_reaction',
         description: '发送群消息表情回应',
-        inputStruct: 'SendGroupMessageReactionInput',
-        outputStruct: null,
+        inputStructName: 'SendGroupMessageReactionInput',
+        outputStructName: null,
       },
       {
         endpoint: 'send_group_nudge',
         description: '发送群戳一戳',
-        inputStruct: 'SendGroupNudgeInput',
-        outputStruct: null,
+        inputStructName: 'SendGroupNudgeInput',
+        outputStructName: null,
       },
       {
         endpoint: 'get_group_notifications',
         description: '获取群通知列表',
-        inputStruct: 'GetGroupNotificationsInput',
-        outputStruct: 'GetGroupNotificationsOutput',
+        inputStructName: 'GetGroupNotificationsInput',
+        outputStructName: 'GetGroupNotificationsOutput',
       },
       {
         endpoint: 'accept_group_request',
         description: '同意入群/邀请他人入群请求',
-        inputStruct: 'AcceptGroupRequestInput',
-        outputStruct: null,
+        inputStructName: 'AcceptGroupRequestInput',
+        outputStructName: null,
       },
       {
         endpoint: 'reject_group_request',
         description: '拒绝入群/邀请他人入群请求',
-        inputStruct: 'RejectGroupRequestInput',
-        outputStruct: null,
+        inputStructName: 'RejectGroupRequestInput',
+        outputStructName: null,
       },
       {
         endpoint: 'accept_group_invitation',
         description: '同意他人邀请自身入群',
-        inputStruct: 'AcceptGroupInvitationInput',
-        outputStruct: null,
+        inputStructName: 'AcceptGroupInvitationInput',
+        outputStructName: null,
       },
       {
         endpoint: 'reject_group_invitation',
         description: '拒绝他人邀请自身入群',
-        inputStruct: 'RejectGroupInvitationInput',
-        outputStruct: null,
+        inputStructName: 'RejectGroupInvitationInput',
+        outputStructName: null,
       },
     ],
   },
-  file: {
+  {
+    key: 'file',
     name: '文件 API',
-    apis: [
+    apiSpecs: [
       {
         endpoint: 'upload_private_file',
         description: '上传私聊文件',
-        inputStruct: 'UploadPrivateFileInput',
-        outputStruct: 'UploadPrivateFileOutput',
+        inputStructName: 'UploadPrivateFileInput',
+        outputStructName: 'UploadPrivateFileOutput',
       },
       {
         endpoint: 'upload_group_file',
         description: '上传群文件',
-        inputStruct: 'UploadGroupFileInput',
-        outputStruct: 'UploadGroupFileOutput',
+        inputStructName: 'UploadGroupFileInput',
+        outputStructName: 'UploadGroupFileOutput',
       },
       {
         endpoint: 'get_private_file_download_url',
         description: '获取私聊文件下载链接',
-        inputStruct: 'GetPrivateFileDownloadUrlInput',
-        outputStruct: 'GetPrivateFileDownloadUrlOutput',
+        inputStructName: 'GetPrivateFileDownloadUrlInput',
+        outputStructName: 'GetPrivateFileDownloadUrlOutput',
       },
       {
         endpoint: 'get_group_file_download_url',
         description: '获取群文件下载链接',
-        inputStruct: 'GetGroupFileDownloadUrlInput',
-        outputStruct: 'GetGroupFileDownloadUrlOutput',
+        inputStructName: 'GetGroupFileDownloadUrlInput',
+        outputStructName: 'GetGroupFileDownloadUrlOutput',
       },
       {
         endpoint: 'get_group_files',
         description: '获取群文件列表',
-        inputStruct: 'GetGroupFilesInput',
-        outputStruct: 'GetGroupFilesOutput',
+        inputStructName: 'GetGroupFilesInput',
+        outputStructName: 'GetGroupFilesOutput',
       },
       {
         endpoint: 'move_group_file',
         description: '移动群文件',
-        inputStruct: 'MoveGroupFileInput',
-        outputStruct: null,
+        inputStructName: 'MoveGroupFileInput',
+        outputStructName: null,
       },
       {
         endpoint: 'rename_group_file',
         description: '重命名群文件',
-        inputStruct: 'RenameGroupFileInput',
-        outputStruct: null,
+        inputStructName: 'RenameGroupFileInput',
+        outputStructName: null,
       },
       {
         endpoint: 'delete_group_file',
         description: '删除群文件',
-        inputStruct: 'DeleteGroupFileInput',
-        outputStruct: null,
+        inputStructName: 'DeleteGroupFileInput',
+        outputStructName: null,
       },
       {
         endpoint: 'create_group_folder',
         description: '创建群文件夹',
-        inputStruct: 'CreateGroupFolderInput',
-        outputStruct: 'CreateGroupFolderOutput',
+        inputStructName: 'CreateGroupFolderInput',
+        outputStructName: 'CreateGroupFolderOutput',
       },
       {
         endpoint: 'rename_group_folder',
         description: '重命名群文件夹',
-        inputStruct: 'RenameGroupFolderInput',
-        outputStruct: null,
+        inputStructName: 'RenameGroupFolderInput',
+        outputStructName: null,
       },
       {
         endpoint: 'delete_group_folder',
         description: '删除群文件夹',
-        inputStruct: 'DeleteGroupFolderInput',
-        outputStruct: null,
+        inputStructName: 'DeleteGroupFolderInput',
+        outputStructName: null,
       },
     ],
   },
-};
+];

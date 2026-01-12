@@ -1,8 +1,9 @@
 import StructRenderer from '@/component/StructRenderer';
-import { commonStructs } from '@/app/common';
+import { commonStructMap } from '@saltify/milky-common/src/common';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { ZodDiscriminatedUnion, ZodObject } from 'zod';
 import { Metadata } from 'next';
+import { MilkyStructName } from '@saltify/milky-types/namings';
 
 const Wrapper = getMDXComponents().wrapper;
 
@@ -14,19 +15,21 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   return {
-    title: `🥛 Milky | ${commonStructs[params.commonEntityName].description} (${params.commonEntityName})`,
+    title: `🥛 Milky | ${commonStructMap.get(params.commonEntityName as MilkyStructName)!.description} (${
+      params.commonEntityName
+    })`,
   };
 }
 
 export function generateStaticParams() {
-  return Object.keys(commonStructs).map((name) => ({
+  return Array.from(commonStructMap.keys()).map((name) => ({
     commonEntityName: name,
   }));
 }
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const entity = commonStructs[params.commonEntityName];
+  const entity = commonStructMap.get(params.commonEntityName as MilkyStructName)!;
   return (
     <Wrapper
       toc={

@@ -1,13 +1,9 @@
-import { commonStructs } from '@/app/common';
 import { Link } from 'nextra-theme-docs';
 import { Table } from 'nextra/components';
 import { JSX } from 'react';
 import { z } from 'zod';
 import { $ZodType } from 'zod/v4/core';
-
-const commonStructNames = new Map<$ZodType, string>(
-  Object.entries(commonStructs).map(([name, struct]) => [struct, name])
-);
+import { commonStructNameMap } from '@saltify/milky-common/src/common';
 
 function renderTypeName(type: $ZodType): JSX.Element | string {
   if (type instanceof z.ZodArray) {
@@ -51,21 +47,18 @@ function renderTypeName(type: $ZodType): JSX.Element | string {
   if (type instanceof z.ZodLazy) {
     return renderTypeName(type.unwrap());
   }
-  if (commonStructNames.has(type)) {
+  if (commonStructNameMap.has(type as z.ZodType)) {
     return renderCommonStructName(type);
   }
   return 'Unknown struct, consult the developers to register it';
 }
 
 function renderCommonStructName(type: $ZodType): JSX.Element {
-  const structName = commonStructNames.get(type)!;
+  const structName = commonStructNameMap.get(type as z.ZodType)!;
   return <Link href={`/struct/${structName}`}>{structName}</Link>;
 }
 
 function renderZodObject(struct: z.ZodObject) {
-  if (Object.keys(struct.shape).length === 0) {
-    return <p style={{ marginTop: '1rem' }}>此对象无字段，请传入 {'{}'}。</p>;
-  }
   return (
     <div style={{ marginTop: '1rem' }}>
       <Table>
@@ -157,7 +150,7 @@ function renderZodDiscriminatedUnion(struct: z.ZodDiscriminatedUnion) {
               </p>
               {option.shape.data instanceof z.ZodLazy ? (
                 <p style={{ marginTop: '1rem' }}>参见 {renderCommonStructName(option.shape.data.unwrap())}</p> // todo
-              ) : commonStructNames.has(option.shape.data) ? (
+              ) : commonStructNameMap.has(option.shape.data) ? (
                 <p style={{ marginTop: '1rem' }}>参见 {renderCommonStructName(option.shape.data)}</p>
               ) : (
                 <StructRenderer struct={option.shape.data} />

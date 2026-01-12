@@ -2,10 +2,12 @@ import { LastUpdated, Layout, Navbar } from 'nextra-theme-docs';
 import { getPageMap } from 'nextra/page-map';
 import 'nextra-theme-docs/style.css';
 import './styles.css';
-import { commonStructs, apiCategories } from './common';
+
 import { Banner, Head, Search } from 'nextra/components';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { Metadata } from 'next';
+import { apiSpecCategories } from '@saltify/milky-types/namings';
+import { commonStructMap } from '@saltify/milky-common/src/common';
 
 export const metadata: Metadata = {
   title: '🥛 Milky',
@@ -18,9 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <Head />
       <body>
         <Layout
-          banner={
-            <Banner storageKey={'milky-1.1.0'}>🎉 Milky 1.1 已发布！ 🎉</Banner>
-          }
+          banner={<Banner storageKey={'milky-1.1.0'}>🎉 Milky 1.1 已发布！ 🎉</Banner>}
           navbar={
             <Navbar
               logo={
@@ -32,23 +32,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             ></Navbar>
           }
           pageMap={[
-            ...(await getPageMap()).filter(p => !('route' in p) || p.route !== '/raw-preview'),
+            ...(await getPageMap()).filter((p) => !('route' in p) || p.route !== '/raw-preview'),
             {
               name: 'api',
               route: '/api',
               title: 'API',
-              children: Object.entries(apiCategories).map(([name, apiCategory]) => ({
-                name,
-                route: `/api/${name}`,
-                title: apiCategory.name,
+              children: apiSpecCategories.map((category) => ({
+                name: category.name,
+                route: `/api/${category.key}`,
+                title: category.name,
               })),
             },
             {
               name: 'struct',
               route: '/struct',
               title: '结构体',
-              children: Object.entries(commonStructs).map(([name, struct]) => ({
-                name,
+              children: Array.from(commonStructMap.entries()).map(([name, struct]) => ({
+                name: name,
                 route: `/struct/${name}`,
                 title: struct.description,
                 frontMater: {},
