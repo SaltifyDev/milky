@@ -44,6 +44,8 @@ export const IncomingSegment = z.discriminatedUnion('type', [
     data: z.object({
       message_seq: ZInt64.describe('被引用的消息序列号'),
       sender_id: ZUin.describe('被引用的消息发送者 QQ 号'),
+      sender_name: ZString.nullish().describe('被引用的消息发送者名称，仅在合并转发中能够获取'),
+      time: ZInt64.describe('被引用的消息的 Unix 时间戳（秒）'),
       get segments() {
         return z.array(z.lazy(() => IncomingSegment)).describe('被引用的消息内容');
       }
