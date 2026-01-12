@@ -127,6 +127,7 @@ export const IncomingSegment = z.discriminatedUnion('type', [
 ]).describe('接收消息段');
 
 export const IncomingForwardedMessage = z.object({
+  message_seq: ZInt64.describe('消息序列号'),
   sender_name: ZString.describe('发送者名称'),
   avatar_url: ZString.describe('发送者头像 URL'),
   time: ZInt64.describe('消息 Unix 时间戳（秒）'),
