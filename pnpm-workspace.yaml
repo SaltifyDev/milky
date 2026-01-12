@@ -1,5 +1,6 @@
 packages:
   - types
+  - common
   - docs
 
 onlyBuiltDependencies:

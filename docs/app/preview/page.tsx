@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import RawPreviewClient from './RawPreviewClient';
+import RawPreviewClient from '@/component/RawPreviewClient';
 
 export default function RawPreviewPage() {
   return (

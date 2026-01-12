@@ -1,5 +1,4 @@
-import {} from '@/app/common';
-import { generateIR } from '@/app/ir';
+import { generateIR } from '@saltify/milky-common/src/ir';
 
 export const dynamic = 'force-static';
 

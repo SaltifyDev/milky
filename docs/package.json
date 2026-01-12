@@ -9,6 +9,7 @@
     "postbuild": "pagefind --site .next/server/app --output-path out/_pagefind"
   },
   "dependencies": {
+    "@saltify/milky-common": "workspace:*",
     "@saltify/milky-types": "workspace:*",
     "next": "^16.1.1",
     "nextra": "^4.6.1",

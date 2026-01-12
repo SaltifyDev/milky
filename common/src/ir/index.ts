@@ -1,157 +1,21 @@
-import { commonStructs, apiCategories } from '@/app/common';
-import { z } from 'zod';
-import { $ZodType } from 'zod/v4/core';
+import { commonStructMap, commonStructNameMap } from '@common/common';
+import {
+  IR,
+  IRApi,
+  IRApiCategory,
+  IRField,
+  IRNestedUnionDerivedType,
+  IRNestedUnionStruct,
+  IRPlainUnionStruct,
+  IRStruct,
+} from './types';
+import z from 'zod';
+import * as schemaOf from '@saltify/milky-types';
 import { milkyVersion, milkyPackageVersion } from '@saltify/milky-types';
+import { apiSpecCategories, commonStructNames } from '@saltify/milky-types/namings';
+import { $ZodType } from 'zod/v4/core';
 
-export interface IR {
-  milkyVersion: string;
-  milkyPackageVersion: string;
-  commonStructs: IRStruct[];
-  apiCategories: IRApiCategory[];
-}
-
-// IR for structs
-
-export interface IRStructBase<T extends string> {
-  structType: T;
-  name: string;
-  description: string;
-}
-
-export interface IRSimpleStruct extends IRStructBase<'simple'> {
-  fields: IRField[];
-}
-
-export interface IRUnionStructBase<T extends string> extends IRStructBase<'union'> {
-  unionType: T;
-  tagFieldName: string;
-}
-
-export interface IRPlainUnionStruct extends IRUnionStructBase<'plain'> {
-  derivedStructs: {
-    tagValue: string;
-    description: string;
-    fields: IRField[];
-  }[];
-}
-
-export interface IRNestedUnionStruct extends IRUnionStructBase<'withData'> {
-  baseFields: IRField[];
-  derivedTypes: IRNestedUnionDerivedType[];
-}
-
-export interface IRNestedUnionDerivedTypeBase<T extends string> {
-  tagValue: string;
-  description: string;
-  derivingType: T;
-}
-
-export interface IRNestedUnionDerivedStructType extends IRNestedUnionDerivedTypeBase<'struct'> {
-  fields: IRField[];
-}
-
-export interface IRNestedUnionDerivedRefType extends IRNestedUnionDerivedTypeBase<'ref'> {
-  refStructName: string;
-}
-
-export type IRNestedUnionDerivedType = IRNestedUnionDerivedStructType | IRNestedUnionDerivedRefType;
-
-export type IRStruct = IRSimpleStruct | IRPlainUnionStruct | IRNestedUnionStruct;
-
-// IR for API
-
-export interface IRApiCategory {
-  key: string;
-  name: string;
-  apis: IRApi[];
-}
-
-export interface IRApi {
-  endpoint: string;
-  description: string;
-  requestFields?: IRField[];
-  responseFields?: IRField[];
-}
-
-// IR for fields
-
-export interface IRFieldBase<T extends string> {
-  fieldType: T;
-  name: string;
-  description: string;
-  isArray: boolean;
-  isOptional: boolean;
-  defaultValue?: any;
-}
-
-export interface IRScalarField extends IRFieldBase<'scalar'> {
-  scalarType: 'int32' | 'int64' | 'string' | 'bool';
-}
-
-export interface IREnumField extends IRFieldBase<'enum'> {
-  values: string[];
-}
-
-export interface IRRefField extends IRFieldBase<'ref'> {
-  refStructName: string;
-}
-
-export type IRField = IRScalarField | IREnumField | IRRefField;
-
-// Generating logic
-
-const commonStructNames = new Map<$ZodType, string>(
-  Object.entries(commonStructs).map(([name, struct]) => [struct, name])
-);
-
-export function generateIR(): IR {
-  const irStructs: IRStruct[] = Object.entries(commonStructs).map<IRStruct>(([name, schema]) => {
-    if (schema instanceof z.ZodObject) {
-      return {
-        structType: 'simple',
-        name,
-        description: schema.description ?? '',
-        fields: Object.entries(schema.shape).map(([fieldName, fieldType]) => irFieldFor(fieldName, fieldType)),
-      };
-    }
-    if (schema instanceof z.ZodDiscriminatedUnion) {
-      return irUnionStructFor(name, schema);
-    }
-    throw new Error('Unsupported schema type');
-  });
-
-  const irApiCategories: IRApiCategory[] = Object.entries(apiCategories).map<IRApiCategory>(([key, category]) => {
-    return {
-      key: key,
-      name: category.name,
-      apis: category.apis.map<IRApi>((api) => {
-        const inputStruct = api.inputStruct as z.ZodObject;
-        const outputStruct = api.outputStruct;
-        return {
-          endpoint: api.endpoint,
-          description: api.description,
-          requestFields:
-            Object.keys(inputStruct.shape).length > 0
-              ? Object.entries(inputStruct.shape).map(([fieldName, fieldType]) => irFieldFor(fieldName, fieldType))
-              : undefined,
-          responseFields:
-            outputStruct instanceof z.ZodObject
-              ? Object.entries(outputStruct.shape).map(([fieldName, fieldType]) => irFieldFor(fieldName, fieldType))
-              : undefined,
-        };
-      }),
-    };
-  });
-
-  return {
-    milkyVersion,
-    milkyPackageVersion,
-    commonStructs: irStructs,
-    apiCategories: irApiCategories,
-  };
-}
-
-export function irFieldFor(name: string, type: $ZodType): IRField {
+function irFieldFor(name: string, type: $ZodType): IRField {
   const field = irFieldForNoDesc(name, type);
   return {
     ...field,
@@ -159,7 +23,7 @@ export function irFieldFor(name: string, type: $ZodType): IRField {
   };
 }
 
-export function irFieldForNoDesc(name: string, type: $ZodType): IRField {
+function irFieldForNoDesc(name: string, type: $ZodType): IRField {
   if (type instanceof z.ZodArray) {
     const elementField = irFieldForNoDesc(name, type.element);
     return {
@@ -238,24 +102,21 @@ export function irFieldForNoDesc(name: string, type: $ZodType): IRField {
   if (type instanceof z.ZodLazy) {
     return irFieldForNoDesc(name, type.unwrap());
   }
-  if (commonStructNames.has(type)) {
+  if (commonStructNameMap.has(type as z.ZodType)) {
     return {
       fieldType: 'ref',
       name,
       description: '',
       isArray: false,
       isOptional: false,
-      refStructName: commonStructNames.get(type)!,
+      refStructName: commonStructNameMap.get(type as z.ZodType)!,
     };
   }
 
-  throw new Error('Unsupported schema type');
+  throw new Error(`Unsupported schema type: ${type.constructor.name} for field ${name}`);
 }
 
-export function irUnionStructFor(
-  name: string,
-  struct: z.ZodDiscriminatedUnion
-): IRPlainUnionStruct | IRNestedUnionStruct {
+function irUnionStructFor(name: string, struct: z.ZodDiscriminatedUnion): IRPlainUnionStruct | IRNestedUnionStruct {
   function isArrayEqual(arr1: string[], arr2: string[]): boolean {
     if (arr1.length !== arr2.length) {
       return false;
@@ -301,12 +162,12 @@ export function irUnionStructFor(
       baseFields: commonKeys.map((key) => irFieldFor(key, options[0].shape[key])),
       derivedTypes: options.map<IRNestedUnionDerivedType>((option) => {
         const dataField = option.shape['data'];
-        if (commonStructNames.has(dataField)) {
+        if (commonStructNameMap.has(dataField)) {
           return {
             tagValue: (option.shape[struct.def.discriminator] as z.ZodLiteral).value as string,
             description: option.description ?? '',
             derivingType: 'ref',
-            refStructName: commonStructNames.get(dataField)!,
+            refStructName: commonStructNameMap.get(dataField)!,
           };
         } else {
           return {
@@ -341,4 +202,53 @@ export function irUnionStructFor(
       }),
     };
   }
+}
+
+export function generateIR(): IR {
+  const irStructs: IRStruct[] = Array.from(commonStructMap).map<IRStruct>(([name, schema]) => {
+    if (schema instanceof z.ZodObject) {
+      return {
+        structType: 'simple',
+        name,
+        description: schema.description ?? '',
+        fields: Object.entries(schema.shape).map(([fieldName, fieldType]) => irFieldFor(fieldName, fieldType)),
+      };
+    }
+    if (schema instanceof z.ZodDiscriminatedUnion) {
+      return irUnionStructFor(name, schema);
+    }
+    throw new Error('Unsupported schema type');
+  });
+
+  const irApiCategories: IRApiCategory[] = apiSpecCategories.map<IRApiCategory>((category) => {
+    return {
+      key: category.key,
+      name: category.name,
+      apis: category.apiSpecs.map<IRApi>((spec) => {
+        return {
+          endpoint: spec.endpoint,
+          description: spec.description,
+          requestFields:
+            spec.inputStructName !== null
+              ? Object.entries((schemaOf[spec.inputStructName] as z.ZodObject).shape).map(([fieldName, fieldType]) =>
+                  irFieldFor(fieldName, fieldType)
+                )
+              : undefined,
+          responseFields:
+            spec.outputStructName !== null
+              ? Object.entries((schemaOf[spec.outputStructName] as z.ZodObject).shape).map(([fieldName, fieldType]) =>
+                  irFieldFor(fieldName, fieldType)
+                )
+              : undefined,
+        };
+      }),
+    };
+  });
+
+  return {
+    milkyVersion,
+    milkyPackageVersion,
+    commonStructs: irStructs,
+    apiCategories: irApiCategories,
+  };
 }

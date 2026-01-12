@@ -9,9 +9,9 @@
       "import": "./src/index.ts",
       "types": "./src/index.ts"
     },
-    "./api": {
-      "import": "./src/api-endpoints.ts",
-      "types": "./src/api-endpoints.ts"
+    "./namings": {
+      "import": "./src/namings.ts",
+      "types": "./src/namings.ts"
     }
   },
   "publishConfig": {
@@ -22,9 +22,9 @@
         "import": "./dist/index.mjs",
         "types": "./dist/index.d.mts"
       },
-      "./api": {
-        "import": "./dist/api-endpoints.mjs",
-        "types": "./dist/api-endpoints.d.mts"
+      "./namings": {
+        "import": "./dist/namings.mjs",
+        "types": "./dist/namings.d.mts"
       }
     }
   },
