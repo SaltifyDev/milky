@@ -1,0 +1,16 @@
+{
+  "name": "@saltify/milky-common",
+  "type": "module",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@saltify/milky-types": "workspace:*",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "eslint-config-prettier": "^10.1.8"
+  }
+}

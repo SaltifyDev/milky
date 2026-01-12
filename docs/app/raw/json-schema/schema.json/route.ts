@@ -1,18 +1,7 @@
-import {} from '@/app/common';
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
-import z from 'zod';
+import { generateJsonSchema } from '@saltify/milky-common/src/generator/json-schema';
 
 export const dynamic = 'force-static';
 
 export function GET() {
-  return new Response(
-    JSON.stringify({
-      milkyVersion: milkyVersion,
-      packageVersion: milkyPackageVersion,
-      schemas: z.toJSONSchema(z.globalRegistry, {
-        metadata: z.globalRegistry,
-        io: 'input',
-      }).schemas,
-    })
-  );
+  return new Response(JSON.stringify(generateJsonSchema()));
 }

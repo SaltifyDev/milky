@@ -1,8 +1,10 @@
 import StructRenderer from '@/component/StructRenderer';
-import { apiCategories } from '@/app/common';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
-import { ZodVoid } from 'zod';
 import { Metadata } from 'next';
+import { generateIR } from '@saltify/milky-common/src/ir';
+
+const ir = generateIR();
+const apiCategoryMap = new Map(ir.apiCategories.map((category) => [category.key, category]));
 
 const Wrapper = getMDXComponents().wrapper;
 
@@ -14,25 +16,25 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   return {
-    title: `🥛 Milky | ${apiCategories[params.apiCategoryId].name}`,
+    title: `🥛 Milky | ${apiCategoryMap.get(params.apiCategoryId)!.name}`,
   };
 }
 
 export function generateStaticParams() {
-  return Object.keys(apiCategories).map((name) => ({
-    apiCategoryId: name,
+  return ir.apiCategories.map((category) => ({
+    apiCategoryId: category.key,
   }));
 }
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const apiCategory = apiCategories[params.apiCategoryId];
+  const apiCategory = apiCategoryMap.get(params.apiCategoryId)!;
   return (
     <Wrapper
-      toc={apiCategory.apis.map((api) => ({
+      toc={apiCategory.apis.map((spec) => ({
         depth: 2,
-        value: api.description,
-        id: api.endpoint,
+        value: spec.description,
+        id: spec.endpoint,
       }))}
       metadata={{
         title: apiCategory.name,
@@ -52,10 +54,10 @@ export default async function Page(props: Props) {
           gap: '2rem',
         }}
       >
-        {apiCategory.apis.map((api) => (
+        {apiCategory.apis.map((spec) => (
           <div
-            id={api.endpoint}
-            key={api.endpoint}
+            id={spec.endpoint}
+            key={spec.endpoint}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -65,19 +67,37 @@ export default async function Page(props: Props) {
               className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
               style={{ fontSize: '1.75rem', marginBottom: '0.5em' }}
             >
-              <b>{api.endpoint}</b> {api.description}
+              <b>{spec.endpoint}</b> {spec.description}
             </p>
             <p style={{ fontSize: '1.25rem', marginTop: '0.5em' }}>
               <b>输入参数</b>
             </p>
-            <StructRenderer struct={api.inputStruct} />
+            {spec.requestFields === undefined ? (
+              <p style={{ marginTop: '1em' }}>此 API 无输入参数，请应用端传入 {'{}'}。</p>
+            ) : (
+              <StructRenderer
+                struct={{
+                  structType: 'simple',
+                  name: `${spec.endpoint}-request`,
+                  description: '',
+                  fields: spec.requestFields,
+                }}
+              />
+            )}
             <p style={{ fontSize: '1.25rem', marginTop: '1em' }}>
               <b>输出参数</b>
             </p>
-            {api.outputStruct instanceof ZodVoid ? (
+            {spec.responseFields === undefined ? (
               <p style={{ marginTop: '1em' }}>此 API 无输出参数，请协议端传入 {'{}'}。</p>
             ) : (
-              <StructRenderer struct={api.outputStruct} />
+              <StructRenderer
+                struct={{
+                  structType: 'simple',
+                  name: `${spec.endpoint}-response`,
+                  description: '',
+                  fields: spec.responseFields,
+                }}
+              />
             )}
           </div>
         ))}
