@@ -1,10 +1,10 @@
 import StructRenderer from '@/component/StructRenderer';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { Metadata } from 'next';
+import { generateIR } from '@saltify/milky-common/src/ir';
 
-import * as schemaOf from '@saltify/milky-types';
-import { apiSpecCategories } from '@saltify/milky-types/namings';
-import z from 'zod';
+const ir = generateIR();
+const apiCategoryMap = new Map(ir.apiCategories.map((category) => [category.key, category]));
 
 const Wrapper = getMDXComponents().wrapper;
 
@@ -16,22 +16,22 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   return {
-    title: `🥛 Milky | ${apiSpecCategories.find((category) => category.key === params.apiCategoryId)!.name}`,
+    title: `🥛 Milky | ${apiCategoryMap.get(params.apiCategoryId)!.name}`,
   };
 }
 
 export function generateStaticParams() {
-  return apiSpecCategories.map((category) => ({
+  return ir.apiCategories.map((category) => ({
     apiCategoryId: category.key,
   }));
 }
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const apiCategory = apiSpecCategories.find((category) => category.key === params.apiCategoryId)!;
+  const apiCategory = apiCategoryMap.get(params.apiCategoryId)!;
   return (
     <Wrapper
-      toc={apiCategory.apiSpecs.map((spec) => ({
+      toc={apiCategory.apis.map((spec) => ({
         depth: 2,
         value: spec.description,
         id: spec.endpoint,
@@ -54,7 +54,7 @@ export default async function Page(props: Props) {
           gap: '2rem',
         }}
       >
-        {apiCategory.apiSpecs.map((spec) => (
+        {apiCategory.apis.map((spec) => (
           <div
             id={spec.endpoint}
             key={spec.endpoint}
@@ -72,18 +72,32 @@ export default async function Page(props: Props) {
             <p style={{ fontSize: '1.25rem', marginTop: '0.5em' }}>
               <b>输入参数</b>
             </p>
-            {spec.inputStructName === null ? (
+            {spec.requestFields === undefined ? (
               <p style={{ marginTop: '1em' }}>此 API 无输入参数，请应用端传入 {'{}'}。</p>
             ) : (
-              <StructRenderer struct={schemaOf[spec.inputStructName] as z.ZodType} />
+              <StructRenderer
+                struct={{
+                  structType: 'simple',
+                  name: `${spec.endpoint}-request`,
+                  description: '',
+                  fields: spec.requestFields,
+                }}
+              />
             )}
             <p style={{ fontSize: '1.25rem', marginTop: '1em' }}>
               <b>输出参数</b>
             </p>
-            {spec.outputStructName === null ? (
+            {spec.responseFields === undefined ? (
               <p style={{ marginTop: '1em' }}>此 API 无输出参数，请协议端传入 {'{}'}。</p>
             ) : (
-              <StructRenderer struct={schemaOf[spec.outputStructName] as z.ZodType} />
+              <StructRenderer
+                struct={{
+                  structType: 'simple',
+                  name: `${spec.endpoint}-response`,
+                  description: '',
+                  fields: spec.responseFields,
+                }}
+              />
             )}
           </div>
         ))}

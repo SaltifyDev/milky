@@ -1,9 +1,10 @@
 import StructRenderer from '@/component/StructRenderer';
-import { commonStructMap } from '@saltify/milky-common/src/common';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
-import { ZodDiscriminatedUnion, ZodObject } from 'zod';
 import { Metadata } from 'next';
-import { MilkyStructName } from '@saltify/milky-types/namings';
+import { generateIR } from '@saltify/milky-common/src/ir';
+
+const ir = generateIR();
+const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
 
 const Wrapper = getMDXComponents().wrapper;
 
@@ -14,10 +15,9 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
+  const struct = commonStructMap.get(params.commonEntityName)!;
   return {
-    title: `🥛 Milky | ${commonStructMap.get(params.commonEntityName as MilkyStructName)!.description} (${
-      params.commonEntityName
-    })`,
+    title: `🥛 Milky | ${struct.description} (${params.commonEntityName})`,
   };
 }
 
@@ -29,22 +29,22 @@ export function generateStaticParams() {
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const entity = commonStructMap.get(params.commonEntityName as MilkyStructName)!;
+  const entity = commonStructMap.get(params.commonEntityName)!;
   return (
     <Wrapper
       toc={
-        entity instanceof ZodDiscriminatedUnion
-          ? entity.options.map((option) => {
-              if (!(option instanceof ZodObject)) {
-                throw new Error(`Expected ZodObject, but got ${option.constructor.name}`);
-              }
-              const discriminatorValue = option.shape[entity.def.discriminator].value;
-              return {
+        entity.structType === 'union'
+          ? entity.unionType === 'plain'
+            ? entity.derivedStructs.map((option) => ({
                 depth: 2,
-                value: option.description,
-                id: `type-${discriminatorValue}`,
-              };
-            })
+                value: option.description || option.tagValue,
+                id: `type-${option.tagValue}`,
+              }))
+            : entity.derivedTypes.map((derived) => ({
+                depth: 2,
+                value: derived.description || derived.tagValue,
+                id: `type-${derived.tagValue}`,
+              }))
           : []
       }
       metadata={{

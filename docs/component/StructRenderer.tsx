@@ -1,64 +1,83 @@
 import { Link } from 'nextra-theme-docs';
 import { Table } from 'nextra/components';
 import { JSX } from 'react';
-import { z } from 'zod';
-import { $ZodType } from 'zod/v4/core';
-import { commonStructNameMap } from '@saltify/milky-common/src/common';
+import {
+  IRField,
+  IRNestedUnionDerivedStructType,
+  IRNestedUnionStruct,
+  IRPlainUnionStruct,
+  IRScalarField,
+  IRStruct,
+} from '@saltify/milky-common/src/ir/types';
 
-function renderTypeName(type: $ZodType): JSX.Element | string {
-  if (type instanceof z.ZodArray) {
-    return <>{renderTypeName(type.element)}[]</>;
+function renderMarkdownCode(text: string): JSX.Element {
+  const codeRegex = /`([\s\S]*?)`/g;
+  const result = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeRegex.exec(text)) !== null) {
+    const precedingText = text.slice(lastIndex, match.index);
+    if (precedingText) {
+      result.push(precedingText);
+    }
+    const codeContent = match[1];
+    result.push(
+      <code className="nextra-code" key={match.index}>
+        {codeContent}
+      </code>
+    );
+    lastIndex = match.index + match[0].length;
   }
-  if (type instanceof z.ZodNumber) {
-    return (type.meta()?.scalarType as string | undefined) ?? 'int32';
+
+  const remainingText = text.slice(lastIndex);
+  if (remainingText) {
+    result.push(remainingText);
   }
-  if (type instanceof z.ZodBoolean) {
+
+  return <>{result.map((result) => result)}</>;
+}
+
+function renderScalarTypeName(scalarType: IRScalarField['scalarType']) {
+  if (scalarType === 'bool') {
     return 'boolean';
   }
-  if (type instanceof z.ZodString) {
-    return 'string';
+  return scalarType;
+}
+
+function renderBaseTypeName(field: IRField): JSX.Element | string {
+  if (field.fieldType === 'scalar') {
+    return renderScalarTypeName(field.scalarType);
   }
-  if (type instanceof z.ZodEnum) {
-    return type.options.map((e) => JSON.stringify(e)).join(' | ');
+  if (field.fieldType === 'enum') {
+    return 'enum';
   }
-  if (type instanceof z.ZodNullable) {
-    return renderTypeName(type.unwrap());
-  }
-  if (type instanceof z.ZodPipe) {
-    return renderTypeName(type.def.in);
-  }
-  if (type instanceof z.ZodOptional) {
-    return <>{renderTypeName(type.unwrap())} (optional)</>;
-  }
-  if (type instanceof z.ZodDefault) {
-    let unwrapped = type.unwrap();
-    if (unwrapped instanceof z.ZodOptional) {
-      unwrapped = unwrapped.unwrap();
-    }
-    if (unwrapped instanceof z.ZodNullable) {
-      unwrapped = unwrapped.unwrap();
-    }
-    return (
-      <>
-        {renderTypeName(unwrapped)} (default: {JSON.stringify(type.def.defaultValue)})
-      </>
-    );
-  }
-  if (type instanceof z.ZodLazy) {
-    return renderTypeName(type.unwrap());
-  }
-  if (commonStructNameMap.has(type as z.ZodType)) {
-    return renderCommonStructName(type);
+  if (field.fieldType === 'ref') {
+    return <Link href={`/struct/${field.refStructName}`}>{field.refStructName}</Link>;
   }
   return 'Unknown struct, consult the developers to register it';
 }
 
-function renderCommonStructName(type: $ZodType): JSX.Element {
-  const structName = commonStructNameMap.get(type as z.ZodType)!;
-  return <Link href={`/struct/${structName}`}>{structName}</Link>;
+function renderTypeName(field: IRField): JSX.Element | string {
+  let typeName: JSX.Element | string = renderBaseTypeName(field);
+  if (field.isArray) {
+    typeName = <>{typeName}[]</>;
+  }
+  if (field.isOptional) {
+    typeName = (
+      <>
+        {typeName}
+        <b>?</b>
+      </>
+    );
+  }
+  return typeName;
 }
 
-function renderZodObject(struct: z.ZodObject) {
+function renderFieldsTable(fields: IRField[]) {
+  if (fields.length === 0) {
+    return <p style={{ marginTop: '1rem' }}>此结构体无字段。</p>;
+  }
   return (
     <div style={{ marginTop: '1rem' }}>
       <Table>
@@ -69,154 +88,142 @@ function renderZodObject(struct: z.ZodObject) {
             <Table.Th>描述</Table.Th>
           </Table.Tr>
         </thead>
-        <tbody>{Object.entries<z.ZodType>(struct.shape).map(([key, value]) => renderZodObjectRow(key, value))}</tbody>
+        <tbody>{fields.map((field) => renderFieldRow(field))}</tbody>
       </Table>
     </div>
   );
 }
 
-function renderZodObjectRow(key: string, ztype: z.ZodType) {
+function renderFieldRow(field: IRField) {
+  let description = field.description;
+  if (field.fieldType === 'enum') {
+    description += `，可能值：${field.values.map((v) => `\`${v}\``).join(' ')}`;
+  }
+  if (field.defaultValue !== undefined) {
+    description += `，默认值：\`${field.defaultValue}\``;
+  }
   return (
-    <Table.Tr key={key}>
-      <Table.Td>{key}</Table.Td>
-      <Table.Td>{renderTypeName(ztype)}</Table.Td>
-      <Table.Td>{ztype.description}</Table.Td>
+    <Table.Tr key={field.name}>
+      <Table.Td>{field.name}</Table.Td>
+      <Table.Td>{renderTypeName(field)}</Table.Td>
+      <Table.Td>{renderMarkdownCode(description)}</Table.Td>
     </Table.Tr>
   );
 }
 
-function renderZodDiscriminatedUnion(struct: z.ZodDiscriminatedUnion) {
-  const keysList = struct.options.map((option) => {
-    if (option instanceof z.ZodObject) {
-      return Object.keys(option.shape);
-    } else {
-      throw new Error('Expected ZodDiscriminatedUnion to contain ZodObject');
-    }
-  });
-  // Check if all options have the same keys
-  if (keysList.every((keys) => keys.length === keysList[0].length && keys.every((key) => keysList[0].includes(key)))) {
-    if (!keysList[0].includes('data')) {
-      throw new Error('Expected all options to have a "data" field');
-    }
-    const commonKeys = keysList[0].filter((key) => key !== 'data' && key !== struct.def.discriminator);
-    const firstOption = struct.options[0];
-    if (!(firstOption instanceof z.ZodObject)) {
-      throw new Error('Expected first option to be a ZodObject');
-    }
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          marginTop: '1rem',
-          gap: '1rem',
-        }}
-      >
-        <Table>
-          <thead>
-            <Table.Tr>
-              <Table.Th>字段名</Table.Th>
-              <Table.Th>类型</Table.Th>
-              <Table.Th>描述</Table.Th>
-            </Table.Tr>
-          </thead>
-          <tbody>
-            <Table.Tr>
-              <Table.Td>{struct.def.discriminator}</Table.Td>
-              <Table.Td>string</Table.Td>
-              <Table.Td>类型区分字段</Table.Td>
-            </Table.Tr>
-            {commonKeys.map((key) => renderZodObjectRow(key, firstOption.shape[key]))}
-            <Table.Tr>
-              <Table.Td>data</Table.Td>
-              <Table.Td>object</Table.Td>
-              <Table.Td>与 {struct.def.discriminator} 有关</Table.Td>
-            </Table.Tr>
-          </tbody>
-        </Table>
-        <p>data 在不同 {struct.def.discriminator} 下的具体类型如下：</p>
-        {struct.options.map((option) => {
-          if (!(option instanceof z.ZodObject)) {
-            throw new Error('Expected option to be a ZodObject');
-          }
-          const discriminatorValue = (option.shape[struct.def.discriminator] as z.ZodLiteral).value as string;
-          return (
-            <div id={`type-${discriminatorValue}`} key={discriminatorValue} style={{ marginTop: '2rem' }}>
-              <p
-                className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
-                style={{ fontSize: '1.75rem' }}
-              >
-                <b>{discriminatorValue}</b> {option.description}
-              </p>
-              {option.shape.data instanceof z.ZodLazy ? (
-                <p style={{ marginTop: '1rem' }}>参见 {renderCommonStructName(option.shape.data.unwrap())}</p> // todo
-              ) : commonStructNameMap.has(option.shape.data) ? (
-                <p style={{ marginTop: '1rem' }}>参见 {renderCommonStructName(option.shape.data)}</p>
-              ) : (
-                <StructRenderer struct={option.shape.data} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  } else {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          marginTop: '1rem',
-          gap: '1rem',
-        }}
-      >
-        <p>可能的类型如下：</p>
-        {struct.options.map((option) => {
-          if (!(option instanceof z.ZodObject)) {
-            throw new Error('Expected option to be a ZodObject');
-          }
-          const discriminatorValue = (option.shape[struct.def.discriminator] as z.ZodLiteral).value as string;
-          return (
-            <div id={`type-${discriminatorValue}`} key={discriminatorValue} style={{ marginTop: '2rem' }}>
-              <p
-                className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
-                style={{ fontSize: '1.75rem' }}
-              >
-                <b>{discriminatorValue}</b> {option.description}
-              </p>
-              <Table style={{ marginTop: '1rem' }}>
-                <thead>
-                  <Table.Tr>
-                    <Table.Th>字段名</Table.Th>
-                    <Table.Th>类型</Table.Th>
-                    <Table.Th>描述</Table.Th>
-                  </Table.Tr>
-                </thead>
-                <tbody>
-                  <Table.Tr>
-                    <Table.Td>{struct.def.discriminator}</Table.Td>
-                    <Table.Td>&quot;{discriminatorValue}&quot;</Table.Td>
-                    <Table.Td>表示{option.description}</Table.Td>
-                  </Table.Tr>
-                  {Object.entries<z.ZodType>(option.shape)
-                    .filter(([key]) => key !== struct.def.discriminator)
-                    .map(([key, value]) => renderZodObjectRow(key, value))}
-                </tbody>
-              </Table>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
+function renderPlainUnionStruct(struct: IRPlainUnionStruct) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        marginTop: '1rem',
+        gap: '1rem',
+      }}
+    >
+      <p>可能的类型如下：</p>
+      {struct.derivedStructs.map((option) => (
+        <div id={`type-${option.tagValue}`} key={option.tagValue} style={{ marginTop: '2rem' }}>
+          <p
+            className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
+            style={{ fontSize: '1.75rem' }}
+          >
+            <b>{option.tagValue}</b> {option.description}
+          </p>
+          <Table style={{ marginTop: '1rem' }}>
+            <thead>
+              <Table.Tr>
+                <Table.Th>字段名</Table.Th>
+                <Table.Th>类型</Table.Th>
+                <Table.Th>描述</Table.Th>
+              </Table.Tr>
+            </thead>
+            <tbody>
+              <Table.Tr>
+                <Table.Td>{struct.tagFieldName}</Table.Td>
+                <Table.Td>string</Table.Td>
+                <Table.Td>
+                  固定值 <code className="nextra-code">{option.tagValue}</code>，表示{option.description}
+                </Table.Td>
+              </Table.Tr>
+              {option.fields.map((field) => renderFieldRow(field))}
+            </tbody>
+          </Table>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-export default function StructRenderer(props: { struct: z.ZodType }) {
-  if (props.struct instanceof z.ZodObject) {
-    return renderZodObject(props.struct);
+function renderDerivedStruct(derived: IRNestedUnionDerivedStructType) {
+  return renderFieldsTable(derived.fields);
+}
+
+function renderNestedUnionStruct(struct: IRNestedUnionStruct) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        marginTop: '1rem',
+        gap: '1rem',
+      }}
+    >
+      <Table>
+        <thead>
+          <Table.Tr>
+            <Table.Th>字段名</Table.Th>
+            <Table.Th>类型</Table.Th>
+            <Table.Th>描述</Table.Th>
+          </Table.Tr>
+        </thead>
+        <tbody>
+          <Table.Tr>
+            <Table.Td>{struct.tagFieldName}</Table.Td>
+            <Table.Td>string</Table.Td>
+            <Table.Td>类型区分字段</Table.Td>
+          </Table.Tr>
+          {struct.baseFields.map((field) => renderFieldRow(field))}
+          <Table.Tr>
+            <Table.Td>data</Table.Td>
+            <Table.Td>object</Table.Td>
+            <Table.Td>与 {struct.tagFieldName} 有关</Table.Td>
+          </Table.Tr>
+        </tbody>
+      </Table>
+      <p>data 在不同 {struct.tagFieldName} 下的具体类型如下：</p>
+      {struct.derivedTypes.map((derived) => (
+        <div id={`type-${derived.tagValue}`} key={derived.tagValue} style={{ marginTop: '2rem' }}>
+          <p
+            className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
+            style={{ fontSize: '1.75rem' }}
+          >
+            <b>{derived.tagValue}</b> {derived.description}
+          </p>
+          {derived.derivingType === 'ref' ? (
+            <p style={{ marginTop: '1rem' }}>
+              参见 <Link href={`/struct/${derived.refStructName}`}>{derived.refStructName}</Link>
+            </p>
+          ) : (
+            renderDerivedStruct(derived)
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function StructRenderer(props: { struct: IRStruct }) {
+  if (props.struct.structType === 'simple') {
+    return renderFieldsTable(props.struct.fields);
   }
-  if (props.struct instanceof z.ZodDiscriminatedUnion) {
-    return renderZodDiscriminatedUnion(props.struct);
+  if (props.struct.structType === 'union') {
+    if (props.struct.unionType === 'plain') {
+      return renderPlainUnionStruct(props.struct);
+    }
+    if (props.struct.unionType === 'withData') {
+      return renderNestedUnionStruct(props.struct);
+    }
   }
   return <>unsupported type</>;
 }
