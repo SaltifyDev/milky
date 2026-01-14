@@ -2,7 +2,7 @@ import globals from 'globals';
 import pluginJs from '@eslint/js';
 import prettierConfig from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
-import path from 'node:path';
+import { resolve, dirname } from 'node:path';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -12,7 +12,7 @@ export default [
     languageOptions: {
       globals: globals.node,
       parserOptions: {
-        tsconfigRootDir: path.dirname(import.meta.url.replace('file://', '')),
+        tsconfigRootDir: resolve(dirname(import.meta.url.replace('file://', ''))),
       },
     },
   },
