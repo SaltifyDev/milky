@@ -47,7 +47,7 @@ export default function RawPreviewClient() {
   const [state, setState] = useState<FetchState>({
     content: '',
     error: null,
-    loading: false,
+    loading: true,
   });
   const pathWithOrigin = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -57,18 +57,12 @@ export default function RawPreviewClient() {
   const [pathCopySuccess, setPathCopySuccess] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!rawPath) {
-      setState({ content: '', error: '请提供 path 查询参数。', loading: false });
-      return;
-    }
-    if (!isValidPath(rawPath)) {
-      setState({ content: '', error: 'path 不合法，请使用相对路径且不要包含 .. 。', loading: false });
+    if (!rawPath || !isValidPath(rawPath)) {
       return;
     }
 
     const url = buildRawUrl(rawPath);
     let cancelled = false;
-    setState((prev) => ({ ...prev, loading: true, error: null }));
     fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error(`请求失败: ${res.status}`);
@@ -108,7 +102,11 @@ export default function RawPreviewClient() {
       >
         <b>Raw Preview</b>
       </p>
-      {state.loading ? (
+      {!rawPath ? (
+        <div>请提供 path 查询参数。</div>
+      ) : !isValidPath(rawPath) ? (
+        <div>path 不合法，请使用相对路径且不要包含 .. 。</div>
+      ) : state.loading ? (
         <div>Loading...</div>
       ) : state.error ? (
         <div style={{ color: '#b42318' }}>{state.error}</div>

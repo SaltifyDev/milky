@@ -7,7 +7,6 @@ import { resolve, dirname } from 'node:path';
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   { files: ['**/*.{js,mjs,cjs,ts}'] },
-  prettierConfig,
   {
     languageOptions: {
       globals: globals.node,
@@ -25,6 +24,7 @@ export default [
       indent: ['error', 2],
     },
   },
+  prettierConfig,
   {
     ignores: ['node_modules', '**/lib', '**/out', '**/dist'],
   },
