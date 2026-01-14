@@ -1,4 +1,4 @@
-import { IRField, IRStruct } from '@common/ir/types';
+import { IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@common/ir/types';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { generateIR } from '@common/ir';
 
@@ -76,6 +76,9 @@ function renderIRSimpleStruct(name: string, fields: IRField[], description: stri
   const entries = fields;
   const lines: string[] = [];
 
+  if (description) {
+    lines.push(...formatDocComment(description));
+  }
   lines.push('@freezed');
   lines.push(`abstract class ${className} with _$${className} {`);
   if (entries.length === 0) {
@@ -96,17 +99,16 @@ function renderIRSimpleStruct(name: string, fields: IRField[], description: stri
   return lines.join('\n');
 }
 
-function renderIRUnionStruct(struct: IRStruct): { union: string; extraDefs: string[] } {
-  if (struct.structType !== 'union') {
-    throw new Error('Expected union struct');
-  }
-
+function renderIRUnionStruct(struct: IRPlainUnionStruct | IRNestedUnionStruct): { union: string; extraDefs: string[] } {
   const name = struct.name;
   const className = toUpperCamelCase(name);
   const lines: string[] = [];
   const extraDefs: string[] = [];
   const discriminator = struct.tagFieldName;
 
+  if (struct.description) {
+    lines.push(...formatDocComment(struct.description));
+  }
   lines.push(`@Freezed(unionKey: "${discriminator}")`);
   lines.push(`abstract class ${className} with _$${className} {`);
 
