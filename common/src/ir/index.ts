@@ -12,7 +12,7 @@ import {
 import z from 'zod';
 import * as schemaOf from '@saltify/milky-types';
 import { milkyVersion, milkyPackageVersion } from '@saltify/milky-types';
-import { apiSpecCategories, commonStructNames } from '@saltify/milky-types/namings';
+import { apiSpecCategories } from '@saltify/milky-types/namings';
 import { $ZodType } from 'zod/v4/core';
 
 function irFieldFor(name: string, type: $ZodType): IRField {

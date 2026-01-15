@@ -1,8 +1,9 @@
-import { commonStructNames, apiSpecCategories } from '@saltify/milky-types/namings';
+import { apiSpecCategories } from '@saltify/milky-types/namings';
 import z from 'zod';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 
 function sanitizeSchema(schema: Record<string, unknown>) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { $schema, ...rest } = schema;
   return rest;
 }
