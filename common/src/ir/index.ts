@@ -31,6 +31,16 @@ function irFieldForNoDesc(name: string, type: $ZodType): IRField {
       isArray: true,
     };
   }
+  if (commonStructNameMap.has(type as z.ZodType)) {
+    return {
+      fieldType: 'ref',
+      name,
+      description: '',
+      isArray: false,
+      isOptional: false,
+      refStructName: commonStructNameMap.get(type as z.ZodType)!,
+    };
+  }
   if (type instanceof z.ZodNumber) {
     const scalarType = type.meta()?.scalarType === 'int64' ? 'int64' : 'int32';
     return {
@@ -78,6 +88,9 @@ function irFieldForNoDesc(name: string, type: $ZodType): IRField {
   if (type instanceof z.ZodPipe) {
     return irFieldForNoDesc(name, type.def.in);
   }
+  if (type instanceof z.ZodCatch) {
+    return irFieldForNoDesc(name, type.unwrap());
+  }
   if (type instanceof z.ZodOptional) {
     const innerField = irFieldForNoDesc(name, type.unwrap());
     return {
@@ -101,16 +114,6 @@ function irFieldForNoDesc(name: string, type: $ZodType): IRField {
   }
   if (type instanceof z.ZodLazy) {
     return irFieldForNoDesc(name, type.unwrap());
-  }
-  if (commonStructNameMap.has(type as z.ZodType)) {
-    return {
-      fieldType: 'ref',
-      name,
-      description: '',
-      isArray: false,
-      isOptional: false,
-      refStructName: commonStructNameMap.get(type as z.ZodType)!,
-    };
   }
 
   throw new Error(`Unsupported schema type: ${type.constructor.name} for field ${name}`);
@@ -206,16 +209,20 @@ function irUnionStructFor(name: string, struct: z.ZodDiscriminatedUnion): IRPlai
 
 export function generateIR(): IR {
   const irStructs: IRStruct[] = Array.from(commonStructMap).map<IRStruct>(([name, schema]) => {
-    if (schema instanceof z.ZodObject) {
+    let s: $ZodType = schema;
+    if (s instanceof z.ZodCatch) {
+      s = s.unwrap();
+    }
+    if (s instanceof z.ZodObject) {
       return {
         structType: 'simple',
         name,
-        description: schema.description ?? '',
-        fields: Object.entries(schema.shape).map(([fieldName, fieldType]) => irFieldFor(fieldName, fieldType)),
+        description: s.description ?? '',
+        fields: Object.entries(s.shape).map(([fieldName, fieldType]) => irFieldFor(fieldName, fieldType)),
       };
     }
-    if (schema instanceof z.ZodDiscriminatedUnion) {
-      return irUnionStructFor(name, schema);
+    if (s instanceof z.ZodDiscriminatedUnion) {
+      return irUnionStructFor(name, s);
     }
     throw new Error('Unsupported schema type');
   });

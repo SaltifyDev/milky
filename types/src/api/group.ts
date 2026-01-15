@@ -11,6 +11,7 @@ import {
 } from '../scalar';
 import { GroupAnnouncementEntity, GroupNotification } from '../common';
 import { GroupEssenceMessage } from '../message';
+import { ZRobustArray } from '../robust';
 
 export const SetGroupNameInput = z.object({
   group_id: ZUin.describe('群号'),
@@ -116,7 +117,7 @@ export const GetGroupNotificationsInput = z.object({
 });
 
 export const GetGroupNotificationsOutput = z.object({
-  notifications: z.array(z.lazy(() => GroupNotification)).describe('获取到的群通知（notification_seq 降序排列），序列号不一定连续'),
+  notifications: ZRobustArray(GroupNotification).describe('获取到的群通知（notification_seq 降序排列），序列号不一定连续'),
   next_notification_seq: ZInt64.nullish().describe('下一页起始通知序列号'),
 });
 

@@ -124,7 +124,12 @@ export const IncomingSegment = z.discriminatedUnion('type', [
       xml_payload: ZString.describe('XML 数据'),
     }),
   }).describe('XML 消息段'),
-]).describe('接收消息段');
+]).catch({
+  type: 'text',
+  data: {
+    text: '[unknown]'
+  }
+}).describe('接收消息段');
 
 export const IncomingForwardedMessage = z.object({
   message_seq: ZInt64.describe('消息序列号'),

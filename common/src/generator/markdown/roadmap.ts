@@ -30,8 +30,9 @@ export function generateMarkdownRoadmap(): string {
   l();
   l('### 接收消息段 (IncomingSegment)');
   l();
-  IncomingSegment.options.forEach((option) => {
-    l(`- [ ] \`${option.shape[IncomingSegment.def.discriminator].value}\` ${option.description}`);
+  const incomingSegment = IncomingSegment.unwrap();
+  incomingSegment.options.forEach((option) => {
+    l(`- [ ] \`${option.shape[incomingSegment.def.discriminator].value}\` ${option.description}`);
   });
   l();
   l('### 发送消息段 (OutgoingSegment)');
