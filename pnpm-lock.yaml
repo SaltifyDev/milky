@@ -21,7 +21,7 @@ importers:
         specifier: ^17.0.0
         version: 17.0.0
       tsdown:
-        specifier: 0.19.0
+        specifier: ^0.19.0
         version: 0.19.0(@typescript/native-preview@7.0.0-dev.20260114.1)(typescript@5.9.3)
       tsx:
         specifier: ^4.21.0
