@@ -1,4 +1,4 @@
-import { IRField, IRStruct } from '@common/ir/types';
+import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@common/ir/types';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { generateIR } from '@common/ir';
 
@@ -51,6 +51,7 @@ function getKotlinTypeSpec(field: IRField): string {
 }
 
 function renderIRObject(
+  ir: IR,
   name: string,
   fields: IRField[],
   description: string,
@@ -70,6 +71,13 @@ function renderIRObject(
   fields.forEach((field) => {
     const defaultValue = field.defaultValue !== undefined ? JSON.stringify(field.defaultValue) : null;
     l(`    /** ${field.description ?? ''} */`);
+    if (field.fieldType === 'ref' && field.isArray) {
+      if (field.refStructName === 'IncomingSegment') {
+        l('    @Serializable(with = TransformUnknownSegmentListSerializer::class)');
+      } else if (ir.commonStructs.find((s) => s.name === field.refStructName)?.structType === 'union') {
+        l('    @Serializable(with = DropBadElementListSerializer::class)');
+      }
+    }
     l(
       `    @SerialName("${field.name}")${
         defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
@@ -80,11 +88,7 @@ function renderIRObject(
   return lines.join('\n');
 }
 
-function renderIRUnionStruct(struct: IRStruct): string {
-  if (struct.structType !== 'union') {
-    throw new Error('Expected union struct');
-  }
-
+function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionStruct) {
   const name = struct.name;
   const lines: string[] = [];
   function l(line: string = '') {
@@ -120,7 +124,7 @@ function renderIRUnionStruct(struct: IRStruct): string {
       l(`    ) : ${toUpperCamelCase(name)}()`);
       if (derivedType.derivingType === 'struct') {
         a(' {');
-        l(indentLines(renderIRObject('Data', derivedType.fields, '', false), '        '));
+        l(indentLines(renderIRObject(ir, 'Data', derivedType.fields, '', false), '        '));
         l('    }');
       }
       if (index !== struct.derivedTypes.length - 1) {
@@ -134,7 +138,7 @@ function renderIRUnionStruct(struct: IRStruct): string {
       }
       l(
         indentLines(
-          renderIRObject(derivedStruct.tagValue, derivedStruct.fields, '', false, [
+          renderIRObject(ir, derivedStruct.tagValue, derivedStruct.fields, '', false, [
             `@SerialName("${derivedStruct.tagValue}")`,
           ]),
           '    '
@@ -162,8 +166,10 @@ export function generateKotlinxSerializationSpec(): string {
   l();
   l('package org.ntqqrev.milky');
   l();
-  l('import kotlinx.serialization.Serializable');
   l('import kotlinx.serialization.*');
+  l('import kotlinx.serialization.builtins.*');
+  l('import kotlinx.serialization.descriptors.*');
+  l('import kotlinx.serialization.encoding.*');
   l('import kotlinx.serialization.json.*');
   l();
   l(`const val milkyVersion = "${milkyVersion}"`);
@@ -177,15 +183,89 @@ export function generateKotlinxSerializationSpec(): string {
   l('    explicitNulls = false');
   l('}');
   l();
+  l(
+    `
+internal class DropBadElementListSerializer<T>(private val elementSerializer: KSerializer<T>) : KSerializer<List<T>> {
+    val listSerializer = ListSerializer(elementSerializer)
+
+    override val descriptor: SerialDescriptor =
+        listSerializer.descriptor
+
+    override fun serialize(encoder: Encoder, value: List<T>) {
+        encoder.encodeSerializableValue(listSerializer, value)
+    }
+
+    override fun deserialize(decoder: Decoder): List<T> {
+        if (decoder !is JsonDecoder) {
+            throw SerializationException("This serializer can be used only with Json format")
+        }
+
+        val element = decoder.decodeJsonElement() as? JsonArray
+            ?: throw SerializationException("Expected JsonArray for List deserialization")
+
+        val out = ArrayList<T>(element.size)
+        for (e in element) {
+            try {
+                out += decoder.json.decodeFromJsonElement(elementSerializer, e)
+            } catch (_: SerializationException) {
+                // discard bad element quietly
+            }
+        }
+        return out
+    }
+}
+    `.trim()
+  );
+  l();
+  l(
+    `
+internal class TransformUnknownSegmentListSerializer(private val elementSerializer: KSerializer<IncomingSegment>) :
+    KSerializer<List<IncomingSegment>> {
+
+    val listSerializer = ListSerializer(elementSerializer)
+
+    override val descriptor: SerialDescriptor =
+        listSerializer.descriptor
+
+    override fun serialize(encoder: Encoder, value: List<IncomingSegment>) {
+        encoder.encodeSerializableValue(listSerializer, value)
+    }
+
+    override fun deserialize(decoder: Decoder): List<IncomingSegment> {
+        if (decoder !is JsonDecoder) {
+            throw SerializationException("This serializer can be used only with Json format")
+        }
+
+        val element = decoder.decodeJsonElement() as? JsonArray
+            ?: throw SerializationException("Expected JsonArray for List deserialization")
+
+        val out = ArrayList<IncomingSegment>(element.size)
+        for (e in element) {
+            out += try {
+                decoder.json.decodeFromJsonElement(elementSerializer, e)
+            } catch (_: SerializationException) {
+                IncomingSegment.Text(
+                    data = IncomingSegment.Text.Data(
+                        text = "[\${e.jsonObject["type"]!!.jsonPrimitive.content}]"
+                    )
+                )
+            }
+        }
+        return out
+    }
+}
+    `.trim()
+  );
+  l();
   l('// ####################################');
   l('// Common Structs');
   l('// ####################################');
   l();
   ir.commonStructs.forEach((struct) => {
     if (struct.structType === 'simple') {
-      l(renderIRObject(struct.name, struct.fields, struct.description));
+      l(renderIRObject(ir, struct.name, struct.fields, struct.description));
     } else {
-      l(renderIRUnionStruct(struct));
+      l(renderIRUnionStruct(ir, struct));
     }
     l();
   });
@@ -209,13 +289,13 @@ export function generateKotlinxSerializationSpec(): string {
     l();
     category.apis.forEach((api) => {
       if (api.requestFields && api.requestFields.length > 0) {
-        l(renderIRObject(`${toUpperCamelCase(api.endpoint)}Input`, api.requestFields, '', false));
+        l(renderIRObject(ir, `${toUpperCamelCase(api.endpoint)}Input`, api.requestFields, '', false));
       } else {
         l(`typealias ${toUpperCamelCase(api.endpoint)}Input = ApiEmptyStruct`);
       }
       l();
       if (api.responseFields) {
-        l(renderIRObject(`${toUpperCamelCase(api.endpoint)}Output`, api.responseFields, '', false));
+        l(renderIRObject(ir, `${toUpperCamelCase(api.endpoint)}Output`, api.responseFields, '', false));
       } else {
         l(`typealias ${toUpperCamelCase(api.endpoint)}Output = ApiEmptyStruct`);
       }

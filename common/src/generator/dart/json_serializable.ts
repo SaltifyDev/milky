@@ -1,4 +1,4 @@
-import { IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@common/ir/types';
+import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@common/ir/types';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { generateIR } from '@common/ir';
 
@@ -30,6 +30,121 @@ function resolveDefaultValue(value: unknown): unknown {
   return value;
 }
 
+function collectArrayUnionRefs(ir: IR): Set<string> {
+  const unionStructNames = new Set(
+    ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name)
+  );
+  const arrayUnionRefs = new Set<string>();
+
+  const handleFields = (fields: IRField[]) => {
+    fields.forEach((field) => {
+      if (field.fieldType === 'ref' && field.isArray && unionStructNames.has(field.refStructName)) {
+        arrayUnionRefs.add(field.refStructName);
+      }
+    });
+  };
+
+  ir.commonStructs.forEach((struct) => {
+    if (struct.structType === 'simple') {
+      handleFields(struct.fields);
+      return;
+    }
+    if (struct.unionType === 'withData') {
+      handleFields(struct.baseFields);
+      struct.derivedTypes.forEach((derivedType) => {
+        if (derivedType.derivingType === 'struct') {
+          handleFields(derivedType.fields);
+        }
+      });
+      return;
+    }
+    struct.derivedStructs.forEach((derivedStruct) => {
+      handleFields(derivedStruct.fields);
+    });
+  });
+
+  ir.apiCategories.forEach((category) => {
+    category.apis.forEach((api) => {
+      if (api.requestFields) {
+        handleFields(api.requestFields);
+      }
+      if (api.responseFields) {
+        handleFields(api.responseFields);
+      }
+    });
+  });
+
+  return arrayUnionRefs;
+}
+
+function renderDropBadElementListHelper(typeName: string): string {
+  const className = toUpperCamelCase(typeName);
+  return [
+    `List<${className}> _dropBad${className}ListFromJson(Object? json) {`,
+    `  if (json == null) {`,
+    `    return const <${className}>[];`,
+    `  }`,
+    `  if (json is! List) {`,
+    `    throw FormatException('Expected a list for ${className}');`,
+    `  }`,
+    `  final List<${className}> output = [];`,
+    `  for (final element in json) {`,
+    `    try {`,
+    `      if (element is Map<String, dynamic>) {`,
+    `        output.add(${className}.fromJson(element));`,
+    `      } else if (element is Map) {`,
+    `        output.add(${className}.fromJson(Map<String, dynamic>.from(element)));`,
+    `      }`,
+    `    } catch (_) {`,
+    `      // Skip invalid or unknown variants.`,
+    `    }`,
+    `  }`,
+    `  return output;`,
+    `}`,
+  ].join('\n');
+}
+
+function renderIncomingSegmentListHelper(): string {
+  return [
+    'IncomingSegment _unknownIncomingSegment(Object? element) {',
+    "  var typeValue = 'unknown';",
+    '  if (element is Map) {',
+    "    final rawType = element['type'];",
+    '    if (rawType != null) {',
+    '      typeValue = rawType.toString();',
+    '    }',
+    '  }',
+    '  return IncomingSegment.text(',
+    '    data: IncomingSegmentTextData(',
+    "      text: '[${typeValue}]',",
+    '    ),',
+    '  );',
+    '}',
+    '',
+    'List<IncomingSegment> _incomingSegmentListFromJson(Object? json) {',
+    '  if (json == null) {',
+    '    return const <IncomingSegment>[];',
+    '  }',
+    '  if (json is! List) {',
+    "    throw FormatException('Expected a list for IncomingSegment');",
+    '  }',
+    '  final List<IncomingSegment> output = [];',
+    '  for (final element in json) {',
+    '    try {',
+    '      if (element is Map<String, dynamic>) {',
+    '        output.add(IncomingSegment.fromJson(element));',
+    '      } else if (element is Map) {',
+    '        output.add(IncomingSegment.fromJson(Map<String, dynamic>.from(element)));',
+    '      }',
+    '    } catch (_) {',
+    '      output.add(_unknownIncomingSegment(element));',
+    '    }',
+    '  }',
+    '  return output;',
+    '}',
+  ].join('\n');
+}
+
 function getDartTypeSpec(field: IRField): string {
   let baseType: string;
   if (field.fieldType === 'scalar') {
@@ -49,7 +164,7 @@ function getDartTypeSpec(field: IRField): string {
   return field.isArray ? `List<${baseType}>` : baseType;
 }
 
-function renderFieldLines(key: string, field: IRField, typeOverride?: string): string[] {
+function renderFieldLines(key: string, field: IRField, unionStructNames: Set<string>, typeOverride?: string): string[] {
   const lines: string[] = [];
   const fieldName = toLowerCamelCase(key);
   const description = field.description;
@@ -58,6 +173,15 @@ function renderFieldLines(key: string, field: IRField, typeOverride?: string): s
   const isNullable = field.isOptional && !hasDefault;
   const dartType = isNullable ? `${baseType}?` : baseType;
   const isRequired = !isNullable && !hasDefault;
+  const jsonKeyParts = [`name: "${key}"`];
+
+  if (field.fieldType === 'ref' && field.isArray) {
+    if (field.refStructName === 'IncomingSegment') {
+      jsonKeyParts.push('fromJson: _incomingSegmentListFromJson');
+    } else if (unionStructNames.has(field.refStructName)) {
+      jsonKeyParts.push(`fromJson: _dropBad${toUpperCamelCase(field.refStructName)}ListFromJson`);
+    }
+  }
 
   if (description) {
     formatDocComment(description).forEach((line) => lines.push(line));
@@ -65,13 +189,18 @@ function renderFieldLines(key: string, field: IRField, typeOverride?: string): s
   if (hasDefault) {
     lines.push(`@Default(${formatDartLiteral(resolveDefaultValue(field.defaultValue))})`);
   }
-  lines.push(`@JsonKey(name: "${key}")`);
+  lines.push(`@JsonKey(${jsonKeyParts.join(', ')})`);
   lines.push(`${isRequired ? 'required ' : ''}${dartType} ${fieldName},`);
 
   return lines;
 }
 
-function renderIRSimpleStruct(name: string, fields: IRField[], description: string): string {
+function renderIRSimpleStruct(
+  name: string,
+  fields: IRField[],
+  description: string,
+  unionStructNames: Set<string>
+): string {
   const className = toUpperCamelCase(name);
   const entries = fields;
   const lines: string[] = [];
@@ -86,7 +215,7 @@ function renderIRSimpleStruct(name: string, fields: IRField[], description: stri
   } else {
     lines.push(`  const factory ${className}({`);
     entries.forEach((field) => {
-      renderFieldLines(field.name, field).forEach((line) => {
+      renderFieldLines(field.name, field, unionStructNames).forEach((line) => {
         lines.push(`    ${line}`);
       });
     });
@@ -99,7 +228,10 @@ function renderIRSimpleStruct(name: string, fields: IRField[], description: stri
   return lines.join('\n');
 }
 
-function renderIRUnionStruct(struct: IRPlainUnionStruct | IRNestedUnionStruct): { union: string; extraDefs: string[] } {
+function renderIRUnionStruct(
+  struct: IRPlainUnionStruct | IRNestedUnionStruct,
+  unionStructNames: Set<string>
+): { union: string; extraDefs: string[] } {
   const name = struct.name;
   const className = toUpperCamelCase(name);
   const lines: string[] = [];
@@ -123,13 +255,13 @@ function renderIRUnionStruct(struct: IRPlainUnionStruct | IRNestedUnionStruct): 
         dataTypeName = toUpperCamelCase(derivedType.refStructName);
       } else {
         dataTypeName = `${className}${toUpperCamelCase(variantValue)}Data`;
-        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, ''));
+        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, '', unionStructNames));
       }
 
       lines.push(`  @FreezedUnionValue("${variantValue}")`);
       lines.push(`  const factory ${className}.${variantConstructor}({`);
       struct.baseFields.forEach((field) => {
-        renderFieldLines(field.name, field).forEach((line) => {
+        renderFieldLines(field.name, field, unionStructNames).forEach((line) => {
           lines.push(`    ${line}`);
         });
       });
@@ -141,7 +273,7 @@ function renderIRUnionStruct(struct: IRPlainUnionStruct | IRNestedUnionStruct): 
         isOptional: false,
         refStructName: dataTypeName,
       };
-      renderFieldLines('data', dataField, dataTypeName).forEach((line) => {
+      renderFieldLines('data', dataField, unionStructNames, dataTypeName).forEach((line) => {
         lines.push(`    ${line}`);
       });
       lines.push(`  }) = ${variantClassName};`);
@@ -158,7 +290,7 @@ function renderIRUnionStruct(struct: IRPlainUnionStruct | IRNestedUnionStruct): 
       lines.push(`  @FreezedUnionValue("${variantValue}")`);
       lines.push(`  const factory ${className}.${variantConstructor}({`);
       derivedStruct.fields.forEach((field) => {
-        renderFieldLines(field.name, field).forEach((line) => {
+        renderFieldLines(field.name, field, unionStructNames).forEach((line) => {
           lines.push(`    ${line}`);
         });
       });
@@ -179,6 +311,10 @@ function renderIRUnionStruct(struct: IRPlainUnionStruct | IRNestedUnionStruct): 
 export function generateDartJsonSerializableSpec(): string {
   const lines: string[] = [];
   const ir = generateIR();
+  const unionStructNames = new Set(
+    ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name)
+  );
+  const arrayUnionRefs = collectArrayUnionRefs(ir);
   function l(line: string = '') {
     lines.push(line);
   }
@@ -194,6 +330,16 @@ export function generateDartJsonSerializableSpec(): string {
   l(`const milkyVersion = "${milkyVersion}";`);
   l(`const milkyPackageVersion = "${milkyPackageVersion}";`);
   l();
+  if (arrayUnionRefs.has('IncomingSegment')) {
+    l(renderIncomingSegmentListHelper());
+    l();
+  }
+  Array.from(arrayUnionRefs)
+    .filter((name) => name !== 'IncomingSegment')
+    .forEach((name) => {
+      l(renderDropBadElementListHelper(name));
+      l();
+    });
   l('@freezed');
   l('abstract class ApiGeneralResponse with _$ApiGeneralResponse {');
   l('  const factory ApiGeneralResponse({');
@@ -219,9 +365,9 @@ export function generateDartJsonSerializableSpec(): string {
   l();
   ir.commonStructs.forEach((struct) => {
     if (struct.structType === 'simple') {
-      l(renderIRSimpleStruct(struct.name, struct.fields, struct.description));
+      l(renderIRSimpleStruct(struct.name, struct.fields, struct.description, unionStructNames));
     } else {
-      const rendered = renderIRUnionStruct(struct);
+      const rendered = renderIRUnionStruct(struct, unionStructNames);
       l(rendered.union);
       if (rendered.extraDefs.length > 0) {
         l();
@@ -245,14 +391,14 @@ export function generateDartJsonSerializableSpec(): string {
     category.apis.forEach((api) => {
       const inputName = `${toUpperCamelCase(api.endpoint)}Input`;
       if (api.requestFields && api.requestFields.length > 0) {
-        l(renderIRSimpleStruct(inputName, api.requestFields, ''));
+        l(renderIRSimpleStruct(inputName, api.requestFields, '', unionStructNames));
       } else {
         l(`typedef ${inputName} = ApiEmptyStruct;`);
       }
       l();
       const outputName = `${toUpperCamelCase(api.endpoint)}Output`;
       if (api.responseFields && api.responseFields.length > 0) {
-        l(renderIRSimpleStruct(outputName, api.responseFields, ''));
+        l(renderIRSimpleStruct(outputName, api.responseFields, '', unionStructNames));
       } else if (api.responseFields) {
         l(`typedef ${outputName} = ApiEmptyStruct;`);
       } else {
