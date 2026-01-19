@@ -23,7 +23,7 @@ export const IncomingSegment = z.discriminatedUnion('type', [
     type: z.literal('mention'),
     data: z.object({
       user_id: ZUin.describe('提及的 QQ 号'),
-      name: ZString.describe('提及的名称，由 `@` 开头'),
+      name: ZString.describe('去掉 `@` 前缀的提及的名称'),
     }),
   }).describe('提及消息段'),
 
