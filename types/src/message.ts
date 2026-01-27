@@ -206,6 +206,13 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
       summary: ZString.nullish().describe('合并转发摘要'),
     }),
   }).describe('合并转发消息段'),
+
+  z.object({
+    type: z.literal('light_app'),
+    data: z.object({
+      json_payload: ZString.describe('小程序 JSON 数据'),
+    }),
+  }).describe('小程序消息段'),
 ]).describe('发送消息段');
 
 export const OutgoingForwardedMessage = z.object({
