@@ -119,7 +119,11 @@ function irFieldForNoDesc(name: string, type: $ZodType): IRField {
   throw new Error(`Unsupported schema type: ${type.constructor.name} for field ${name}`);
 }
 
-function irUnionStructFor(name: string, struct: z.ZodDiscriminatedUnion): IRPlainUnionStruct | IRNestedUnionStruct {
+function irUnionStructFor(
+  name: string,
+  description: string,
+  struct: z.ZodDiscriminatedUnion
+): IRPlainUnionStruct | IRNestedUnionStruct {
   function isArrayEqual(arr1: string[], arr2: string[]): boolean {
     if (arr1.length !== arr2.length) {
       return false;
@@ -160,7 +164,7 @@ function irUnionStructFor(name: string, struct: z.ZodDiscriminatedUnion): IRPlai
       structType: 'union',
       unionType: 'withData',
       name,
-      description: struct.description ?? '',
+      description,
       tagFieldName: struct.def.discriminator,
       baseFields: commonKeys.map((key) => irFieldFor(key, options[0].shape[key])),
       derivedTypes: options.map<IRNestedUnionDerivedType>((option) => {
@@ -209,20 +213,21 @@ function irUnionStructFor(name: string, struct: z.ZodDiscriminatedUnion): IRPlai
 
 export function generateIR(): IR {
   const irStructs: IRStruct[] = Array.from(commonStructMap).map<IRStruct>(([name, schema]) => {
-    let s: $ZodType = schema;
+    let s: z.ZodType = schema;
+    const description: string = s.description ?? '';
     if (s instanceof z.ZodCatch) {
-      s = s.unwrap();
+      s = s.unwrap() as z.ZodType;
     }
     if (s instanceof z.ZodObject) {
       return {
         structType: 'simple',
         name,
-        description: s.description ?? '',
+        description,
         fields: Object.entries(s.shape).map(([fieldName, fieldType]) => irFieldFor(fieldName, fieldType)),
       };
     }
     if (s instanceof z.ZodDiscriminatedUnion) {
-      return irUnionStructFor(name, s);
+      return irUnionStructFor(name, description, s);
     }
     throw new Error('Unsupported schema type');
   });
