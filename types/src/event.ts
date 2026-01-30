@@ -15,6 +15,12 @@ export const MessageRecallEvent = z.object({
   display_suffix: ZString.describe('撤回提示的后缀文本'),
 });
 
+export const PeerPinChangeEvent = z.object({
+  message_scene: z.enum(['friend', 'group', 'temp']).describe('发生改变的会话的消息场景'),
+  peer_id: ZUin.describe('发生改变的好友 QQ 号或群号'),
+  is_pinned: ZBoolean.describe('是否被置顶, `false` 表示取消置顶'),
+});
+
 export const FriendRequestEvent = z.object({
   initiator_id: ZUin.describe('申请好友的用户 QQ 号'),
   initiator_uid: ZString.describe('用户 UID'),
@@ -155,6 +161,13 @@ export const Event = z.discriminatedUnion('event_type', [
   }).describe('消息撤回事件'),
 
   z.object({
+    event_type: z.literal('peer_pin_change'),
+    time: ZInt64.describe('事件 Unix 时间戳（秒）'),
+    self_id: ZUin.describe('机器人 QQ 号'),
+    data: PeerPinChangeEvent,
+  }).describe('会话置顶变更事件'),
+
+  z.object({
     event_type: z.literal('friend_request'),
     time: ZInt64.describe('事件 Unix 时间戳（秒）'),
     self_id: ZUin.describe('机器人 QQ 号'),
@@ -269,6 +282,7 @@ export const Event = z.discriminatedUnion('event_type', [
 
 export type BotOfflineEvent = z.infer<typeof BotOfflineEvent>;
 export type MessageRecallEvent = z.infer<typeof MessageRecallEvent>;
+export type PeerPinChangeEvent = z.infer<typeof PeerPinChangeEvent>;
 export type FriendRequestEvent = z.infer<typeof FriendRequestEvent>;
 export type GroupJoinRequestEvent = z.infer<typeof GroupJoinRequestEvent>;
 export type GroupInvitedJoinRequestEvent = z.infer<typeof GroupInvitedJoinRequestEvent>;
