@@ -101,7 +101,8 @@ export const QuitGroupInput = z.object({
 export const SendGroupMessageReactionInput = z.object({
   group_id: ZUin.describe('群号'),
   message_seq: ZInt64.describe('要回应的消息序列号'),
-  reaction: ZString.describe('表情 ID'),
+  reaction: ZString.describe('发送的回应的表情 ID'),
+  reaction_type: z.enum(['face', 'emoji']).default('face').describe('发送的回应类型'),
   is_add: ZBooleanWithDefault(true).describe('是否添加表情，`false` 表示取消'),
 });
 
