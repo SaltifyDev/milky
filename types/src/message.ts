@@ -204,6 +204,7 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
       title: ZString.nullish().describe('合并转发标题'),
       preview: z.array(ZString).min(1).max(4).nullish().describe('合并转发预览文本，若提供，至少 1 条，至多 4 条'),
       summary: ZString.nullish().describe('合并转发摘要'),
+      prompt: ZString.nullish().describe('合并转发的预览外显文本，仅对移动端 QQ 有效'),
     }),
   }).describe('合并转发消息段'),
 
