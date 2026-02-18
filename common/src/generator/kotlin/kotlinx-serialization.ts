@@ -96,23 +96,27 @@ function renderIRObject(
   }
   l('@Serializable');
   additionalAnnotations.forEach((annotation) => l(annotation));
-  l(`class ${toUpperCamelCase(name)}(`);
-  fields.forEach((field) => {
-    const needsOverride = overrideFields.has(field.name);
-    const defaultValue = field.defaultValue !== undefined ? JSON.stringify(field.defaultValue) : null;
-    const overridePrefix = needsOverride ? 'override ' : '';
+  if (fields.length > 0) {
+    l(`data class ${toUpperCamelCase(name)}(`);
+    fields.forEach((field) => {
+      const needsOverride = overrideFields.has(field.name);
+      const defaultValue = field.defaultValue !== undefined ? JSON.stringify(field.defaultValue) : null;
+      const overridePrefix = needsOverride ? 'override ' : '';
 
-    l(`    /** ${field.description ?? ''} */`);
+      l(`    /** ${field.description ?? ''} */`);
 
-    renderFieldAnnotations(ir, field, l);
+      renderFieldAnnotations(ir, field, l);
 
-    l(
-      `    @SerialName("${field.name}")${
-        defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
-      } ${overridePrefix}val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, needsOverride)},`
-    );
-  });
-  l(')');
+      l(
+        `    @SerialName("${field.name}")${
+          defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
+        } ${overridePrefix}val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, needsOverride)},`
+      );
+    });
+    l(')');
+  } else {
+    l(`class ${toUpperCamelCase(name)}`);
+  }
   return lines.join('\n');
 }
 
@@ -168,7 +172,7 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       }
       l('    @Serializable');
       l(`    @SerialName("${derivedType.tagValue}")`);
-      l(`    class ${variantName}(`);
+      l(`    data class ${variantName}(`);
       struct.baseFields.forEach((field) => {
         l(`        /** ${field.description ?? ''} */`);
 
@@ -339,7 +343,7 @@ internal class TransformUnknownSegmentListSerializer(private val elementSerializ
   l('// ####################################');
   l();
   l('@Serializable');
-  l('class ApiGeneralResponse(');
+  l('data class ApiGeneralResponse(');
   l('    @SerialName("status") val status: String,');
   l('    @SerialName("retcode") val retcode: Int,');
   l('    @SerialName("data") val data: JsonElement? = null,');
