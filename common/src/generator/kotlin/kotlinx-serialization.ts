@@ -22,7 +22,7 @@ function escapeString(str: string): string {
   return str.replace(/"/g, '\\"');
 }
 
-function getKotlinTypeSpec(field: IRField): string {
+function getKotlinTypeSpec(field: IRField, skipDefaultValue: boolean = false): string {
   let baseType: string;
   if (field.fieldType === 'scalar') {
     if (field.scalarType === 'bool') {
@@ -41,6 +41,9 @@ function getKotlinTypeSpec(field: IRField): string {
   }
 
   const typeSpec = field.isArray ? `List<${baseType}>` : baseType;
+  if (skipDefaultValue) {
+    return field.isOptional ? `${typeSpec}?` : typeSpec;
+  }
   if (field.defaultValue !== undefined) {
     return `${typeSpec} = ${JSON.stringify(field.defaultValue)}`;
   }
@@ -50,13 +53,39 @@ function getKotlinTypeSpec(field: IRField): string {
   return typeSpec;
 }
 
+function isSameField(f1: IRField, f2: IRField): boolean {
+  if (f1.name !== f2.name) return false;
+  if (f1.fieldType !== f2.fieldType) return false;
+  if (f1.isArray !== f2.isArray) return false;
+  if (f1.isOptional !== f2.isOptional) return false;
+
+  if (f1.fieldType === 'scalar' && f2.fieldType === 'scalar') {
+    return f1.scalarType === f2.scalarType;
+  }
+  if (f1.fieldType === 'ref' && f2.fieldType === 'ref') {
+    return f1.refStructName === f2.refStructName;
+  }
+  return true;
+}
+
+function renderFieldAnnotations(ir: IR, field: IRField, l: (line: string) => void) {
+  if (field.fieldType === 'ref' && field.isArray) {
+    if (field.refStructName === 'IncomingSegment') {
+      l('    @Serializable(with = TransformUnknownSegmentListSerializer::class)');
+    } else if (ir.commonStructs.find((s) => s.name === field.refStructName)?.structType === 'union') {
+      l('    @Serializable(with = DropBadElementListSerializer::class)');
+    }
+  }
+}
+
 function renderIRObject(
   ir: IR,
   name: string,
   fields: IRField[],
   description: string,
   includeDesc = true,
-  additionalAnnotations: string[] = []
+  additionalAnnotations: string[] = [],
+  overrideFields: Set<string> = new Set()
 ): string {
   const lines: string[] = [];
   function l(line: string = '') {
@@ -69,19 +98,18 @@ function renderIRObject(
   additionalAnnotations.forEach((annotation) => l(annotation));
   l(`class ${toUpperCamelCase(name)}(`);
   fields.forEach((field) => {
+    const needsOverride = overrideFields.has(field.name);
     const defaultValue = field.defaultValue !== undefined ? JSON.stringify(field.defaultValue) : null;
+    const overridePrefix = needsOverride ? 'override ' : '';
+
     l(`    /** ${field.description ?? ''} */`);
-    if (field.fieldType === 'ref' && field.isArray) {
-      if (field.refStructName === 'IncomingSegment') {
-        l('    @Serializable(with = TransformUnknownSegmentListSerializer::class)');
-      } else if (ir.commonStructs.find((s) => s.name === field.refStructName)?.structType === 'union') {
-        l('    @Serializable(with = DropBadElementListSerializer::class)');
-      }
-    }
+
+    renderFieldAnnotations(ir, field, l);
+
     l(
       `    @SerialName("${field.name}")${
         defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
-      } val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field)},`
+      } ${overridePrefix}val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, needsOverride)},`
     );
   });
   l(')');
@@ -105,6 +133,32 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
 
   l(`@JsonClassDiscriminator("${struct.tagFieldName}")`);
   l(`sealed class ${toUpperCamelCase(name)} {`);
+
+  let commonFields: IRField[] = [];
+
+  if (struct.unionType === 'withData') {
+    commonFields = struct.baseFields || [];
+  } else {
+    if (struct.derivedStructs.length > 0) {
+      commonFields = [...struct.derivedStructs[0].fields];
+      for (let i = 1; i < struct.derivedStructs.length; i++) {
+        const currentStructFields = struct.derivedStructs[i].fields;
+        commonFields = commonFields.filter((f1) => currentStructFields.some((f2) => isSameField(f1, f2)));
+      }
+    }
+  }
+
+  const commonFieldNames = new Set<string>();
+
+  if (commonFields.length > 0) {
+    commonFields.forEach((field) => {
+      commonFieldNames.add(field.name);
+      l(`    /** ${field.description ?? ''} */`);
+      l(`    abstract val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)}`);
+    });
+    l();
+  }
+
   if (struct.unionType === 'withData') {
     struct.derivedTypes.forEach((derivedType, index) => {
       const variantName = toUpperCamelCase(derivedType.tagValue);
@@ -117,7 +171,10 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       l(`    class ${variantName}(`);
       struct.baseFields.forEach((field) => {
         l(`        /** ${field.description ?? ''} */`);
-        l(`        @SerialName("${field.name}") val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field)},`);
+
+        renderFieldAnnotations(ir, field, l);
+
+        l(`        @SerialName("${field.name}") override val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)},`);
       });
       l(`        /** 数据字段 */`);
       l(`        @SerialName("data") val data: ${dataTypeName}`);
@@ -138,9 +195,15 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       }
       l(
         indentLines(
-          renderIRObject(ir, derivedStruct.tagValue, derivedStruct.fields, '', false, [
-            `@SerialName("${derivedStruct.tagValue}")`,
-          ]),
+          renderIRObject(
+            ir,
+            derivedStruct.tagValue,
+            derivedStruct.fields,
+            '',
+            false,
+            [`@SerialName("${derivedStruct.tagValue}")`],
+            commonFieldNames
+          ),
           '    '
         ) + ` : ${toUpperCamelCase(name)}()`
       );
