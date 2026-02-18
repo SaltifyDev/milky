@@ -43,6 +43,6 @@
   },
   "license": "CC0-1.0",
   "dependencies": {
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   }
 }

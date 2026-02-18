@@ -16,7 +16,7 @@
     "nextra-theme-docs": "^4.6.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
