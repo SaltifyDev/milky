@@ -174,7 +174,9 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
 
         renderFieldAnnotations(ir, field, l);
 
-        l(`        @SerialName("${field.name}") override val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)},`);
+        l(
+          `        @SerialName("${field.name}") override val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)},`
+        );
       });
       l(`        /** 数据字段 */`);
       l(`        @SerialName("data") val data: ${dataTypeName}`);
