@@ -105,6 +105,7 @@ export const GroupMessageReactionEvent = z.object({
   user_id: ZUin.describe('发送回应者 QQ 号'),
   message_seq: ZInt64.describe('消息序列号'),
   face_id: ZString.describe('表情 ID'),
+  reaction_type: z.enum(['face', 'emoji']).describe('收到的回应类型'),
   is_add: ZBoolean.describe('是否为添加，`false` 表示取消回应'),
 });
 
