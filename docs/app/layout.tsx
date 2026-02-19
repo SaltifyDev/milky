@@ -2,37 +2,46 @@ import { LastUpdated, Layout, Navbar } from 'nextra-theme-docs';
 import { getPageMap } from 'nextra/page-map';
 import 'nextra-theme-docs/style.css';
 import './styles.css';
+import icon216 from '@/assets/icon216.png';
 
 import { Banner, Head, Search } from 'nextra/components';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { Metadata } from 'next';
 import { apiSpecCategories } from '@saltify/milky-types/namings';
 import { commonStructMap } from '@saltify/milky-common/src/common';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
-  title: '🥛 Milky',
+  title: 'Milky',
   description: 'Milky 协议文档',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh" suppressHydrationWarning>
-      <Head />
+      <Head></Head>
       <body>
         <Layout
           banner={<Banner storageKey={'milky-1.1.0'}>🎉 Milky 1.1 已发布！ 🎉</Banner>}
           navbar={
             <Navbar
               logo={
-                <div style={{ fontSize: '1.15rem' }}>
-                  <b>Milky</b> v{milkyVersion} 文档 <div style={{ fontSize: '0.75rem' }}>{milkyPackageVersion}</div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Image src={icon216} alt="Milky Logo" objectFit="contain" height={54} />
+                  <div style={{ marginLeft: '0.5rem' }} />
+                  <div style={{ fontSize: '1.15rem' }}>
+                    <b>Milky</b> v{milkyVersion}
+                    <div style={{ fontSize: '0.75rem' }}>
+                      <code>v{milkyPackageVersion}</code>
+                    </div>
+                  </div>
                 </div>
               }
               projectLink={'https://github.com/SaltifyDev/milky'}
             ></Navbar>
           }
           pageMap={[
-            ...(await getPageMap()).filter(p => !('route' in p) || p.route !== '/preview'),
+            ...(await getPageMap()).filter((p) => !('route' in p) || p.route !== '/preview'),
             {
               name: 'api',
               route: '/api',
