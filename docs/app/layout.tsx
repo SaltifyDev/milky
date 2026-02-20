@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Navbar
               logo={
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <Image src={icon216} alt="Milky Logo" objectFit="contain" height={54} />
+                  <Image src={icon216} alt="Milky Logo" height={54} />
                   <div style={{ marginLeft: '0.5rem' }} />
                   <div style={{ fontSize: '1.15rem' }}>
                     <b>Milky</b> v{milkyVersion}
