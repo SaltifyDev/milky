@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@eslint/js':
-        specifier: ^9.39.2
-        version: 9.39.2
+        specifier: ^9.39.3
+        version: 9.39.3
       '@typescript/native-preview':
         specifier: ^7.0.0-dev.20260215.1
         version: 7.0.0-dev.20260215.1
