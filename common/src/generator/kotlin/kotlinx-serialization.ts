@@ -121,7 +121,7 @@ function renderIRObject(
 }
 
 function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionStruct) {
-  const name = struct.name;
+  const {name} = struct;
   const lines: string[] = [];
   function l(line: string = '') {
     lines.push(line);
@@ -142,13 +142,11 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
 
   if (struct.unionType === 'withData') {
     commonFields = struct.baseFields || [];
-  } else {
-    if (struct.derivedStructs.length > 0) {
-      commonFields = [...struct.derivedStructs[0].fields];
-      for (let i = 1; i < struct.derivedStructs.length; i++) {
-        const currentStructFields = struct.derivedStructs[i].fields;
-        commonFields = commonFields.filter((f1) => currentStructFields.some((f2) => isSameField(f1, f2)));
-      }
+  } else if (struct.derivedStructs.length > 0) {
+    commonFields = [...struct.derivedStructs[0].fields];
+    for (let i = 1; i < struct.derivedStructs.length; i++) {
+      const currentStructFields = struct.derivedStructs[i].fields;
+      commonFields = commonFields.filter((f1) => currentStructFields.some((f2) => isSameField(f1, f2)));
     }
   }
 
@@ -188,6 +186,13 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       if (derivedType.derivingType === 'struct') {
         a(' {');
         l(indentLines(renderIRObject(ir, 'Data', derivedType.fields, '', false), '        '));
+        l();
+        derivedType.fields.forEach(field => {
+          const fieldName = toLowerCamelCase(field.name);
+          const fieldType = getKotlinTypeSpec(field, true);
+          l(`        /** [data.${fieldName}] */`);
+          l(`        val ${fieldName}: ${fieldType} get() = data.${fieldName}`);
+        });
         l('    }');
       }
       if (index !== struct.derivedTypes.length - 1) {
