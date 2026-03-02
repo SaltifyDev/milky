@@ -6,13 +6,13 @@
   "license": "CC0-1.0",
   "packageManager": "pnpm@10.27.0",
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@typescript/native-preview": "^7.0.0-dev.20260215.1",
+    "@eslint/js": "^9.39.3",
+    "@typescript/native-preview": "^7.0.0-dev.20260301.1",
     "eslint": "^9.39.2",
     "globals": "^17.3.0",
-    "tsdown": "^0.20.1",
+    "tsdown": "^0.20.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0"
+    "typescript-eslint": "^8.56.0"
   }
 }
