@@ -1,6 +1,10 @@
-![banner](https://socialify.git.ci/SaltifyDev/milky/image?description=1&font=Bitter&forks=1&issues=1&logo=https%3A%2F%2Fmilky.ntqqrev.org%2Fmilky.png&name=1&owner=1&pattern=Plus&pulls=1&stargazers=1&theme=Light)
-
 <div align="center">
+
+<img src="https://milky.ntqqrev.org/milky.png" width="162"/>
+
+# Milky
+
+QQ 机器人应用接口标准🥛🐧
 
 ✨ *Illustrated by [夏寂](https://www.mihuashi.com/profiles/1335589)* ✨
 
