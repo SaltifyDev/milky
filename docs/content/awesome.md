@@ -52,6 +52,7 @@ Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件
 
 - [Kotlin 类型定义 (kotlinx.serialization)](/preview?path=kotlin/kotlinx-serialization.txt)
 - [Dart 类型定义 (freezed + json_serializable)](/preview?path=dart/json_serializable.txt)
+- [Rust 类型定义 (serde)](/preview?path=rust/serde.txt)
 
 ### 实用资源
 
