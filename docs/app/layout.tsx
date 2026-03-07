@@ -7,9 +7,12 @@ import icon216 from '@/assets/icon216.png';
 import { Banner, Head, Search } from 'nextra/components';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { Metadata } from 'next';
-import { apiSpecCategories } from '@saltify/milky-types/namings';
-import { commonStructMap } from '@saltify/milky-common/src/common';
 import Image from 'next/image';
+import { apiSpecCategories } from '@saltify/milky-types/namings';
+import { generateIR } from '@common/ir';
+
+const ir = generateIR();
+const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
 
 export const metadata: Metadata = {
   title: 'Milky',

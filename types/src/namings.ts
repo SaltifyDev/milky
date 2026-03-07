@@ -94,6 +94,18 @@ export const apiSpecCategories: ApiSpecCategory[] = [
         outputStructName: 'GetGroupMemberInfoOutput',
       },
       {
+        endpoint: 'get_peer_pins',
+        description: '获取置顶的好友和群列表',
+        inputStructName: null,
+        outputStructName: 'GetPeerPinsOutput',
+      },
+      {
+        endpoint: 'set_peer_pin',
+        description: '设置好友或群的置顶状态',
+        inputStructName: 'SetPeerPinInput',
+        outputStructName: null,
+      },
+      {
         endpoint: 'set_avatar',
         description: '设置 QQ 账号头像',
         inputStructName: 'SetAvatarInput',

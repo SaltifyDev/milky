@@ -92,6 +92,17 @@ export const GetGroupMemberInfoOutput = z.object({
   member: z.lazy(() => GroupMemberEntity).describe('群成员信息'),
 });
 
+export const GetPeerPinsOutput = z.object({
+  friends: z.array(z.lazy(() => FriendEntity)).describe('置顶的好友列表'),
+  groups: z.array(z.lazy(() => GroupEntity)).describe('置顶的群列表'),
+});
+
+export const SetPeerPinInput = z.object({
+  message_scene: z.enum(['friend', 'group', 'temp']).describe('要设置的会话的消息场景'),
+  peer_id: ZUin.describe('要设置的好友 QQ 号或群号'),
+  is_pinned: ZBooleanWithDefault(true).describe('是否置顶, `false` 表示取消置顶'),
+});
+
 export const SetAvatarInput = z.object({
   uri: ZString.describe('头像文件 URI，支持 `file://` `http(s)://` `base64://` 三种格式'),
 });
@@ -136,6 +147,8 @@ export type GetGroupMemberListInput = z.infer<typeof GetGroupMemberListInput>;
 export type GetGroupMemberListOutput = z.infer<typeof GetGroupMemberListOutput>;
 export type GetGroupMemberInfoInput = z.infer<typeof GetGroupMemberInfoInput>;
 export type GetGroupMemberInfoOutput = z.infer<typeof GetGroupMemberInfoOutput>;
+export type GetPeerPinsOutput = z.infer<typeof GetPeerPinsOutput>;
+export type SetPeerPinInput = z.infer<typeof SetPeerPinInput>;
 export type SetAvatarInput = z.infer<typeof SetAvatarInput>;
 export type SetNicknameInput = z.infer<typeof SetNicknameInput>;
 export type SetBioInput = z.infer<typeof SetBioInput>;
