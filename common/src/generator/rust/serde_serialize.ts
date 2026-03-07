@@ -171,10 +171,144 @@ function toRustFieldName(name: string): string {
   return rustKeywords.has(name) ? `r#${name}` : name;
 }
 
+function collectUnionStructNames(ir: ReturnType<typeof generateIR>): Set<string> {
+  return new Set(ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name));
+}
+
+function collectArrayUnionRefs(ir: ReturnType<typeof generateIR>, unionStructNames: Set<string>): Set<string> {
+  const arrayUnionRefs = new Set<string>();
+
+  const handleFields = (fields: IRField[]) => {
+    fields.forEach((field) => {
+      if (field.fieldType === 'ref' && field.isArray && unionStructNames.has(field.refStructName)) {
+        arrayUnionRefs.add(field.refStructName);
+      }
+    });
+  };
+
+  ir.commonStructs.forEach((struct) => {
+    if (struct.structType === 'simple') {
+      handleFields(struct.fields);
+      return;
+    }
+    if (struct.unionType === 'withData') {
+      handleFields(struct.baseFields);
+      struct.derivedTypes.forEach((derivedType) => {
+        if (derivedType.derivingType === 'struct') {
+          handleFields(derivedType.fields);
+        }
+      });
+      return;
+    }
+    struct.derivedStructs.forEach((derivedStruct) => {
+      handleFields(derivedStruct.fields);
+    });
+  });
+
+  ir.apiCategories.forEach((category) => {
+    category.apis.forEach((api) => {
+      if (api.requestFields) {
+        handleFields(api.requestFields);
+      }
+      if (api.responseFields) {
+        handleFields(api.responseFields);
+      }
+    });
+  });
+
+  return arrayUnionRefs;
+}
+
+function getArrayUnionDeserializeFn(field: IRField, unionStructNames: Set<string>): string | null {
+  if (field.fieldType !== 'ref' || !field.isArray || field.defaultValue !== undefined) {
+    return null;
+  }
+
+  const fnPrefix = field.isOptional ? 'deserialize_optional_' : 'deserialize_';
+  if (field.refStructName === 'IncomingSegment') {
+    return `${fnPrefix}incoming_segment_list`;
+  }
+  if (unionStructNames.has(field.refStructName)) {
+    return `${fnPrefix}drop_bad_${toSnakeCase(field.refStructName)}_list`;
+  }
+  return null;
+}
+
+function renderDropBadElementListHelpers(typeName: string): string[] {
+  const rustTypeName = toUpperCamelCase(typeName);
+  const snakeTypeName = toSnakeCase(typeName);
+  return [
+    `fn deserialize_drop_bad_${snakeTypeName}_list<'de, D>(deserializer: D) -> Result<Vec<${rustTypeName}>, D::Error>`,
+    'where',
+    "    D: Deserializer<'de>,",
+    '{',
+    `    deserialize_drop_bad_element_list::<D, ${rustTypeName}>(deserializer)`,
+    '}',
+    '',
+    `fn deserialize_optional_drop_bad_${snakeTypeName}_list<'de, D>(deserializer: D) -> Result<Option<Vec<${rustTypeName}>>, D::Error>`,
+    'where',
+    "    D: Deserializer<'de>,",
+    '{',
+    `    deserialize_optional_drop_bad_element_list::<D, ${rustTypeName}>(deserializer)`,
+    '}',
+  ];
+}
+
+function renderIncomingSegmentListHelpers(): string[] {
+  return [
+    'fn unknown_incoming_segment(value: serde_json::Value) -> IncomingSegment {',
+    '    let type_value = value',
+    '        .as_object()',
+    '        .and_then(|object| object.get("type"))',
+    '        .and_then(serde_json::Value::as_str)',
+    '        .unwrap_or("unknown");',
+    '    IncomingSegment::Text {',
+    '        data: IncomingSegmentTextData {',
+    '            text: format!("[{}]", type_value),',
+    '        },',
+    '    }',
+    '}',
+    '',
+    "fn deserialize_incoming_segment_list<'de, D>(deserializer: D) -> Result<Vec<IncomingSegment>, D::Error>",
+    'where',
+    "    D: Deserializer<'de>,",
+    '{',
+    '    let values = Option::<Vec<serde_json::Value>>::deserialize(deserializer)?.unwrap_or_default();',
+    '    let mut out = Vec::with_capacity(values.len());',
+    '    for value in values {',
+    '        match serde_json::from_value::<IncomingSegment>(value.clone()) {',
+    '            Ok(item) => out.push(item),',
+    '            Err(_) => out.push(unknown_incoming_segment(value)),',
+    '        }',
+    '    }',
+    '    Ok(out)',
+    '}',
+    '',
+    "fn deserialize_optional_incoming_segment_list<'de, D>(deserializer: D) -> Result<Option<Vec<IncomingSegment>>, D::Error>",
+    'where',
+    "    D: Deserializer<'de>,",
+    '{',
+    '    let values = Option::<Vec<serde_json::Value>>::deserialize(deserializer)?;',
+    '    let Some(values) = values else {',
+    '        return Ok(None);',
+    '    };',
+    '    let mut out = Vec::with_capacity(values.len());',
+    '    for value in values {',
+    '        match serde_json::from_value::<IncomingSegment>(value.clone()) {',
+    '            Ok(item) => out.push(item),',
+    '            Err(_) => out.push(unknown_incoming_segment(value)),',
+    '        }',
+    '    }',
+    '    Ok(Some(out))',
+    '}',
+  ];
+}
+
 interface RenderContext {
   defaultHelpers: string[];
   helperNames: Set<string>;
   needsDefaultDeserializer: boolean;
+  unionStructNames: Set<string>;
 }
 
 function ensureDefaultHelpers(
@@ -222,11 +356,17 @@ function renderFieldLines(
   }
 
   const serdeArgs = [`rename = ${escapeRustString(field.name)}`];
+  const arrayUnionDeserializeFn = getArrayUnionDeserializeFn(field, ctx.unionStructNames);
   if (field.defaultValue !== undefined) {
     const { defaultFnName, deserializeFnName } = ensureDefaultHelpers(ctx, helperParts, rustFieldType, field.defaultValue);
     serdeArgs.push(`default = "${defaultFnName}"`, `deserialize_with = "${deserializeFnName}"`);
-  } else if (field.isOptional) {
-    serdeArgs.push('default', 'skip_serializing_if = "Option::is_none"');
+  } else {
+    if (arrayUnionDeserializeFn) {
+      serdeArgs.push(`deserialize_with = "${arrayUnionDeserializeFn}"`);
+    }
+    if (field.isOptional) {
+      serdeArgs.push('default', 'skip_serializing_if = "Option::is_none"');
+    }
   }
 
   lines.push(`${indent}#[serde(${serdeArgs.join(', ')})]`);
@@ -359,10 +499,13 @@ function renderIRUnionStruct(
 
 export function generateRustSerdeSpec(): string {
   const ir = generateIR();
+  const unionStructNames = collectUnionStructNames(ir);
+  const arrayUnionRefs = collectArrayUnionRefs(ir, unionStructNames);
   const ctx: RenderContext = {
     defaultHelpers: [],
     helperNames: new Set<string>(),
     needsDefaultDeserializer: false,
+    unionStructNames,
   };
   const lines: string[] = [];
 
@@ -371,7 +514,7 @@ export function generateRustSerdeSpec(): string {
   }
 
   l(`// Generated from Milky ${milkyVersion} (${milkyPackageVersion})`);
-  if (ctx.needsDefaultDeserializer) {
+  if (ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0) {
     l('use serde::{Deserialize, Deserializer, Serialize};');
   } else {
     l('use serde::{Deserialize, Serialize};');
@@ -445,22 +588,73 @@ export function generateRustSerdeSpec(): string {
     });
   });
 
-  if (ctx.needsDefaultDeserializer) {
+  if (ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0) {
     const importLineIndex = lines.findIndex((line) => line.startsWith('use serde::{'));
     lines[importLineIndex] = 'use serde::{Deserialize, Deserializer, Serialize};';
     l('// ####################################');
     l('// Serde Helpers');
     l('// ####################################');
     l();
-    l("fn deserialize_default_on_null<'de, D, T, F>(deserializer: D, default: F) -> Result<T, D::Error>");
-    l('where');
-    l("    D: Deserializer<'de>,");
-    l("    T: Deserialize<'de>,");
-    l('    F: FnOnce() -> T,');
-    l('{');
-    l('    Ok(Option::<T>::deserialize(deserializer)?.unwrap_or_else(default))');
-    l('}');
-    l();
+    if (arrayUnionRefs.size > 0) {
+      l("fn deserialize_drop_bad_element_list<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>");
+      l('where');
+      l("    D: Deserializer<'de>,");
+      l('    T: serde::de::DeserializeOwned,');
+      l('{');
+      l('    let values = Option::<Vec<serde_json::Value>>::deserialize(deserializer)?.unwrap_or_default();');
+      l('    let mut out = Vec::with_capacity(values.len());');
+      l('    for value in values {');
+      l('        if let Ok(item) = serde_json::from_value::<T>(value) {');
+      l('            out.push(item);');
+      l('        }');
+      l('    }');
+      l('    Ok(out)');
+      l('}');
+      l();
+      l("fn deserialize_optional_drop_bad_element_list<'de, D, T>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>");
+      l('where');
+      l("    D: Deserializer<'de>,");
+      l('    T: serde::de::DeserializeOwned,');
+      l('{');
+      l('    let values = Option::<Vec<serde_json::Value>>::deserialize(deserializer)?;');
+      l('    let Some(values) = values else {');
+      l('        return Ok(None);');
+      l('    };');
+      l('    let mut out = Vec::with_capacity(values.len());');
+      l('    for value in values {');
+      l('        if let Ok(item) = serde_json::from_value::<T>(value) {');
+      l('            out.push(item);');
+      l('        }');
+      l('    }');
+      l('    Ok(Some(out))');
+      l('}');
+      l();
+
+      if (arrayUnionRefs.has('IncomingSegment')) {
+        renderIncomingSegmentListHelpers().forEach((line) => l(line));
+        l();
+      }
+
+      Array.from(arrayUnionRefs)
+        .filter((name) => name !== 'IncomingSegment')
+        .forEach((name) => {
+          renderDropBadElementListHelpers(name).forEach((line) => l(line));
+          l();
+        });
+    }
+
+    if (ctx.needsDefaultDeserializer) {
+      l("fn deserialize_default_on_null<'de, D, T, F>(deserializer: D, default: F) -> Result<T, D::Error>");
+      l('where');
+      l("    D: Deserializer<'de>,");
+      l("    T: Deserialize<'de>,");
+      l('    F: FnOnce() -> T,');
+      l('{');
+      l('    Ok(Option::<T>::deserialize(deserializer)?.unwrap_or_else(default))');
+      l('}');
+      l();
+    }
+
     ctx.defaultHelpers.forEach((line) => l(line));
     if (ctx.defaultHelpers.length > 0 && ctx.defaultHelpers[ctx.defaultHelpers.length - 1] !== '') {
       l();
