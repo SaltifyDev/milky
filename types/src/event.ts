@@ -47,6 +47,7 @@ export const GroupInvitationEvent = z.object({
   group_id: ZUin.describe('群号'),
   invitation_seq: ZInt64.describe('邀请序列号'),
   initiator_id: ZUin.describe('邀请者 QQ 号'),
+  source_group_id: ZUin.nullish().describe('来源群号，如果是通过 QQ 群邀请'),
 });
 
 export const FriendNudgeEvent = z.object({
