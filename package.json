@@ -6,7 +6,7 @@
   "license": "CC0-1.0",
   "packageManager": "pnpm@10.27.0",
   "devDependencies": {
-    "@eslint/js": "^9.39.3",
+    "@eslint/js": "^9.39.4",
     "@typescript/native-preview": "^7.0.0-dev.20260301.1",
     "eslint": "^9.39.2",
     "globals": "^17.3.0",
