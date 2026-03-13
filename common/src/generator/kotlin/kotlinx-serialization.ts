@@ -183,21 +183,57 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       l(`        /** 数据字段 */`);
       l(`        @SerialName("data") val data: ${dataTypeName}`);
       l(`    ) : ${toUpperCamelCase(name)}()`);
-      if (derivedType.derivingType === 'struct') {
+
+      const isStruct = derivedType.derivingType === 'struct';
+      const isRef = derivedType.derivingType === 'ref';
+
+      let targetFields: IRField[] = [];
+      let targetName = 'Data';
+
+      if (isStruct) {
+        targetFields = derivedType.fields;
+      } else if (isRef) {
+        targetName = toUpperCamelCase(derivedType.refStructName);
+        const refStruct = ir.commonStructs.find(s => s.name === derivedType.refStructName);
+
+        if (refStruct) {
+          if (refStruct.structType === 'simple') {
+            targetFields = refStruct.fields;
+          } else if (refStruct.structType === 'union') {
+            // Union struct -> common fields
+            if (refStruct.unionType === 'withData') {
+              targetFields = refStruct.baseFields || [];
+            } else if (refStruct.derivedStructs && refStruct.derivedStructs.length > 0) {
+              targetFields = [...refStruct.derivedStructs[0].fields];
+              for (let i = 1; i < refStruct.derivedStructs.length; i++) {
+                const currentStructFields = refStruct.derivedStructs[i].fields;
+                targetFields = targetFields.filter((f1) => currentStructFields.some((f2) => isSameField(f1, f2)));
+              }
+            }
+          }
+        }
+      }
+
+      if (isStruct || targetFields.length > 0) {
         a(' {');
-        l(indentLines(renderIRObject(ir, 'Data', derivedType.fields, '', false), '        '));
-        l();
-        derivedType.fields.forEach(field => {
+        if (isStruct) {
+          l(indentLines(renderIRObject(ir, 'Data', derivedType.fields, '', false), '        '));
+          l();
+        }
+
+        targetFields.forEach((field: IRField) => {
           const fieldName = toLowerCamelCase(field.name);
           const fieldType = getKotlinTypeSpec(field, true);
+
           l(`        /**`);
           l(`         * 访问器字段，对应 \`data\` 中的同名字段`);
-          l(`         * @see [Data.${fieldName}]`);
+          l(`         * @see [${targetName}.${fieldName}]`);
           l(`         */`);
           l(`        val ${fieldName}: ${fieldType} get() = data.${fieldName}`);
         });
         l('    }');
       }
+
       if (index !== struct.derivedTypes.length - 1) {
         l();
       }
