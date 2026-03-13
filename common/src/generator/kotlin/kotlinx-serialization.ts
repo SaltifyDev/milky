@@ -190,7 +190,10 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
         derivedType.fields.forEach(field => {
           const fieldName = toLowerCamelCase(field.name);
           const fieldType = getKotlinTypeSpec(field, true);
-          l(`        /** [data.${fieldName}] */`);
+          l(`        /**`);
+          l(`         * 访问器字段，对应 \`data\` 中的同名字段`);
+          l(`         * @see [Data.${fieldName}]`);
+          l(`         */`);
           l(`        val ${fieldName}: ${fieldType} get() = data.${fieldName}`);
         });
         l('    }');
