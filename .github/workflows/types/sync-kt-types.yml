@@ -39,6 +39,7 @@ jobs:
           repository: SaltifyDev/milky-kt-types
           token: ${{ secrets.KT_TYPES_TOKEN }}
           path: milky-kt-types
+          ref: main
 
       - name: Copy generated file and update version
         run: |
@@ -54,7 +55,7 @@ jobs:
         run: |
           cd milky-kt-types
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           if [ -n "$(git status --porcelain)" ]; then
             git add .
