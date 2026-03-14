@@ -222,14 +222,20 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
         }
 
         targetFields.forEach((field: IRField) => {
-          const fieldName = toLowerCamelCase(field.name);
+          const realFieldName = toLowerCamelCase(field.name);
+          let fieldName = realFieldName;
           const fieldType = getKotlinTypeSpec(field, true);
+
+          // check conflict with common fields
+          if (commonFieldNames.has(field.name)) {
+            fieldName = `data${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}`;
+          }
 
           l(`        /**`);
           l(`         * 访问器字段，对应 \`data\` 中的同名字段`);
-          l(`         * @see [${targetName}.${fieldName}]`);
+          l(`         * @see [${targetName}.${realFieldName}]`);
           l(`         */`);
-          l(`        val ${fieldName}: ${fieldType} get() = data.${fieldName}`);
+          l(`        val ${fieldName}: ${fieldType} get() = data.${realFieldName}`);
         });
         l('    }');
       }
