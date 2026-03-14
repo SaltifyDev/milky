@@ -1,0 +1,69 @@
+name: Sync Kotlin Types to milky-kt-types
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  generate-and-sync:
+    name: Generate Kotlin Types and Sync
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Milky
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Setup Node & pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Generate Kotlin Types
+        run: |
+          pnpm exec tsx -e "import { generateKotlinxSerializationSpec } from './common/src/generator/kotlin/kotlinx-serialization.ts'; import fs from 'fs'; fs.writeFileSync('Types.kt', generateKotlinxSerializationSpec());"
+
+      - name: Checkout milky-kt-types
+        uses: actions/checkout@v4
+        with:
+          repository: SaltifyDev/milky-kt-types
+          token: ${{ secrets.KT_TYPES_TOKEN }}
+          path: milky-kt-types
+
+      - name: Copy generated file and update version
+        run: |
+          mkdir -p milky-kt-types/src/commonMain/kotlin/org/ntqqrev/milky
+          cp Types.kt milky-kt-types/src/commonMain/kotlin/org/ntqqrev/milky/Types.kt
+
+          MILKY_VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Updating version to $MILKY_VERSION"
+
+          sed -i 's/^version = ".*"/version = "'$MILKY_VERSION'"/' milky-kt-types/build.gradle.kts
+
+      - name: Commit and Push if changed
+        run: |
+          cd milky-kt-types
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "chore(deps): Bump to Milky ${GITHUB_REF#refs/tags/v}"
+            git push origin main
+
+            git tag ${GITHUB_REF#refs/tags/}
+            git push origin ${GITHUB_REF#refs/tags/}
+            echo "Successfully synced to milky-kt-types!"
+          else
+            echo "No changes detected in generated Kotlin types. Skipping push."
+          fi
