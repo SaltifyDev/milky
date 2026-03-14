@@ -1,7 +1,7 @@
 {
   "name": "@saltify/milky-types",
   "type": "module",
-  "version": "1.2.0-rc.1",
+  "version": "1.2.0-rc.3",
   "description": "Type definitions for Milky protocol",
   "main": "src/index.ts",
   "exports": {
@@ -41,7 +41,7 @@
     "type": "git",
     "url": "git+https://github.com/SaltifyDev/milky.git"
   },
-  "license": "CC0-1.0",
+  "license": "MIT",
   "dependencies": {
     "zod": "^4.3.6"
   }

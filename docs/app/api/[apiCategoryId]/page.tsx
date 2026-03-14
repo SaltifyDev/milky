@@ -16,7 +16,7 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   return {
-    title: `🥛 Milky | ${apiCategoryMap.get(params.apiCategoryId)!.name}`,
+    title: `Milky | ${apiCategoryMap.get(params.apiCategoryId)!.name}`,
   };
 }
 

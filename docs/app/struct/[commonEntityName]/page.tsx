@@ -17,7 +17,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const struct = commonStructMap.get(params.commonEntityName)!;
   return {
-    title: `🥛 Milky | ${struct.description} (${params.commonEntityName})`,
+    title: `Milky | ${struct.description} (${params.commonEntityName})`,
   };
 }
 

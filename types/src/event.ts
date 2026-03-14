@@ -47,6 +47,7 @@ export const GroupInvitationEvent = z.object({
   group_id: ZUin.describe('群号'),
   invitation_seq: ZInt64.describe('邀请序列号'),
   initiator_id: ZUin.describe('邀请者 QQ 号'),
+  source_group_id: ZUin.nullish().describe('来源群号，如果是通过 QQ 群邀请'),
 });
 
 export const FriendNudgeEvent = z.object({
@@ -105,6 +106,7 @@ export const GroupMessageReactionEvent = z.object({
   user_id: ZUin.describe('发送回应者 QQ 号'),
   message_seq: ZInt64.describe('消息序列号'),
   face_id: ZString.describe('表情 ID'),
+  reaction_type: z.enum(['face', 'emoji']).describe('收到的回应类型'),
   is_add: ZBoolean.describe('是否为添加，`false` 表示取消回应'),
 });
 

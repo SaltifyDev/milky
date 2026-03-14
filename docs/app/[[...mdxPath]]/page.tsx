@@ -14,7 +14,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const { metadata } = await importPage(params.mdxPath);
   return {
     ...metadata,
-    title: metadata.title ? `🥛 Milky | ${metadata.title}` : '🥛 Milky',
+    title: metadata.title ? `Milky | ${metadata.title}` : 'Milky',
   };
 }
 

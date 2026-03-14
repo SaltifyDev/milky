@@ -29,7 +29,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Rust** - [milky-rust-sdk](https://crates.io/crates/milky-rust-sdk) (MIT **or** Apache 2.0)
 - **.NET** - [Milky.Net.Client](https://www.nuget.org/packages/Milky.Net.Client) (MIT)
 - **Go** - [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk) (MIT)
-- **Kotlin** - [milky-kt-sdk](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-sdk) (MIT)
+- **Kotlin** - [saltify-core](https://central.sonatype.com/artifact/org.ntqqrev/saltify-core) (MIT)
 
 ### 作为独立项目发布
 
@@ -41,21 +41,22 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 以下是由 Milky 社区提供的类型定义包，可以在项目中直接引用。虽然没有直接提供实现或对接功能，但可以帮助开发者快速编写 Milky 协议的实现或 SDK。
 
-- **TypeScript** - [@saltify/milky-types](https://www.npmjs.com/package/@saltify/milky-types) (CC0-1.0)
+- **TypeScript** - [@saltify/milky-types](https://www.npmjs.com/package/@saltify/milky-types) (MIT)
 - **.NET** - [Milky.Net.Model](https://www.nuget.org/packages/Milky.Net.Model) (MIT)
 - **Rust** - [milky-types](https://crates.io/crates/milky-types) (MIT **or** Apache 2.0)
 - **Kotlin** - [milky-kt-types](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-types) (MIT)
 
 ### Type Definition 原始文件
 
-Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件，方便开发者直接下载和使用，通过 CC0-1.0 许可证发布。点击以下链接可进行预览。
+Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件，方便开发者直接下载和使用，通过 MIT 许可证发布。点击以下链接可进行预览。
 
 - [Kotlin 类型定义 (kotlinx.serialization)](/preview?path=kotlin/kotlinx-serialization.txt)
 - [Dart 类型定义 (freezed + json_serializable)](/preview?path=dart/json_serializable.txt)
+- [Rust 类型定义 (serde)](/preview?path=rust/serde.txt)
 
 ### 实用资源
 
-以下是一些与 Milky 协议相关的实用资源，方便参考和使用，同样通过 CC0-1.0 许可证发布。
+以下是一些与 Milky 协议相关的实用资源，方便参考和使用，同样通过 MIT 许可证发布。
 
 - [JSON Schema](/preview?path=json-schema/schema.json)
 - [OpenAPI Specification v3.1](/preview?path=openapi/openapi.json)
