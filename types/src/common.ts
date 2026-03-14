@@ -23,6 +23,11 @@ export const GroupEntity = z.object({
   group_name: ZString.describe('群名称'),
   member_count: ZInt32.describe('群成员数量'),
   max_member_count: ZInt32.describe('群容量'),
+  remark: ZString.describe('群备注'),
+  created_time: ZInt64.describe('群创建时间，Unix 时间戳（秒）'),
+  description: ZString.describe('群简介'),
+  question: ZString.describe('加群验证问题'),
+  announcement: ZString.describe('群公告预览'),
 }).describe('群实体');
 
 export const GroupMemberEntity = UserEntityBase.extend({
