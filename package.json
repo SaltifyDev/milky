@@ -7,7 +7,7 @@
   "packageManager": "pnpm@10.32.1",
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@typescript/native-preview": "^7.0.0-dev.20260301.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260315.1",
     "eslint": "^9.39.2",
     "globals": "^17.4.0",
     "tsdown": "^0.21.2",
