@@ -24,7 +24,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 ### 作为依赖库发布
 
-- **Node.js** - [@saltify/milky-node-sdk](https://www.npmjs.com/package/@saltify/milky-node-sdk) (MIT)
+- **Node.js** - [@saltify/milky-tea](https://www.npmjs.com/package/@saltify/milky-tea) (MIT)
 - **Python** - [milky-python-sdk](https://pypi.org/project/milky-python-sdk/) (MIT)
 - **Rust** - [milky-rust-sdk](https://crates.io/crates/milky-rust-sdk) (MIT **or** Apache 2.0)
 - **.NET** - [Milky.Net.Client](https://www.nuget.org/packages/Milky.Net.Client) (MIT)
