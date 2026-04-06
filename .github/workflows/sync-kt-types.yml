@@ -47,7 +47,7 @@ jobs:
             USE_TAG_SOURCE=true
           else
             git fetch --tags --force
-            RESOLVED_TAG="$(git tag --list 'v*' --sort=-version:refname | head -n 1)"
+            RESOLVED_TAG="$(git for-each-ref --format='%(refname:short)' --sort=-creatordate refs/tags | grep '^v' | head -n 1)"
             USE_TAG_SOURCE=false
           fi
 
@@ -57,11 +57,14 @@ jobs:
           fi
 
           MILKY_VERSION="${RESOLVED_TAG#v}"
+          GRADLE_VERSION="$(printf '%s' "$MILKY_VERSION" | sed -E 's/-rc\.([0-9]+)$/-RC\1/')"
           echo "Resolved tag: $RESOLVED_TAG"
           echo "Resolved version: $MILKY_VERSION"
+          echo "Resolved Gradle version: $GRADLE_VERSION"
 
           echo "resolved_tag=$RESOLVED_TAG" >> "$GITHUB_OUTPUT"
           echo "milky_version=$MILKY_VERSION" >> "$GITHUB_OUTPUT"
+          echo "gradle_version=$GRADLE_VERSION" >> "$GITHUB_OUTPUT"
           echo "use_tag_source=$USE_TAG_SOURCE" >> "$GITHUB_OUTPUT"
 
       - name: Checkout resolved Milky tag
@@ -90,10 +93,10 @@ jobs:
           mkdir -p milky-kt-types/src/commonMain/kotlin/org/ntqqrev/milky
           cp Types.kt milky-kt-types/src/commonMain/kotlin/org/ntqqrev/milky/Types.kt
 
-          MILKY_VERSION="${{ steps.milky-version.outputs.milky_version }}"
-          echo "Updating version to $MILKY_VERSION"
+          GRADLE_VERSION="${{ steps.milky-version.outputs.gradle_version }}"
+          echo "Updating version to $GRADLE_VERSION"
 
-          sed -i 's/^version = ".*"/version = "'$MILKY_VERSION'"/' milky-kt-types/build.gradle.kts
+          sed -i 's/^version = ".*"/version = "'$GRADLE_VERSION'"/' milky-kt-types/build.gradle.kts
 
       - name: Commit and Push if changed
         run: |
