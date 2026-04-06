@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Optional tag to sync, such as `v1.2.0`. Leave empty to use the latest tag.
+        required: false
+        type: string
 
 jobs:
   generate-and-sync:
@@ -15,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: dev
+          fetch-depth: 0
 
       - name: Setup Node & pnpm
         uses: pnpm/action-setup@v3
@@ -25,6 +32,38 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+
+      - name: Resolve Milky tag and version
+        id: milky-version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          INPUT_TAG="${{ inputs.tag }}"
+          if [ -n "$INPUT_TAG" ]; then
+            RESOLVED_TAG="$INPUT_TAG"
+          elif [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
+            RESOLVED_TAG="${GITHUB_REF_NAME}"
+          else
+            git fetch --tags --force
+            RESOLVED_TAG="$(git tag --list 'v*' --sort=-version:refname | head -n 1)"
+          fi
+
+          if [ -z "$RESOLVED_TAG" ]; then
+            echo "Failed to resolve a Milky tag." >&2
+            exit 1
+          fi
+
+          MILKY_VERSION="${RESOLVED_TAG#v}"
+          echo "Resolved tag: $RESOLVED_TAG"
+          echo "Resolved version: $MILKY_VERSION"
+
+          echo "resolved_tag=$RESOLVED_TAG" >> "$GITHUB_OUTPUT"
+          echo "milky_version=$MILKY_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout resolved Milky tag
+        shell: bash
+        run: git checkout "${{ steps.milky-version.outputs.resolved_tag }}"
 
       - name: Install Dependencies
         run: pnpm install
@@ -46,7 +85,7 @@ jobs:
           mkdir -p milky-kt-types/src/commonMain/kotlin/org/ntqqrev/milky
           cp Types.kt milky-kt-types/src/commonMain/kotlin/org/ntqqrev/milky/Types.kt
 
-          MILKY_VERSION=${GITHUB_REF#refs/tags/v}
+          MILKY_VERSION="${{ steps.milky-version.outputs.milky_version }}"
           echo "Updating version to $MILKY_VERSION"
 
           sed -i 's/^version = ".*"/version = "'$MILKY_VERSION'"/' milky-kt-types/build.gradle.kts
@@ -59,11 +98,11 @@ jobs:
 
           if [ -n "$(git status --porcelain)" ]; then
             git add .
-            git commit -m "chore(deps): Bump to Milky ${GITHUB_REF#refs/tags/v}"
+            git commit -m "chore(deps): Bump to Milky ${{ steps.milky-version.outputs.milky_version }}"
             git push origin main
 
-            git tag ${GITHUB_REF#refs/tags/}
-            git push origin ${GITHUB_REF#refs/tags/}
+            git tag ${{ steps.milky-version.outputs.resolved_tag }}
+            git push origin ${{ steps.milky-version.outputs.resolved_tag }}
             echo "Successfully synced to milky-kt-types!"
           else
             echo "No changes detected in generated Kotlin types. Skipping push."
