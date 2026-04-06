@@ -2,6 +2,15 @@ import z from 'zod';
 import * as t from '@saltify/milky-types';
 import { ir } from '@saltify/milky-protocol';
 
+const preserveFullCapitalizedWords = ['csrf'];
+
+function snakeCaseToPascalCase(snakeCase: string): string {
+  return snakeCase
+    .split('_')
+    .map((part) => (preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
+}
+
 function sanitizeSchema(schema: Record<string, unknown>) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { $schema, ...rest } = schema;
@@ -63,8 +72,8 @@ function buildPaths() {
 
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((spec) => {
-      const requestIdOrNull = spec.requestFields && `Api_${spec.endpoint}_input`;
-      const responseIdOrNull = spec.responseFields && `Api_${spec.endpoint}_output`;
+      const requestIdOrNull = spec.requestFields && `${snakeCaseToPascalCase(spec.endpoint)}Input`;
+      const responseIdOrNull = spec.responseFields && `${snakeCaseToPascalCase(spec.endpoint)}Output`;
 
       paths[`/api/${spec.endpoint}`] = {
         post: {
