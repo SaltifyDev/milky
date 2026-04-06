@@ -120,6 +120,10 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
+    devDependencies:
+      '@saltify/milky-protocol':
+        specifier: workspace:*
+        version: link:../protocol
 
 packages:
 
