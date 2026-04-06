@@ -1,3 +1,4 @@
+import {} from '../registry';
 import z from 'zod';
 import * as t from '@saltify/milky-types';
 import { ir } from '@saltify/milky-protocol';
@@ -7,7 +8,9 @@ const preserveFullCapitalizedWords = ['csrf'];
 function snakeCaseToPascalCase(snakeCase: string): string {
   return snakeCase
     .split('_')
-    .map((part) => (preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
+    .map((part) =>
+      preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)
+    )
     .join('');
 }
 
@@ -18,15 +21,7 @@ function sanitizeSchema(schema: Record<string, unknown>) {
 }
 
 function buildComponents() {
-  const idRegistry = z.registry<{ id: string, title: string, description?: string }>();
-  const seenObjects = new WeakSet();
-  Object.entries(t).forEach(([key, value]) => {
-    if (value instanceof z.ZodType && !seenObjects.has(value)) {
-      seenObjects.add(value);
-      idRegistry.add(value, { id: key, title: value.description ?? key, description: value.description });
-    }
-  });
-  const jsonSchemas = z.toJSONSchema(idRegistry, {
+  const jsonSchemas = z.toJSONSchema(z.globalRegistry, {
     metadata: z.globalRegistry,
     io: 'input',
     target: 'openapi-3.0',
