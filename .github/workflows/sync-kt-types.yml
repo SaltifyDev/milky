@@ -42,8 +42,6 @@ jobs:
           INPUT_TAG="${{ inputs.tag }}"
           if [ -n "$INPUT_TAG" ]; then
             RESOLVED_TAG="$INPUT_TAG"
-          elif [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
-            RESOLVED_TAG="${GITHUB_REF_NAME}"
           else
             git fetch --tags --force
             RESOLVED_TAG="$(git tag --list 'v*' --sort=-version:refname | head -n 1)"
@@ -61,16 +59,13 @@ jobs:
           echo "resolved_tag=$RESOLVED_TAG" >> "$GITHUB_OUTPUT"
           echo "milky_version=$MILKY_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout resolved Milky tag
-        shell: bash
-        run: git checkout "${{ steps.milky-version.outputs.resolved_tag }}"
-
       - name: Install Dependencies
         run: pnpm install
 
       - name: Generate Kotlin Types
         run: |
-          pnpm exec tsx -e "import { generateKotlinxSerializationSpec } from './common/src/generator/kotlin/kotlinx-serialization.ts'; import fs from 'fs'; fs.writeFileSync('Types.kt', generateKotlinxSerializationSpec());"
+          cd common
+          npx milky-common generate kotlin/kotlinx-serialization ../Types.kt
 
       - name: Checkout milky-kt-types
         uses: actions/checkout@v4
