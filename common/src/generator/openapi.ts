@@ -1,6 +1,6 @@
-import { apiSpecCategories } from '@saltify/milky-types/namings';
 import z from 'zod';
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
+import * as t from '@saltify/milky-types';
+import { ir } from '@saltify/milky-protocol';
 
 function sanitizeSchema(schema: Record<string, unknown>) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -8,9 +8,17 @@ function sanitizeSchema(schema: Record<string, unknown>) {
   return rest;
 }
 
-function buildComponents(registry: typeof z.globalRegistry) {
-  const jsonSchemas = z.toJSONSchema(registry, {
-    metadata: registry,
+function buildComponents() {
+  const idRegistry = z.registry<{ id: string }>();
+  const seenObjects = new WeakSet();
+  Object.entries(t).forEach(([key, value]) => {
+    if (value instanceof z.ZodObject && !seenObjects.has(value)) {
+      seenObjects.add(value);
+      idRegistry.add(value, { id: key });
+    }
+  });
+  const jsonSchemas = z.toJSONSchema(idRegistry, {
+    metadata: z.globalRegistry,
     io: 'input',
     target: 'openapi-3.0',
     uri: (id) => `#/components/schemas/${id}`,
@@ -53,10 +61,10 @@ function buildComponents(registry: typeof z.globalRegistry) {
 function buildPaths() {
   const paths: Record<string, unknown> = {};
 
-  apiSpecCategories.forEach((category) => {
-    category.apiSpecs.forEach((spec) => {
-      const requestIdOrNull = spec.inputStructName && `Api_${spec.endpoint}_input`;
-      const responseIdOrNull = spec.outputStructName && `Api_${spec.endpoint}_output`;
+  ir.apiCategories.forEach((category) => {
+    category.apis.forEach((spec) => {
+      const requestIdOrNull = spec.requestFields && `Api_${spec.endpoint}_input`;
+      const responseIdOrNull = spec.responseFields && `Api_${spec.endpoint}_output`;
 
       paths[`/api/${spec.endpoint}`] = {
         post: {
@@ -136,8 +144,8 @@ export function generateOpenApiSpec() {
     openapi: '3.1.0',
     info: {
       title: 'Milky',
-      version: milkyPackageVersion,
-      description: `Milky 协议 API 与事件定义（v${milkyVersion}）`,
+      version: t.milkyPackageVersion,
+      description: `Milky 协议 API 与事件定义（v${t.milkyVersion}）`,
     },
     servers: [
       {
@@ -155,7 +163,7 @@ export function generateOpenApiSpec() {
           description: '在 Authorization 头中携带：Bearer {access_token}',
         },
       },
-      schemas: buildComponents(z.globalRegistry),
+      schemas: buildComponents(),
     },
     paths: buildPaths(),
     webhooks: buildWebhooks(),

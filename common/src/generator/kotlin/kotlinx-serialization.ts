@@ -1,5 +1,4 @@
 import { ir, IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -278,7 +277,7 @@ export function generateKotlinxSerializationSpec(): string {
   function l(line: string = '') {
     lines.push(line);
   }
-  l(`// Generated from Milky ${milkyVersion} (${milkyPackageVersion})`);
+  l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
   l('@file:OptIn(ExperimentalSerializationApi::class)');
   l();
   l('package org.ntqqrev.milky');
@@ -289,8 +288,8 @@ export function generateKotlinxSerializationSpec(): string {
   l('import kotlinx.serialization.encoding.*');
   l('import kotlinx.serialization.json.*');
   l();
-  l(`const val milkyVersion = "${milkyVersion}"`);
-  l(`const val milkyPackageVersion = "${milkyPackageVersion}"`);
+  l(`const val milkyVersion = "${ir.milkyVersion}"`);
+  l(`const val milkyPackageVersion = "${ir.milkyPackageVersion}"`);
   l();
   l('@Target(AnnotationTarget.PROPERTY)');
   l('annotation class LiteralDefault(val value: String)');

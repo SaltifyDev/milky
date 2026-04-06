@@ -1,4 +1,3 @@
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { IR, ir, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
 
 function toLowerCamelCase(s: string): string {
@@ -318,15 +317,15 @@ export function generateDartJsonSerializableSpec(): string {
   }
 
   l('// ignore_for_file: invalid_annotation_target');
-  l(`// Generated from Milky ${milkyVersion} (${milkyPackageVersion})`);
+  l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
   l();
   l("import 'package:freezed_annotation/freezed_annotation.dart';");
   l();
   l("part 'milky_types.freezed.dart';");
   l("part 'milky_types.g.dart';");
   l();
-  l(`const milkyVersion = "${milkyVersion}";`);
-  l(`const milkyPackageVersion = "${milkyPackageVersion}";`);
+  l(`const milkyVersion = "${ir.milkyVersion}";`);
+  l(`const milkyPackageVersion = "${ir.milkyPackageVersion}";`);
   l();
   if (arrayUnionRefs.has('IncomingSegment')) {
     l(renderIncomingSegmentListHelper());

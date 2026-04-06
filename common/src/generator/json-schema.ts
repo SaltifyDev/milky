@@ -1,12 +1,19 @@
-import {} from '../common';
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
+import * as t from '@saltify/milky-types';
 import z from 'zod';
 
 export function generateJsonSchema() {
+  const idRegistry = z.registry<{ id: string }>();
+  const seenObjects = new WeakSet();
+  Object.entries(t).forEach(([key, value]) => {
+    if (value instanceof z.ZodObject && !seenObjects.has(value)) {
+      seenObjects.add(value);
+      idRegistry.add(value, { id: key });
+    }
+  });
   return {
-    milkyVersion: milkyVersion,
-    packageVersion: milkyPackageVersion,
-    schemas: z.toJSONSchema(z.globalRegistry, {
+    milkyVersion: t.milkyVersion,
+    packageVersion: t.milkyPackageVersion,
+    schemas: z.toJSONSchema(idRegistry, {
       metadata: z.globalRegistry,
       io: 'input',
     }).schemas,

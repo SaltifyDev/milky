@@ -5,10 +5,8 @@ import './styles.css';
 import icon216 from '@/assets/icon216.png';
 
 import { Banner, Head, Search } from 'nextra/components';
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { Metadata } from 'next';
 import Image from 'next/image';
-import { apiSpecCategories } from '@saltify/milky-types/namings';
 import { ir } from '@saltify/milky-protocol';
 
 const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
@@ -32,9 +30,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Image src={icon216} alt="Milky Logo" height={54} />
                   <div style={{ marginLeft: '0.5rem' }} />
                   <div style={{ fontSize: '1.15rem' }}>
-                    <b>Milky</b> v{milkyVersion}
+                    <b>Milky</b> v{ir.milkyVersion}
                     <div style={{ fontSize: '0.75rem' }}>
-                      <code>v{milkyPackageVersion}</code>
+                      <code>v{ir.milkyPackageVersion}</code>
                     </div>
                   </div>
                 </div>
@@ -48,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               name: 'api',
               route: '/api',
               title: 'API',
-              children: apiSpecCategories.map((category) => ({
+              children: ir.apiCategories.map((category) => ({
                 name: category.name,
                 route: `/api/${category.key}`,
                 title: category.name,
