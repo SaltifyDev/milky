@@ -253,7 +253,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
       if (spec.requestFields) {
         l(
           `export const ${pascalEndpoint}Input = ` +
-            renderIRObject(`${pascalEndpoint}Input`, spec.requestFields, spec.description + '请求参数', true) +
+            renderIRObject(`${pascalEndpoint}Input`, spec.requestFields, spec.endpoint + ' 请求参数', true) +
             ';'
         );
         l(`export type ${pascalEndpoint}Input = z.infer<typeof ${pascalEndpoint}Input>;`);
@@ -262,7 +262,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
       if (spec.responseFields) {
         l(
           `export const ${pascalEndpoint}Output = ` +
-            renderIRObject(`${pascalEndpoint}Output`, spec.responseFields, spec.description + '响应数据', true) +
+            renderIRObject(`${pascalEndpoint}Output`, spec.responseFields, spec.endpoint + ' 响应数据', true) +
             ';'
         );
         l(`export type ${pascalEndpoint}Output = z.infer<typeof ${pascalEndpoint}Output>;`);
