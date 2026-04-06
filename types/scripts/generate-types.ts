@@ -32,7 +32,9 @@ function useLines(): [string[], (line?: string) => void] {
 function snakeCaseToPascalCase(snakeCase: string): string {
   return snakeCase
     .split('_')
-    .map((part) => (preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
+    .map((part) =>
+      preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)
+    )
     .join('');
 }
 
@@ -200,7 +202,9 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
             // add type aliases for Event
             if (struct.name === 'Event') {
               l(`export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = ${structName};`);
-              l(`export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${structName}>;`);
+              l(
+                `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${structName}>;`
+              );
               l();
             }
           }
@@ -233,8 +237,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
         l("  type: 'text',");
         // eslint-disable-next-line quotes
         l("  data: { text: '[unknown]' },");
-        // eslint-disable-next-line quotes
-        l("}).describe('消息内容');");
+        l(`}).describe('${struct.description}');`);
       } else {
         l(`]).describe('${struct.description}');`);
       }

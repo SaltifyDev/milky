@@ -18,12 +18,16 @@ function registerEntries() {
   z.globalRegistry._idmap.clear();
 
   ir.commonStructs.forEach((struct) => {
-    const schema = t[struct.name];
+    let schema = t[struct.name];
     z.globalRegistry.add(schema, {
       id: struct.name,
       title: schema.description,
       description: schema.description,
     });
+
+    if (schema instanceof z.ZodCatch) {
+      schema = schema.def.innerType as z.ZodType;
+    }
 
     if (schema instanceof z.ZodDiscriminatedUnion) {
       schema.options.forEach((option) => {
@@ -38,7 +42,7 @@ function registerEntries() {
 
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((spec) => {
-      if (spec.requestFields !== null) {
+      if (spec.requestFields !== undefined) {
         const requestId = `${snakeCaseToPascalCase(spec.endpoint)}Input`;
         const inputSchema = t[requestId];
         z.globalRegistry.add(inputSchema, {
@@ -47,7 +51,7 @@ function registerEntries() {
           description: `${spec.description} API 请求参数`,
         });
       }
-      if (spec.responseFields !== null) {
+      if (spec.responseFields !== undefined) {
         const outputId = `${snakeCaseToPascalCase(spec.endpoint)}Output`;
         const outputSchema = t[outputId];
         z.globalRegistry.add(outputSchema, {
