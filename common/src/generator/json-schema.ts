@@ -5,7 +5,7 @@ export function generateJsonSchema() {
   const idRegistry = z.registry<{ id: string }>();
   const seenObjects = new WeakSet();
   Object.entries(t).forEach(([key, value]) => {
-    if (value instanceof z.ZodObject && !seenObjects.has(value)) {
+    if (value instanceof z.ZodType && !seenObjects.has(value)) {
       seenObjects.add(value);
       idRegistry.add(value, { id: key });
     }
