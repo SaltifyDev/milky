@@ -1,6 +1,5 @@
-import { IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '../../ir/types';
+import { ir, IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
-import { generateIR } from '../../ir';
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -171,11 +170,11 @@ function toRustFieldName(name: string): string {
   return rustKeywords.has(name) ? `r#${name}` : name;
 }
 
-function collectUnionStructNames(ir: ReturnType<typeof generateIR>): Set<string> {
+function collectUnionStructNames(ir: IR): Set<string> {
   return new Set(ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name));
 }
 
-function collectArrayUnionRefs(ir: ReturnType<typeof generateIR>, unionStructNames: Set<string>): Set<string> {
+function collectArrayUnionRefs(ir: IR, unionStructNames: Set<string>): Set<string> {
   const arrayUnionRefs = new Set<string>();
 
   const handleFields = (fields: IRField[]) => {
@@ -498,7 +497,6 @@ function renderIRUnionStruct(
 }
 
 export function generateRustSerdeSpec(): string {
-  const ir = generateIR();
   const unionStructNames = collectUnionStructNames(ir);
   const arrayUnionRefs = collectArrayUnionRefs(ir, unionStructNames);
   const ctx: RenderContext = {

@@ -73,6 +73,7 @@ export interface IRApi {
 export interface IRFieldBase<T extends string> {
   fieldType: T;
   name: string;
+  dataType?: string;
   description: string;
   isArray: boolean;
   isOptional: boolean;

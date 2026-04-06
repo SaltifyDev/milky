@@ -1,6 +1,5 @@
-import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '../../ir/types';
+import { ir, IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
-import { generateIR } from '../../ir';
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -276,7 +275,6 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
 
 export function generateKotlinxSerializationSpec(): string {
   const lines: string[] = [];
-  const ir = generateIR();
   function l(line: string = '') {
     lines.push(line);
   }

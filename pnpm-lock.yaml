@@ -35,6 +35,9 @@ importers:
 
   common:
     dependencies:
+      '@saltify/milky-protocol':
+        specifier: workspace:*
+        version: link:../protocol
       '@saltify/milky-types':
         specifier: workspace:*
         version: link:../types
@@ -60,6 +63,9 @@ importers:
       '@saltify/milky-common':
         specifier: workspace:*
         version: link:../common
+      '@saltify/milky-protocol':
+        specifier: workspace:*
+        version: link:../protocol
       '@saltify/milky-types':
         specifier: workspace:*
         version: link:../types
@@ -106,6 +112,8 @@ importers:
       pagefind:
         specifier: ^1.4.0
         version: 1.4.0
+
+  protocol: {}
 
   types:
     dependencies:

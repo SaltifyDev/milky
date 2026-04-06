@@ -8,6 +8,7 @@
   },
   "scripts": {},
   "dependencies": {
+    "@saltify/milky-protocol": "workspace:*",
     "@saltify/milky-types": "workspace:*",
     "zod": "^4.3.6"
   },

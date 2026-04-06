@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@saltify/milky-common": "workspace:*",
+    "@saltify/milky-protocol": "workspace:*",
     "@saltify/milky-types": "workspace:*",
     "next": "^16.1.6",
     "nextra": "^4.6.1",

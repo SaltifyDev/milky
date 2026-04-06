@@ -1,0 +1,13 @@
+{
+  "name": "@saltify/milky-protocol",
+  "type": "module",
+  "private": true,
+  "version": "1.2.0",
+  "description": "Milky protocol definition in form of IR",
+  "main": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SaltifyDev/milky.git"
+  },
+  "license": "MIT"
+}

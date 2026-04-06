@@ -9,9 +9,8 @@ import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
 import { Metadata } from 'next';
 import Image from 'next/image';
 import { apiSpecCategories } from '@saltify/milky-types/namings';
-import { generateIR } from '@saltify/milky-common/src/ir';
+import { ir } from '@saltify/milky-protocol';
 
-const ir = generateIR();
 const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
 
 export const metadata: Metadata = {

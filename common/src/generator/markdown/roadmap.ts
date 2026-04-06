@@ -1,5 +1,28 @@
-import { Event, IncomingSegment, milkyPackageVersion, milkyVersion, OutgoingSegment } from '@saltify/milky-types';
-import { apiSpecCategories } from '@saltify/milky-types/namings';
+import { ir, IRPlainUnionStruct, IRNestedUnionStruct } from '@saltify/milky-protocol';
+
+function findUnionStruct(name: string): IRPlainUnionStruct | IRNestedUnionStruct {
+  const struct = ir.commonStructs.find((candidate) => candidate.name === name);
+
+  if (!struct || struct.structType !== 'union') {
+    throw new Error(`Union struct "${name}" not found in IR`);
+  }
+
+  return struct;
+}
+
+function getUnionVariants(struct: IRPlainUnionStruct | IRNestedUnionStruct): { tagValue: string; description: string }[] {
+  if (struct.unionType === 'withData') {
+    return struct.derivedTypes.map((derivedType) => ({
+      tagValue: derivedType.tagValue,
+      description: derivedType.description,
+    }));
+  }
+
+  return struct.derivedStructs.map((derivedStruct) => ({
+    tagValue: derivedStruct.tagValue,
+    description: derivedStruct.description,
+  }));
+}
 
 export function generateMarkdownRoadmap(): string {
   const lines: string[] = [];
@@ -8,37 +31,36 @@ export function generateMarkdownRoadmap(): string {
   }
   l('# Roadmap');
   l();
-  l(`<!-- Generated from Milky ${milkyVersion} (${milkyPackageVersion}) -->`);
+  l(`<!-- Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion}) -->`);
   l();
   l('## API');
   l();
-  apiSpecCategories.forEach((category) => {
+  ir.apiCategories.forEach((category) => {
     l(`### ${category.name}`);
     l();
-    category.apiSpecs.forEach((spec) => {
-      l(`- [ ] \`/${spec.endpoint}\` ${spec.description}`);
+    category.apis.forEach((api) => {
+      l(`- [ ] \`/${api.endpoint}\` ${api.description}`);
     });
     l();
   });
   l('## 事件 (Event)');
   l();
-  Event.options.forEach((option) => {
-    l(`- [ ] \`${option.shape[Event.def.discriminator].value}\` ${option.description}`);
+  getUnionVariants(findUnionStruct('Event')).forEach((variant) => {
+    l(`- [ ] \`${variant.tagValue}\` ${variant.description}`);
   });
   l();
   l('## 消息段 (Segment)');
   l();
   l('### 接收消息段 (IncomingSegment)');
   l();
-  const incomingSegment = IncomingSegment.unwrap();
-  incomingSegment.options.forEach((option) => {
-    l(`- [ ] \`${option.shape[incomingSegment.def.discriminator].value}\` ${option.description}`);
+  getUnionVariants(findUnionStruct('IncomingSegment')).forEach((variant) => {
+    l(`- [ ] \`${variant.tagValue}\` ${variant.description}`);
   });
   l();
   l('### 发送消息段 (OutgoingSegment)');
   l();
-  OutgoingSegment.options.forEach((option) => {
-    l(`- [ ] \`${option.shape[OutgoingSegment.def.discriminator].value}\` ${option.description}`);
+  getUnionVariants(findUnionStruct('OutgoingSegment')).forEach((variant) => {
+    l(`- [ ] \`${variant.tagValue}\` ${variant.description}`);
   });
   return lines.join('\n');
 }
