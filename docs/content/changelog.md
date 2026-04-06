@@ -2,7 +2,7 @@
 
 ## 1.2.0
 
-> Released on 2025-04-06
+> Released on 2026-04-06
 
 > [!important]
 >
@@ -49,7 +49,7 @@
 
 ## 1.1.0
 
-> Released on 2025-01-10
+> Released on 2026-01-10
 
 ### API 更改
 
