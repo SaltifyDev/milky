@@ -11,6 +11,7 @@ import {
 } from '../scalar';
 import { GroupAnnouncementEntity, GroupNotification } from '../common';
 import { GroupEssenceMessage } from '../message';
+import { ZRobustArray } from '../robust';
 
 export const SetGroupNameInput = z.object({
   group_id: ZUin.describe('群号'),
@@ -100,7 +101,8 @@ export const QuitGroupInput = z.object({
 export const SendGroupMessageReactionInput = z.object({
   group_id: ZUin.describe('群号'),
   message_seq: ZInt64.describe('要回应的消息序列号'),
-  reaction: ZString.describe('表情 ID'),
+  reaction: ZString.describe('发送的回应的表情 ID'),
+  reaction_type: z.enum(['face', 'emoji']).default('face').describe('发送的回应类型'),
   is_add: ZBooleanWithDefault(true).describe('是否添加表情，`false` 表示取消'),
 });
 
@@ -116,7 +118,7 @@ export const GetGroupNotificationsInput = z.object({
 });
 
 export const GetGroupNotificationsOutput = z.object({
-  notifications: z.array(z.lazy(() => GroupNotification)).describe('获取到的群通知（notification_seq 降序排列），序列号不一定连续'),
+  notifications: ZRobustArray(GroupNotification).describe('获取到的群通知（notification_seq 降序排列），序列号不一定连续'),
   next_notification_seq: ZInt64.nullish().describe('下一页起始通知序列号'),
 });
 

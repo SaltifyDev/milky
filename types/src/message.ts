@@ -23,6 +23,7 @@ export const IncomingSegment = z.discriminatedUnion('type', [
     type: z.literal('mention'),
     data: z.object({
       user_id: ZUin.describe('提及的 QQ 号'),
+      name: ZString.describe('去掉 `@` 前缀的提及的名称'),
     }),
   }).describe('提及消息段'),
 
@@ -43,6 +44,12 @@ export const IncomingSegment = z.discriminatedUnion('type', [
     type: z.literal('reply'),
     data: z.object({
       message_seq: ZInt64.describe('被引用的消息序列号'),
+      sender_id: ZUin.describe('被引用的消息发送者 QQ 号'),
+      sender_name: ZString.nullish().describe('被引用的消息发送者名称，仅在合并转发中能够获取'),
+      time: ZInt64.describe('被引用的消息的 Unix 时间戳（秒）'),
+      get segments() {
+        return z.array(z.lazy(() => IncomingSegment)).describe('被引用的消息内容');
+      }
     }),
   }).describe('回复消息段'),
 
@@ -118,9 +125,15 @@ export const IncomingSegment = z.discriminatedUnion('type', [
       xml_payload: ZString.describe('XML 数据'),
     }),
   }).describe('XML 消息段'),
-]).describe('接收消息段');
+]).catch({
+  type: 'text',
+  data: {
+    text: '[unknown]'
+  }
+}).describe('接收消息段');
 
 export const IncomingForwardedMessage = z.object({
+  message_seq: ZInt64.describe('消息序列号'),
   sender_name: ZString.describe('发送者名称'),
   avatar_url: ZString.describe('发送者头像 URL'),
   time: ZInt64.describe('消息 Unix 时间戳（秒）'),
@@ -186,10 +199,21 @@ export const OutgoingSegment = z.discriminatedUnion('type', [
     type: z.literal('forward'),
     data: z.object({
       get messages() {
-        return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('合并转发消息段');
-      }
+        return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('合并转发消息内容');
+      },
+      title: ZString.nullish().describe('合并转发标题'),
+      preview: z.array(ZString).min(1).max(4).nullish().describe('合并转发预览文本，若提供，至少 1 条，至多 4 条'),
+      summary: ZString.nullish().describe('合并转发摘要'),
+      prompt: ZString.nullish().describe('合并转发的预览外显文本，仅对移动端 QQ 有效'),
     }),
   }).describe('合并转发消息段'),
+
+  z.object({
+    type: z.literal('light_app'),
+    data: z.object({
+      json_payload: ZString.describe('小程序 JSON 数据'),
+    }),
+  }).describe('小程序消息段'),
 ]).describe('发送消息段');
 
 export const OutgoingForwardedMessage = z.object({
