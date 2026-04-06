@@ -1,4 +1,4 @@
-import { commonStructMap, commonStructNameMap } from '@common/common';
+import { commonStructMap, commonStructNameMap } from '../common';
 import {
   IR,
   IRApi,

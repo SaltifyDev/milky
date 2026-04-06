@@ -1,6 +1,6 @@
-import { IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@common/ir/types';
+import { IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '../../ir/types';
 import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
-import { generateIR } from '@common/ir';
+import { generateIR } from '../../ir';
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
