@@ -8,7 +8,6 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
     "declaration": true,
     "strict": true,
