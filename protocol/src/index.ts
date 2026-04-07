@@ -1,12 +1,13 @@
 import { commonStructs } from './ir/common';
 import { apiCategories } from './ir/api';
 import { IR } from './types';
+import pkg from '../../types/package.json';
 
 export * from './types';
 
 export const ir: IR = {
-  milkyVersion: '1.2',
-  milkyPackageVersion: '1.2.0',
+  milkyVersion: pkg.version.split('.').slice(0, 2).join('.'),
+  milkyPackageVersion: pkg.version,
   commonStructs,
   apiCategories,
 };
