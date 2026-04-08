@@ -11,3 +11,5 @@ export const ir: IR = {
   commonStructs,
   apiCategories,
 };
+
+export default ir;
