@@ -9,6 +9,7 @@ import { generateKotlinxSerializationSpec } from './generator/kotlin/kotlinx-ser
 import { generateMarkdownRoadmap } from './generator/markdown/roadmap';
 import { generateOpenApiSpec } from './generator/openapi';
 import { generateRustSerdeSpec } from './generator/rust/serde';
+import { generateTypeScriptStaticSpec } from './generator/typescript/static';
 import { generateTypeScriptZodSpec } from './generator/typescript/zod';
 
 type GeneratorOutput = string | object;
@@ -34,6 +35,10 @@ const generatorSpecs: GeneratorSpec[] = [
   {
     canonicalName: 'rust/serde',
     generate: generateRustSerdeSpec,
+  },
+  {
+    canonicalName: 'typescript/static',
+    generate: generateTypeScriptStaticSpec,
   },
   {
     canonicalName: 'typescript/zod',
