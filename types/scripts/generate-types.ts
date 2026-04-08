@@ -273,6 +273,32 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
       }
     });
   });
+  l('// ####################################');
+  l('// Meta Information');
+  l('// ####################################');
+  l();
+  l('export const zodCommonStructs = {');
+  ir.commonStructs.forEach((struct) => {
+    l(`  ${struct.name},`);
+  });
+  l('};');
+  l();
+  l('export const zodApiCategories = {');
+  ir.apiCategories.forEach((category) => {
+    l(`  ${category.key}: {`);
+    l(`    name: '${category.name}',`);
+    l('    apis: {');
+    category.apis.forEach((spec) => {
+      l(`      ${spec.endpoint}: {`);
+      l(`        description: '${spec.description}',`);
+      l(`        requestSchema: ${spec.requestFields ? `${snakeCaseToPascalCase(spec.endpoint)}Input` : 'null'},`);
+      l(`        responseSchema: ${spec.responseFields ? `${snakeCaseToPascalCase(spec.endpoint)}Output` : 'null'},`);
+      l('      },');
+    });
+    l('    },');
+    l('  },');
+  });
+  l('};');
 
   return lines.join('\n');
 }
