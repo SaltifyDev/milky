@@ -1,7 +1,8 @@
 import { generateTypeScriptStaticSpec } from '@saltify/milky-common/src/generator/typescript/static';
+import { ir } from '@saltify/milky-protocol';
 
 export const dynamic = 'force-static';
 
 export function GET() {
-  return new Response(generateTypeScriptStaticSpec());
+  return new Response(generateTypeScriptStaticSpec(ir));
 }

@@ -1,4 +1,4 @@
-import { ir } from '@saltify/milky-protocol';
+import { IR } from '@saltify/milky-protocol';
 import { getTypeScriptTypeProjection, normalizeDerivedStructName, snakeCaseToPascalCase } from './common';
 
 function useLines(): [string[], (line?: string) => void] {
@@ -9,7 +9,7 @@ function useLines(): [string[], (line?: string) => void] {
   return [lines, l];
 }
 
-export function generateTypeScriptStaticSpec(): string {
+export function generateTypeScriptStaticSpec(ir: IR): string {
   const [lines, l] = useLines();
 
   l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);

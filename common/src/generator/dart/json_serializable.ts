@@ -1,4 +1,4 @@
-import { IR, ir, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -306,7 +306,7 @@ function renderIRUnionStruct(
   return { union: lines.join('\n'), extraDefs };
 }
 
-export function generateDartJsonSerializableSpec(): string {
+export function generateDartJsonSerializableSpec(ir: IR): string {
   const lines: string[] = [];
   const unionStructNames = new Set(
     ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name)

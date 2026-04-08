@@ -1,4 +1,4 @@
-import { ir, IRField } from '@saltify/milky-protocol';
+import { IR, IRField } from '@saltify/milky-protocol';
 import { getTypeScriptTypeProjection, normalizeDerivedStructName, snakeCaseToPascalCase } from './common';
 
 const applyDropBadElementArrayStructs = ['GroupNotification'];
@@ -28,7 +28,7 @@ function useLines(): [string[], (line?: string) => void] {
   return [lines, l];
 }
 
-function getZodTypeSpec(field: IRField): string {
+function getZodTypeSpec(ir: IR, field: IRField): string {
   let typeSpec: string = 'z.unknown()';
   if (field.fieldType === 'scalar') {
     if (field.dataType !== undefined) {
@@ -74,6 +74,7 @@ function getZodTypeSpec(field: IRField): string {
 }
 
 function renderIRObject(
+  ir: IR,
   name: string,
   fields: IRField[],
   description: string,
@@ -92,7 +93,7 @@ function renderIRObject(
     if (specialReplacements.has(specialKey)) {
       l(specialReplacements.get(specialKey));
     } else {
-      l(`  ${field.name}: ${getZodTypeSpec(field)}.describe('${field.description}'),`);
+      l(`  ${field.name}: ${getZodTypeSpec(ir, field)}.describe('${field.description}'),`);
     }
   });
   if (withDescription) {
@@ -104,7 +105,7 @@ function renderIRObject(
   return lines.join('\n');
 }
 
-export function generateTypeScriptZodSpec() {
+export function generateTypeScriptZodSpec(ir: IR) {
   const [lines, l] = useLines();
 
   l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
@@ -130,14 +131,14 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
   l();
   ir.commonStructs.forEach((struct) => {
     if (struct.structType === 'simple') {
-      l(`export const ${struct.name} = ${renderIRObject(struct.name, struct.fields, struct.description, true)};`);
+      l(`export const ${struct.name} = ${renderIRObject(ir, struct.name, struct.fields, struct.description, true)};`);
       l(`export type ${struct.name} = z.infer<typeof ${struct.name}>;`);
     } else {
       // is union struct
       if (struct.unionType === 'plain') {
         struct.derivedStructs.forEach((derived) => {
           l(
-            `export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = ${renderIRObject(struct.name, derived.fields, derived.description, true, struct.tagFieldName, derived.tagValue)};`
+            `export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = ${renderIRObject(ir, struct.name, derived.fields, derived.description, true, struct.tagFieldName, derived.tagValue)};`
           );
           l(
             `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`
@@ -153,7 +154,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
         struct.derivedTypes.forEach((derived) => {
           const structName = normalizeDerivedStructName(struct.name, derived.tagValue) + 'Data';
           if (derived.derivingType === 'struct') {
-            l(`export const ${structName} = ${renderIRObject(structName, derived.fields, derived.description, true)};`);
+            l(`export const ${structName} = ${renderIRObject(ir, structName, derived.fields, derived.description, true)};`);
             l(`export type ${structName} = z.infer<typeof ${structName}>;`);
             l();
             // add type aliases for Event
@@ -171,7 +172,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
           l('  z.object({');
           l(`    ${struct.tagFieldName}: z.literal('${derived.tagValue}'),`);
           struct.baseFields.forEach((field) => {
-            l(`    ${field.name}: ${getZodTypeSpec(field)}.describe('${field.description}'),`);
+            l(`    ${field.name}: ${getZodTypeSpec(ir, field)}.describe('${field.description}'),`);
           });
           if (derived.derivingType === 'struct') {
             l(
@@ -211,7 +212,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
       if (spec.requestFields) {
         l(
           `export const ${pascalEndpoint}Input = ` +
-            renderIRObject(`${pascalEndpoint}Input`, spec.requestFields, spec.endpoint + ' 请求参数', true) +
+            renderIRObject(ir, `${pascalEndpoint}Input`, spec.requestFields, spec.endpoint + ' 请求参数', true) +
             ';'
         );
         l(`export type ${pascalEndpoint}Input = z.infer<typeof ${pascalEndpoint}Input>;`);
@@ -220,7 +221,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
       if (spec.responseFields) {
         l(
           `export const ${pascalEndpoint}Output = ` +
-            renderIRObject(`${pascalEndpoint}Output`, spec.responseFields, spec.endpoint + ' 响应数据', true) +
+            renderIRObject(ir, `${pascalEndpoint}Output`, spec.responseFields, spec.endpoint + ' 响应数据', true) +
             ';'
         );
         l(`export type ${pascalEndpoint}Output = z.infer<typeof ${pascalEndpoint}Output>;`);

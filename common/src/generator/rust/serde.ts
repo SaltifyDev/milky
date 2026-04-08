@@ -1,4 +1,4 @@
-import { ir, IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
 
 function toLowerCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -495,7 +495,7 @@ function renderIRUnionStruct(
   return { union: lines.join('\n'), extraDefs };
 }
 
-export function generateRustSerdeSpec(): string {
+export function generateRustSerdeSpec(ir: IR): string {
   const unionStructNames = collectUnionStructNames(ir);
   const arrayUnionRefs = collectArrayUnionRefs(ir, unionStructNames);
   const ctx: RenderContext = {

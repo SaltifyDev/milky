@@ -13,5 +13,6 @@
     "declaration": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
+    "types": ["node"]
   }
 }

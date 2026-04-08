@@ -1,6 +1,7 @@
 {
   "name": "milky",
   "scripts": {
+    "prepare": "tsx generator/src/cli.ts generate typescript/zod -v local -o types/src/index.g.ts",
     "docs:dev": "pnpm --filter @saltify/milky-docs dev"
   },
   "license": "MIT",

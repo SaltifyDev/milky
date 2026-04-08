@@ -1,6 +1,6 @@
-import { ir, IRPlainUnionStruct, IRNestedUnionStruct } from '@saltify/milky-protocol';
+import { IRPlainUnionStruct, IRNestedUnionStruct, IR } from '@saltify/milky-protocol';
 
-function findUnionStruct(name: string): IRPlainUnionStruct | IRNestedUnionStruct {
+function findUnionStruct(ir: IR, name: string): IRPlainUnionStruct | IRNestedUnionStruct {
   const struct = ir.commonStructs.find((candidate) => candidate.name === name);
 
   if (!struct || struct.structType !== 'union') {
@@ -10,7 +10,9 @@ function findUnionStruct(name: string): IRPlainUnionStruct | IRNestedUnionStruct
   return struct;
 }
 
-function getUnionVariants(struct: IRPlainUnionStruct | IRNestedUnionStruct): { tagValue: string; description: string }[] {
+function getUnionVariants(
+  struct: IRPlainUnionStruct | IRNestedUnionStruct
+): { tagValue: string; description: string }[] {
   if (struct.unionType === 'withData') {
     return struct.derivedTypes.map((derivedType) => ({
       tagValue: derivedType.tagValue,
@@ -24,7 +26,7 @@ function getUnionVariants(struct: IRPlainUnionStruct | IRNestedUnionStruct): { t
   }));
 }
 
-export function generateMarkdownRoadmap(): string {
+export function generateMarkdownRoadmap(ir: IR): string {
   const lines: string[] = [];
   function l(line: string = '') {
     lines.push(line);
@@ -45,7 +47,7 @@ export function generateMarkdownRoadmap(): string {
   });
   l('## 事件 (Event)');
   l();
-  getUnionVariants(findUnionStruct('Event')).forEach((variant) => {
+  getUnionVariants(findUnionStruct(ir, 'Event')).forEach((variant) => {
     l(`- [ ] \`${variant.tagValue}\` ${variant.description}`);
   });
   l();
@@ -53,13 +55,13 @@ export function generateMarkdownRoadmap(): string {
   l();
   l('### 接收消息段 (IncomingSegment)');
   l();
-  getUnionVariants(findUnionStruct('IncomingSegment')).forEach((variant) => {
+  getUnionVariants(findUnionStruct(ir, 'IncomingSegment')).forEach((variant) => {
     l(`- [ ] \`${variant.tagValue}\` ${variant.description}`);
   });
   l();
   l('### 发送消息段 (OutgoingSegment)');
   l();
-  getUnionVariants(findUnionStruct('OutgoingSegment')).forEach((variant) => {
+  getUnionVariants(findUnionStruct(ir, 'OutgoingSegment')).forEach((variant) => {
     l(`- [ ] \`${variant.tagValue}\` ${variant.description}`);
   });
   return lines.join('\n');

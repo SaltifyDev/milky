@@ -77,8 +77,8 @@ jobs:
 
       - name: Generate Kotlin Types
         run: |
-          cd common
-          npx milky-common generate kotlin/kotlinx-serialization ../Types.kt
+          cd generator
+          npx tsx src/cli.ts generate kotlin/kotlinx-serialization -v local -o ../Types.kt
 
       - name: Checkout milky-kt-types
         uses: actions/checkout@v4

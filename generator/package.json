@@ -1,12 +1,10 @@
 {
-  "name": "@saltify/milky-types",
+  "name": "@saltify/milky-generator",
   "type": "module",
-  "version": "1.2.1-rc.2",
-  "description": "Type definitions for Milky protocol",
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.mjs",
-    "typings": "dist/index.d.mts"
+  "version": "0.1.0",
+  "description": "Milky codegen CLI",
+  "bin": {
+    "milkygen": "dist/cli.mjs"
   },
   "files": [
     "dist"
@@ -22,10 +20,10 @@
     "url": "git+https://github.com/SaltifyDev/milky.git"
   },
   "license": "MIT",
-  "dependencies": {
-    "zod": "^4.3.6"
-  },
   "devDependencies": {
-    "@saltify/milky-protocol": "workspace:*"
+    "@saltify/milky-common": "workspace:*",
+    "@saltify/milky-protocol": "workspace:*",
+    "@types/node": "^24.12.2",
+    "cmd-ts": "^0.15.0"
   }
 }
