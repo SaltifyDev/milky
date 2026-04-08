@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "tsx scripts/generate-types.ts > src/index.g.ts",
+    "prepare": "milky-common generate typescript/zod src/index.g.ts",
     "build": "tsdown",
     "prepack": "npm run build"
   },
@@ -27,6 +27,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@saltify/milky-common": "workspace:*",
     "@saltify/milky-protocol": "workspace:*"
   }
 }

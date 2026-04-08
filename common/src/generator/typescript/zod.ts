@@ -109,7 +109,6 @@ function getZodTypeSpec(field: IRField): string {
   if (field.isOptional) {
     typeSpec += '.nullish()';
   } else if (field.defaultValue !== undefined) {
-    // eslint-disable-next-line quotes
     typeSpec += `.nullish().default(${JSON.stringify(field.defaultValue).replace(/"/g, "'")}).transform<${getTypeScriptTypeProjection(field)}>((val) => val ?? ${JSON.stringify(field.defaultValue).replace(/"/g, "'")})`;
   }
 
@@ -147,7 +146,7 @@ function renderIRObject(
   return lines.join('\n');
 }
 
-function generateTypeScriptZodSpec() {
+export function generateTypeScriptZodSpec() {
   const [lines, l] = useLines();
 
   l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
@@ -233,9 +232,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
       }
       if (struct.name === 'IncomingSegment') {
         l(']).catch({');
-        // eslint-disable-next-line quotes
         l("  type: 'text',");
-        // eslint-disable-next-line quotes
         l("  data: { text: '[unknown]' },");
         l(`}).describe('${struct.description}');`);
       } else {
@@ -299,8 +296,7 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
     l('  },');
   });
   l('};');
+  l();
 
   return lines.join('\n');
 }
-
-console.log(generateTypeScriptZodSpec());
