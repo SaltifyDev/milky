@@ -50,9 +50,11 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件，方便开发者直接下载和使用，通过 MIT 许可证发布。点击以下链接可进行预览。
 
-- [Kotlin 类型定义 (kotlinx.serialization)](/preview?path=kotlin/kotlinx-serialization.txt)
 - [Dart 类型定义 (freezed + json_serializable)](/preview?path=dart/json_serializable.txt)
+- [Kotlin 类型定义 (kotlinx.serialization)](/preview?path=kotlin/kotlinx-serialization.txt)
 - [Rust 类型定义 (serde)](/preview?path=rust/serde.txt)
+- [TypeScript 类型定义 (仅接口)](/preview?path=typescript/static.txt)
+- [TypeScript 类型定义 (Zod)](/preview?path=typescript/zod.txt)
 
 ### 实用资源
 
