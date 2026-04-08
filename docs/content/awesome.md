@@ -20,7 +20,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 - **NoneBot** - [adapter-milky](https://github.com/nonebot/adapter-milky) (MIT)
 - **Koishi** - [koishi-plugin-adapter-milky](https://github.com/idranme/koishi-plugin-adapter-milky) (MIT)
-- **Karin** - [karin-plugin-adapter-milky](https://github.com/KarinJS/karin-plugin-adapter-milky) (GPL-3.0)
+- **Karin** - [karin-plugin-adapter-milky](https://github.com/KarinJS/karin-plugin-adapter-milky) (MIT)
 
 ### 作为依赖库发布
 
