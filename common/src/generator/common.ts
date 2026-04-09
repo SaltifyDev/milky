@@ -3,6 +3,11 @@ import { z } from 'zod';
 
 const preserveFullCapitalizedWords = ['csrf'];
 
+const dynamicImport = new Function('specifier', 'return import(specifier);') as (
+  specifier: string
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => Promise<Record<string, any>>;
+
 export function snakeCaseToPascalCase(snakeCase: string): string {
   return snakeCase
     .split('_')
@@ -14,7 +19,7 @@ export function snakeCaseToPascalCase(snakeCase: string): string {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function importCodeAsModule(code: string): Promise<Record<string, any>> {
-  const mod = await import('data:text/javascript,' + encodeURIComponent(code));
+  const mod = await dynamicImport('data:text/javascript,' + encodeURIComponent(code));
   return mod;
 }
 
