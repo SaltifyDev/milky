@@ -1,5 +1,5 @@
-import { generateMarkdownRoadmap } from '@saltify/milky-common/src/generator/markdown/roadmap';
 import { ir } from '@saltify/milky-protocol';
+import { generateMarkdownRoadmap } from '@saltify/milky-common';
 
 export const dynamic = 'force-static';
 

@@ -1,5 +1,5 @@
-import { generateKotlinxSerializationSpec } from '@saltify/milky-common/src/generator/kotlin/kotlinx-serialization';
 import { ir } from '@saltify/milky-protocol';
+import { generateKotlinxSerializationSpec } from '@saltify/milky-common';
 
 export const dynamic = 'force-static';
 

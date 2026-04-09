@@ -1,19 +1,24 @@
-import * as _t from '@saltify/milky-types';
-import z from 'zod';
-import { ir } from '@saltify/milky-protocol';
-
-const t = _t as unknown as Record<string, z.ZodType>; // for easier access to types by string keys
+import { IR } from '@saltify/milky-protocol';
+import { z } from 'zod';
 
 const preserveFullCapitalizedWords = ['csrf'];
 
-function snakeCaseToPascalCase(snakeCase: string): string {
+export function snakeCaseToPascalCase(snakeCase: string): string {
   return snakeCase
     .split('_')
-    .map((part) => (preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
+    .map((part) =>
+      preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)
+    )
     .join('');
 }
 
-function registerEntries() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function importCodeAsModule(code: string): Promise<Record<string, any>> {
+  const mod = await import('data:text/javascript,' + encodeURIComponent(code));
+  return mod;
+}
+
+export function initRegistry(ir: IR, t: Record<string, z.ZodType>) {
   // clean existing ID entries to prevent errors
   z.globalRegistry._idmap.clear();
 
@@ -63,7 +68,3 @@ function registerEntries() {
     });
   });
 }
-
-// Do initial registration.
-// This breaks global state; fortunately, this module is internal.
-registerEntries();

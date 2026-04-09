@@ -1,5 +1,5 @@
-import { generateTypeScriptStaticSpec } from '@saltify/milky-common/src/generator/typescript/static';
 import { ir } from '@saltify/milky-protocol';
+import { generateTypeScriptStaticSpec } from '@saltify/milky-common';
 
 export const dynamic = 'force-static';
 

@@ -1,5 +1,5 @@
-import { generateDartJsonSerializableSpec } from '@saltify/milky-common/src/generator/dart/json_serializable';
 import { ir } from '@saltify/milky-protocol';
+import { generateDartJsonSerializableSpec } from '@saltify/milky-common';
 
 export const dynamic = 'force-static';
 

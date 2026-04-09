@@ -1,5 +1,5 @@
-import { generateTypeScriptZodSpec } from '@saltify/milky-common/src/generator/typescript/zod';
 import { ir } from '@saltify/milky-protocol';
+import { generateTypeScriptZodSpec } from '@saltify/milky-common';
 
 export const dynamic = 'force-static';
 

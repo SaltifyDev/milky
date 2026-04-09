@@ -6,7 +6,7 @@ import { command, run, string, positional, option, subcommands } from 'cmd-ts';
 
 type GeneratorSpec = {
   canonicalName: string;
-  generate: (ir: IR) => string | object;
+  generate: (ir: IR) => string | object | Promise<string | object>;
 };
 
 const generators: GeneratorSpec[] = [
@@ -15,12 +15,20 @@ const generators: GeneratorSpec[] = [
     generate: c.generateDartJsonSerializableSpec,
   },
   {
+    canonicalName: 'json-schema',
+    generate: c.generateJsonSchema,
+  },
+  {
     canonicalName: 'kotlin/kotlinx-serialization',
     generate: c.generateKotlinxSerializationSpec,
   },
   {
     canonicalName: 'markdown/roadmap',
     generate: c.generateMarkdownRoadmap,
+  },
+  {
+    canonicalName: 'openapi',
+    generate: c.generateOpenApiSpec,
   },
   {
     canonicalName: 'rust/serde',
@@ -95,7 +103,7 @@ const cmd = subcommands({
           process.exit(1);
         }
         const protocol = await resolveProtocolOfVersion(args.version);
-        const content = serializeOutput(spec.generate(protocol));
+        const content = serializeOutput(await spec.generate(protocol));
         if (args.output.length === 0) {
           process.stdout.write(content);
           process.exit(0);
