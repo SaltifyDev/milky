@@ -8,8 +8,6 @@ export function getApiTypeNames(endpoint: string) {
     pascalEndpoint,
     inputName: `${pascalEndpoint}Input`,
     outputName: `${pascalEndpoint}Output`,
-    requestName: `${pascalEndpoint}Request`,
-    responseName: `${pascalEndpoint}Response`,
   };
 }
 

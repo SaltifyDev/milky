@@ -96,30 +96,46 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
       const typeNames = getApiTypeNames(api.endpoint);
       l(`/** ${api.description} API 请求参数 */`);
       if (api.requestFields !== undefined) {
-        l(`export interface ${typeNames.requestName} {`);
+        l(`export interface ${typeNames.inputName} {`);
         api.requestFields.forEach((field) => {
           l(`  /** ${field.description} */`);
           l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
         });
         l('}');
       } else {
-        l(`export type ${typeNames.requestName} = {};`);
+        l(`export type ${typeNames.inputName} = {};`);
       }
       l();
       l(`/** ${api.description} API 响应数据 */`);
       if (api.responseFields !== undefined) {
-        l(`export interface ${typeNames.responseName} {`);
+        l(`export interface ${typeNames.outputName} {`);
         api.responseFields.forEach((field) => {
           l(`  /** ${field.description} */`);
           l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
         });
         l('}');
       } else {
-        l(`export type ${typeNames.responseName} = {};`);
+        l(`export type ${typeNames.outputName} = {};`);
       }
       l();
     });
   });
+  l('export interface ApiCategories {');
+  ir.apiCategories.forEach((category) => {
+    l(`  /** ${category.name} */`);
+    l(`  ${category.key}: {`);
+    category.apis.forEach((api) => {
+      const typeNames = getApiTypeNames(api.endpoint);
+      l(`    /** ${api.description} */`);
+      l(`    ${api.endpoint}: {`);
+      l(`      request: ${typeNames.inputName};`);
+      l(`      response: ${typeNames.outputName};`);
+      l('    };');
+    });
+    l('  };');
+  });
+  l('}');
+  l();
 
   return writer.toString();
 }
