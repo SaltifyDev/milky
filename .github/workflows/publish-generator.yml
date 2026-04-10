@@ -102,4 +102,4 @@ jobs:
             npm_tag="rc"
           fi
 
-          npm publish --tag "$npm_tag"
+          pnpm publish --tag "$npm_tag"
