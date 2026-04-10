@@ -629,7 +629,7 @@ export function generateRustSerdeSpec(ir: IR): string {
   l('pub trait ApiEndpoint {');
   l('    type Input: Serialize;');
   l('    type Output: DeserializeOwned;');
-  l("    const PATH: &'static str;");
+  l("    const NAME: &'static str;");
   l('}');
   l();
   ir.apiCategories.forEach((category) => {
