@@ -54,7 +54,7 @@ Milky 的协议内容以 Milky IR 的形式发布在 npm 包 [@saltify/milky-pro
 
 Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件和实用资源，方便开发者直接下载和使用，通过 MIT 许可证发布。点击以下链接可进行预览。所有原始文件均基于代码库的最新 commit。
 
-- [Milky IR](/preview?path=milky-ir/milky-ir.json)
+- [Milky IR](/preview?path=milky-ir/ir.json)
 - [Dart 类型定义 (freezed + json_serializable)](/preview?path=dart/json_serializable.txt)
 - [Kotlin 类型定义 (kotlinx.serialization)](/preview?path=kotlin/kotlinx-serialization.txt)
 - [Rust 类型定义 (serde)](/preview?path=rust/serde.txt)
