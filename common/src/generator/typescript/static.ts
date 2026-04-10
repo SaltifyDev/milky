@@ -86,7 +86,7 @@ export const milkyPackageVersion = '${ir.milkyPackageVersion}';
         l(`export type ${struct.name} =`);
         struct.derivedTypes.forEach((derivedType, index) => {
           l('  | {');
-          l(`      type: '${derivedType.tagValue}';`);
+          l(`      ${struct.tagFieldName}: '${derivedType.tagValue}';`);
           l(`      data: ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}Data;`);
           l(`    }${index === struct.derivedTypes.length - 1 ? ';' : ''}`);
         });
