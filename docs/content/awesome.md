@@ -37,6 +37,10 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 ## 其他项目
 
+Milky 的协议内容以 Milky IR 的形式发布在 npm 包 [@saltify/milky-protocol](https://www.npmjs.com/package/@saltify/milky-protocol) 中，提供了 Milky IR 的原始文件和 TypeScript 导出。Milky IR 本身为 JSON 格式的协议定义，包含了 Milky 协议的所有细节内容，具体格式与介绍见上述包的 README 文件。
+
+[@saltify/milky-generator](https://www.npmjs.com/package/@saltify/milky-generator) (MIT) 是基于 Milky IR 的代码生成 CLI，支持生成多种目标格式的类型定义，并且可以指定版本号，方便开发者根据需要生成不同版本的 Milky 协议定义。
+
 ### Type Definitions
 
 以下是由 Milky 社区提供的类型定义包，可以在项目中直接引用。虽然没有直接提供实现或对接功能，但可以帮助开发者快速编写 Milky 协议的实现或 SDK。
@@ -46,19 +50,16 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Rust** - [milky-types](https://crates.io/crates/milky-types) (MIT **or** Apache 2.0)
 - **Kotlin** - [milky-kt-types](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-types) (MIT)
 
-### Type Definition 原始文件
+### 原始文件与实用资源
 
-Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件，方便开发者直接下载和使用，通过 MIT 许可证发布。点击以下链接可进行预览。
+Milky 官网在 `/raw` 端点下提供了一些语言的类型定义原始文件和实用资源，方便开发者直接下载和使用，通过 MIT 许可证发布。点击以下链接可进行预览。所有原始文件均基于代码库的最新 commit。
 
-- [Kotlin 类型定义 (kotlinx.serialization)](/preview?path=kotlin/kotlinx-serialization.txt)
+- [Milky IR](/preview?path=milky-ir/ir.json)
 - [Dart 类型定义 (freezed + json_serializable)](/preview?path=dart/json_serializable.txt)
+- [Kotlin 类型定义 (kotlinx.serialization)](/preview?path=kotlin/kotlinx-serialization.txt)
 - [Rust 类型定义 (serde)](/preview?path=rust/serde.txt)
-
-### 实用资源
-
-以下是一些与 Milky 协议相关的实用资源，方便参考和使用，同样通过 MIT 许可证发布。
-
+- [TypeScript 类型定义 (仅接口)](/preview?path=typescript/static.txt)
+- [TypeScript 类型定义 (Zod)](/preview?path=typescript/zod.txt)
 - [JSON Schema](/preview?path=json-schema/schema.json)
 - [OpenAPI Specification v3.1](/preview?path=openapi/openapi.json)
-- [Milky IR](/preview?path=milky-ir/ir.json) - 更简洁、对 Codegen 更友好的 Milky API 中间表示形式
-- [Roadmap](/preview?path=markdown/roadmap.txt) - Markdown 格式的模板，用于规划你的 Milky 实现或 SDK 项目
+- [Markdown Roadmap](/preview?path=markdown/roadmap.txt)

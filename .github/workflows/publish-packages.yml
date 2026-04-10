@@ -1,0 +1,144 @@
+name: Publish protocol and types packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate:
+    name: Validate versions against latest tag
+    runs-on: ubuntu-latest
+    outputs:
+      package_version: ${{ steps.validate.outputs.package_version }}
+      publish_ref: ${{ steps.resolve.outputs.publish_ref }}
+      resolved_tag: ${{ steps.resolve.outputs.resolved_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Resolve publish tag
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --force --tags
+
+          latest_tag="$(git for-each-ref --format='%(refname:short)' --sort=-creatordate refs/tags | grep '^v' | head -n 1)"
+          if [ -z "$latest_tag" ]; then
+            echo "No v-prefixed tag found in the repository." >&2
+            exit 1
+          fi
+
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
+            publish_ref="${GITHUB_REF_NAME}"
+          else
+            publish_ref="$latest_tag"
+          fi
+
+          if [ "$publish_ref" != "$latest_tag" ]; then
+            echo "Publish tag $publish_ref is not the latest v-prefixed tag ($latest_tag)." >&2
+            exit 1
+          fi
+
+          echo "resolved_tag=$latest_tag" >> "$GITHUB_OUTPUT"
+          echo "publish_ref=$publish_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout publish tag
+        shell: bash
+        run: git checkout "${{ steps.resolve.outputs.publish_ref }}"
+      - name: Validate package versions
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const resolvedTag = process.env.RESOLVED_TAG;
+          const expectedVersion = resolvedTag.slice(1);
+
+          const protocolPkg = JSON.parse(fs.readFileSync('protocol/package.json', 'utf8'));
+          const typesPkg = JSON.parse(fs.readFileSync('types/package.json', 'utf8'));
+
+          if (protocolPkg.version !== typesPkg.version) {
+            throw new Error(
+              `protocol version ${protocolPkg.version} does not match types version ${typesPkg.version}.`,
+            );
+          }
+
+          if (protocolPkg.version !== expectedVersion) {
+            throw new Error(
+              `Package version ${protocolPkg.version} does not match latest tag ${resolvedTag}.`,
+            );
+          }
+
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `package_version=${protocolPkg.version}\n`);
+          console.log(`Validated package version ${protocolPkg.version} against ${resolvedTag}.`);
+          NODE
+        env:
+          RESOLVED_TAG: ${{ steps.resolve.outputs.resolved_tag }}
+
+  publish:
+    name: Publish ${{ matrix.package_dir }}
+    needs: validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package_dir:
+          - protocol
+          - types
+    steps:
+      - name: Checkout publish tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.publish_ref }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Ensure npm is up to date
+        run: pnpm install -g npm@latest
+
+      - name: Publish package
+        shell: bash
+        working-directory: ${{ matrix.package_dir }}
+        run: |
+          set -euo pipefail
+
+          version="$(node -p "require('./package.json').version")"
+          npm_tag="latest"
+          if [[ "$version" == *-* ]]; then
+            npm_tag="rc"
+          fi
+
+          npm publish --provenance --access public --tag "$npm_tag"

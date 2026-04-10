@@ -1,32 +1,12 @@
 {
   "name": "@saltify/milky-types",
   "type": "module",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Type definitions for Milky protocol",
   "main": "src/index.ts",
-  "exports": {
-    ".": {
-      "import": "./src/index.ts",
-      "types": "./src/index.ts"
-    },
-    "./namings": {
-      "import": "./src/namings.ts",
-      "types": "./src/namings.ts"
-    }
-  },
   "publishConfig": {
     "main": "dist/index.mjs",
-    "typings": "dist/index.d.mts",
-    "exports": {
-      ".": {
-        "import": "./dist/index.mjs",
-        "types": "./dist/index.d.mts"
-      },
-      "./namings": {
-        "import": "./dist/namings.mjs",
-        "types": "./dist/namings.d.mts"
-      }
-    }
+    "typings": "dist/index.d.mts"
   },
   "files": [
     "dist"
@@ -44,5 +24,8 @@
   "license": "MIT",
   "dependencies": {
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@saltify/milky-protocol": "workspace:*"
   }
 }

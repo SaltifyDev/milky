@@ -1,26 +1,10 @@
-import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@common/ir/types';
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
-import { generateIR } from '@common/ir';
-
-function toLowerCamelCase(s: string): string {
-  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-}
-
-function toUpperCamelCase(s: string): string {
-  const lower = toLowerCamelCase(s);
-  return lower.charAt(0).toUpperCase() + lower.slice(1);
-}
+import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+import { collectArrayUnionRefs, collectUnionStructNames } from '../shared/ir';
+import { snakeCaseToLowerCamelCase, snakeCaseToUpperCamelCase } from '../shared/naming';
+import { formatDocComment } from '../shared/text';
 
 function formatDartLiteral(value: unknown): string {
   return JSON.stringify(value);
-}
-
-function formatDocComment(text: string): string[] {
-  const lines = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-  return lines.map((line) => `/// ${line}`);
 }
 
 function resolveDefaultValue(value: unknown): unknown {
@@ -30,55 +14,8 @@ function resolveDefaultValue(value: unknown): unknown {
   return value;
 }
 
-function collectArrayUnionRefs(ir: IR): Set<string> {
-  const unionStructNames = new Set(
-    ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name)
-  );
-  const arrayUnionRefs = new Set<string>();
-
-  const handleFields = (fields: IRField[]) => {
-    fields.forEach((field) => {
-      if (field.fieldType === 'ref' && field.isArray && unionStructNames.has(field.refStructName)) {
-        arrayUnionRefs.add(field.refStructName);
-      }
-    });
-  };
-
-  ir.commonStructs.forEach((struct) => {
-    if (struct.structType === 'simple') {
-      handleFields(struct.fields);
-      return;
-    }
-    if (struct.unionType === 'withData') {
-      handleFields(struct.baseFields);
-      struct.derivedTypes.forEach((derivedType) => {
-        if (derivedType.derivingType === 'struct') {
-          handleFields(derivedType.fields);
-        }
-      });
-      return;
-    }
-    struct.derivedStructs.forEach((derivedStruct) => {
-      handleFields(derivedStruct.fields);
-    });
-  });
-
-  ir.apiCategories.forEach((category) => {
-    category.apis.forEach((api) => {
-      if (api.requestFields) {
-        handleFields(api.requestFields);
-      }
-      if (api.responseFields) {
-        handleFields(api.responseFields);
-      }
-    });
-  });
-
-  return arrayUnionRefs;
-}
-
 function renderDropBadElementListHelper(typeName: string): string {
-  const className = toUpperCamelCase(typeName);
+  const className = snakeCaseToUpperCamelCase(typeName);
   return [
     `List<${className}> _dropBad${className}ListFromJson(Object? json) {`,
     `  if (json == null) {`,
@@ -158,7 +95,7 @@ function getDartTypeSpec(field: IRField): string {
   } else if (field.fieldType === 'enum') {
     baseType = 'String';
   } else {
-    baseType = toUpperCamelCase(field.refStructName);
+    baseType = snakeCaseToUpperCamelCase(field.refStructName);
   }
 
   return field.isArray ? `List<${baseType}>` : baseType;
@@ -166,7 +103,7 @@ function getDartTypeSpec(field: IRField): string {
 
 function renderFieldLines(key: string, field: IRField, unionStructNames: Set<string>, typeOverride?: string): string[] {
   const lines: string[] = [];
-  const fieldName = toLowerCamelCase(key);
+  const fieldName = snakeCaseToLowerCamelCase(key);
   const description = field.description;
   const baseType = typeOverride ?? getDartTypeSpec(field);
   const hasDefault = field.defaultValue !== undefined;
@@ -179,7 +116,7 @@ function renderFieldLines(key: string, field: IRField, unionStructNames: Set<str
     if (field.refStructName === 'IncomingSegment') {
       jsonKeyParts.push('fromJson: _incomingSegmentListFromJson');
     } else if (unionStructNames.has(field.refStructName)) {
-      jsonKeyParts.push(`fromJson: _dropBad${toUpperCamelCase(field.refStructName)}ListFromJson`);
+      jsonKeyParts.push(`fromJson: _dropBad${snakeCaseToUpperCamelCase(field.refStructName)}ListFromJson`);
     }
   }
 
@@ -201,7 +138,7 @@ function renderIRSimpleStruct(
   description: string,
   unionStructNames: Set<string>
 ): string {
-  const className = toUpperCamelCase(name);
+  const className = snakeCaseToUpperCamelCase(name);
   const entries = fields;
   const lines: string[] = [];
 
@@ -233,7 +170,7 @@ function renderIRUnionStruct(
   unionStructNames: Set<string>
 ): { union: string; extraDefs: string[] } {
   const name = struct.name;
-  const className = toUpperCamelCase(name);
+  const className = snakeCaseToUpperCamelCase(name);
   const lines: string[] = [];
   const extraDefs: string[] = [];
   const discriminator = struct.tagFieldName;
@@ -247,14 +184,14 @@ function renderIRUnionStruct(
   if (struct.unionType === 'withData') {
     struct.derivedTypes.forEach((derivedType, index) => {
       const variantValue = derivedType.tagValue;
-      const variantConstructor = toLowerCamelCase(variantValue);
-      const variantClassName = `${className}${toUpperCamelCase(variantValue)}`;
+      const variantConstructor = snakeCaseToLowerCamelCase(variantValue);
+      const variantClassName = `${className}${snakeCaseToUpperCamelCase(variantValue)}`;
       let dataTypeName: string;
 
       if (derivedType.derivingType === 'ref') {
-        dataTypeName = toUpperCamelCase(derivedType.refStructName);
+        dataTypeName = snakeCaseToUpperCamelCase(derivedType.refStructName);
       } else {
-        dataTypeName = `${className}${toUpperCamelCase(variantValue)}Data`;
+        dataTypeName = `${className}${snakeCaseToUpperCamelCase(variantValue)}Data`;
         extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, '', unionStructNames));
       }
 
@@ -284,8 +221,8 @@ function renderIRUnionStruct(
   } else {
     struct.derivedStructs.forEach((derivedStruct, index) => {
       const variantValue = derivedStruct.tagValue;
-      const variantConstructor = toLowerCamelCase(variantValue);
-      const variantClassName = `${className}${toUpperCamelCase(variantValue)}`;
+      const variantConstructor = snakeCaseToLowerCamelCase(variantValue);
+      const variantClassName = `${className}${snakeCaseToUpperCamelCase(variantValue)}`;
 
       lines.push(`  @FreezedUnionValue("${variantValue}")`);
       lines.push(`  const factory ${className}.${variantConstructor}({`);
@@ -308,27 +245,24 @@ function renderIRUnionStruct(
   return { union: lines.join('\n'), extraDefs };
 }
 
-export function generateDartJsonSerializableSpec(): string {
+export function generateDartJsonSerializableSpec(ir: IR): string {
   const lines: string[] = [];
-  const ir = generateIR();
-  const unionStructNames = new Set(
-    ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name)
-  );
+  const unionStructNames = collectUnionStructNames(ir);
   const arrayUnionRefs = collectArrayUnionRefs(ir);
   function l(line: string = '') {
     lines.push(line);
   }
 
   l('// ignore_for_file: invalid_annotation_target');
-  l(`// Generated from Milky ${milkyVersion} (${milkyPackageVersion})`);
+  l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
   l();
   l("import 'package:freezed_annotation/freezed_annotation.dart';");
   l();
   l("part 'milky_types.freezed.dart';");
   l("part 'milky_types.g.dart';");
   l();
-  l(`const milkyVersion = "${milkyVersion}";`);
-  l(`const milkyPackageVersion = "${milkyPackageVersion}";`);
+  l(`const milkyVersion = "${ir.milkyVersion}";`);
+  l(`const milkyPackageVersion = "${ir.milkyPackageVersion}";`);
   l();
   if (arrayUnionRefs.has('IncomingSegment')) {
     l(renderIncomingSegmentListHelper());
@@ -389,14 +323,14 @@ export function generateDartJsonSerializableSpec(): string {
     l(`// ---- ${category.name} ----`);
     l();
     category.apis.forEach((api) => {
-      const inputName = `${toUpperCamelCase(api.endpoint)}Input`;
+      const inputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Input`;
       if (api.requestFields && api.requestFields.length > 0) {
         l(renderIRSimpleStruct(inputName, api.requestFields, '', unionStructNames));
       } else {
         l(`typedef ${inputName} = ApiEmptyStruct;`);
       }
       l();
-      const outputName = `${toUpperCamelCase(api.endpoint)}Output`;
+      const outputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Output`;
       if (api.responseFields && api.responseFields.length > 0) {
         l(renderIRSimpleStruct(outputName, api.responseFields, '', unionStructNames));
       } else if (api.responseFields) {
@@ -421,10 +355,10 @@ export function generateDartJsonSerializableSpec(): string {
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
       l(`  /// ${api.description}`);
-      l(`  static final ${toLowerCamelCase(api.endpoint)} = ApiEndpoint(`);
+      l(`  static final ${snakeCaseToLowerCamelCase(api.endpoint)} = ApiEndpoint(`);
       l(`    "/${api.endpoint}",`);
-      l(`    ${toUpperCamelCase(api.endpoint)}Input.fromJson,`);
-      l(`    (${toUpperCamelCase(api.endpoint)}Output output) => output.toJson(),`);
+      l(`    ${snakeCaseToUpperCamelCase(api.endpoint)}Input.fromJson,`);
+      l(`    (${snakeCaseToUpperCamelCase(api.endpoint)}Output output) => output.toJson(),`);
       l('  );');
     });
   });

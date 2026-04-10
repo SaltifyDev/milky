@@ -1,9 +1,8 @@
 import StructRenderer from '@/component/StructRenderer';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
+import { ir } from '@saltify/milky-protocol';
 import { Metadata } from 'next';
-import { generateIR } from '@saltify/milky-common/src/ir';
 
-const ir = generateIR();
 const apiCategoryMap = new Map(ir.apiCategories.map((category) => [category.key, category]));
 
 const Wrapper = getMDXComponents().wrapper;

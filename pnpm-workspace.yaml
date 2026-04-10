@@ -1,7 +1,9 @@
 packages:
+  - protocol
   - types
   - common
   - docs
+  - generator
 
 onlyBuiltDependencies:
   - esbuild

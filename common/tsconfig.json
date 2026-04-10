@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "paths": { "@common/*": ["./src/*"] },
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "esnext",
@@ -14,6 +13,5 @@
     "declaration": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["node"]
   }
 }

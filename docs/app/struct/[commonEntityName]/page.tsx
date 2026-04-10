@@ -1,9 +1,8 @@
 import StructRenderer from '@/component/StructRenderer';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
+import { ir } from '@saltify/milky-protocol';
 import { Metadata } from 'next';
-import { generateIR } from '@saltify/milky-common/src/ir';
 
-const ir = generateIR();
 const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
 
 const Wrapper = getMDXComponents().wrapper;

@@ -1,22 +1,7 @@
-import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@common/ir/types';
-import { milkyPackageVersion, milkyVersion } from '@saltify/milky-types';
-import { generateIR } from '@common/ir';
-
-function toLowerCamelCase(s: string): string {
-  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-}
-
-function toUpperCamelCase(s: string): string {
-  const lower = toLowerCamelCase(s);
-  return lower.charAt(0).toUpperCase() + lower.slice(1);
-}
-
-function indentLines(text: string, indent: string = '    '): string {
-  return text
-    .split('\n')
-    .map((line) => (line.trim() ? indent + line : line))
-    .join('\n');
-}
+import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+import { getPlainUnionCommonFields } from '../shared/ir';
+import { snakeCaseToLowerCamelCase, snakeCaseToUpperCamelCase } from '../shared/naming';
+import { indentLines } from '../shared/text';
 
 function escapeString(str: string): string {
   return str.replace(/"/g, '\\"');
@@ -37,7 +22,7 @@ function getKotlinTypeSpec(field: IRField, skipDefaultValue: boolean = false): s
   } else if (field.fieldType === 'enum') {
     baseType = 'String';
   } else {
-    baseType = toUpperCamelCase(field.refStructName);
+    baseType = snakeCaseToUpperCamelCase(field.refStructName);
   }
 
   const typeSpec = field.isArray ? `List<${baseType}>` : baseType;
@@ -51,21 +36,6 @@ function getKotlinTypeSpec(field: IRField, skipDefaultValue: boolean = false): s
     return `${typeSpec}? = null`;
   }
   return typeSpec;
-}
-
-function isSameField(f1: IRField, f2: IRField): boolean {
-  if (f1.name !== f2.name) return false;
-  if (f1.fieldType !== f2.fieldType) return false;
-  if (f1.isArray !== f2.isArray) return false;
-  if (f1.isOptional !== f2.isOptional) return false;
-
-  if (f1.fieldType === 'scalar' && f2.fieldType === 'scalar') {
-    return f1.scalarType === f2.scalarType;
-  }
-  if (f1.fieldType === 'ref' && f2.fieldType === 'ref') {
-    return f1.refStructName === f2.refStructName;
-  }
-  return true;
 }
 
 function renderFieldAnnotations(ir: IR, field: IRField, l: (line: string) => void) {
@@ -97,7 +67,7 @@ function renderIRObject(
   l('@Serializable');
   additionalAnnotations.forEach((annotation) => l(annotation));
   if (fields.length > 0) {
-    l(`data class ${toUpperCamelCase(name)}(`);
+    l(`data class ${snakeCaseToUpperCamelCase(name)}(`);
     fields.forEach((field) => {
       const needsOverride = overrideFields.has(field.name);
       const defaultValue = field.defaultValue !== undefined ? JSON.stringify(field.defaultValue) : null;
@@ -110,18 +80,18 @@ function renderIRObject(
       l(
         `    @SerialName("${field.name}")${
           defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
-        } ${overridePrefix}val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, needsOverride)},`
+        } ${overridePrefix}val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, needsOverride)},`
       );
     });
     l(')');
   } else {
-    l(`class ${toUpperCamelCase(name)}`);
+    l(`class ${snakeCaseToUpperCamelCase(name)}`);
   }
   return lines.join('\n');
 }
 
 function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionStruct) {
-  const {name} = struct;
+  const { name } = struct;
   const lines: string[] = [];
   function l(line: string = '') {
     lines.push(line);
@@ -136,18 +106,14 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
   l('@Serializable');
 
   l(`@JsonClassDiscriminator("${struct.tagFieldName}")`);
-  l(`sealed class ${toUpperCamelCase(name)} {`);
+  l(`sealed class ${snakeCaseToUpperCamelCase(name)} {`);
 
   let commonFields: IRField[] = [];
 
   if (struct.unionType === 'withData') {
     commonFields = struct.baseFields || [];
-  } else if (struct.derivedStructs.length > 0) {
-    commonFields = [...struct.derivedStructs[0].fields];
-    for (let i = 1; i < struct.derivedStructs.length; i++) {
-      const currentStructFields = struct.derivedStructs[i].fields;
-      commonFields = commonFields.filter((f1) => currentStructFields.some((f2) => isSameField(f1, f2)));
-    }
+  } else {
+    commonFields = getPlainUnionCommonFields(struct);
   }
 
   const commonFieldNames = new Set<string>();
@@ -156,15 +122,16 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
     commonFields.forEach((field) => {
       commonFieldNames.add(field.name);
       l(`    /** ${field.description ?? ''} */`);
-      l(`    abstract val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)}`);
+      l(`    abstract val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)}`);
     });
     l();
   }
 
   if (struct.unionType === 'withData') {
     struct.derivedTypes.forEach((derivedType, index) => {
-      const variantName = toUpperCamelCase(derivedType.tagValue);
-      const dataTypeName = derivedType.derivingType === 'ref' ? toUpperCamelCase(derivedType.refStructName) : 'Data';
+      const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
+      const dataTypeName =
+        derivedType.derivingType === 'ref' ? snakeCaseToUpperCamelCase(derivedType.refStructName) : 'Data';
       if (derivedType.description) {
         l(`    /** ${derivedType.description} */`);
       }
@@ -177,12 +144,12 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
         renderFieldAnnotations(ir, field, l);
 
         l(
-          `        @SerialName("${field.name}") override val ${toLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)},`
+          `        @SerialName("${field.name}") override val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)},`
         );
       });
       l(`        /** 数据字段 */`);
       l(`        @SerialName("data") val data: ${dataTypeName}`);
-      l(`    ) : ${toUpperCamelCase(name)}()`);
+      l(`    ) : ${snakeCaseToUpperCamelCase(name)}()`);
 
       const isStruct = derivedType.derivingType === 'struct';
       const isRef = derivedType.derivingType === 'ref';
@@ -193,22 +160,17 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       if (isStruct) {
         targetFields = derivedType.fields;
       } else if (isRef) {
-        targetName = toUpperCamelCase(derivedType.refStructName);
-        const refStruct = ir.commonStructs.find(s => s.name === derivedType.refStructName);
+        targetName = snakeCaseToUpperCamelCase(derivedType.refStructName);
+        const refStruct = ir.commonStructs.find((s) => s.name === derivedType.refStructName);
 
         if (refStruct) {
           if (refStruct.structType === 'simple') {
             targetFields = refStruct.fields;
           } else if (refStruct.structType === 'union') {
-            // Union struct -> common fields
             if (refStruct.unionType === 'withData') {
               targetFields = refStruct.baseFields || [];
-            } else if (refStruct.derivedStructs && refStruct.derivedStructs.length > 0) {
-              targetFields = [...refStruct.derivedStructs[0].fields];
-              for (let i = 1; i < refStruct.derivedStructs.length; i++) {
-                const currentStructFields = refStruct.derivedStructs[i].fields;
-                targetFields = targetFields.filter((f1) => currentStructFields.some((f2) => isSameField(f1, f2)));
-              }
+            } else {
+              targetFields = getPlainUnionCommonFields(refStruct);
             }
           }
         }
@@ -222,11 +184,10 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
         }
 
         targetFields.forEach((field: IRField) => {
-          const realFieldName = toLowerCamelCase(field.name);
+          const realFieldName = snakeCaseToLowerCamelCase(field.name);
           let fieldName = realFieldName;
           const fieldType = getKotlinTypeSpec(field, true);
 
-          // check conflict with common fields
           if (commonFieldNames.has(field.name)) {
             fieldName = `data${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}`;
           }
@@ -261,7 +222,7 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
             commonFieldNames
           ),
           '    '
-        ) + ` : ${toUpperCamelCase(name)}()`
+        ) + ` : ${snakeCaseToUpperCamelCase(name)}()`
       );
       if (index !== struct.derivedStructs.length - 1) {
         l();
@@ -274,13 +235,12 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
   return lines.join('\n');
 }
 
-export function generateKotlinxSerializationSpec(): string {
+export function generateKotlinxSerializationSpec(ir: IR): string {
   const lines: string[] = [];
-  const ir = generateIR();
   function l(line: string = '') {
     lines.push(line);
   }
-  l(`// Generated from Milky ${milkyVersion} (${milkyPackageVersion})`);
+  l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
   l('@file:OptIn(ExperimentalSerializationApi::class)');
   l();
   l('package org.ntqqrev.milky');
@@ -291,8 +251,8 @@ export function generateKotlinxSerializationSpec(): string {
   l('import kotlinx.serialization.encoding.*');
   l('import kotlinx.serialization.json.*');
   l();
-  l(`const val milkyVersion = "${milkyVersion}"`);
-  l(`const val milkyPackageVersion = "${milkyPackageVersion}"`);
+  l(`const val milkyVersion = "${ir.milkyVersion}"`);
+  l(`const val milkyPackageVersion = "${ir.milkyPackageVersion}"`);
   l();
   l('@Target(AnnotationTarget.PROPERTY)');
   l('annotation class LiteralDefault(val value: String)');
@@ -303,78 +263,74 @@ export function generateKotlinxSerializationSpec(): string {
   l('}');
   l();
   l(
-    `
-internal class DropBadElementListSerializer<T>(private val elementSerializer: KSerializer<T>) : KSerializer<List<T>> {
-    val listSerializer = ListSerializer(elementSerializer)
-
-    override val descriptor: SerialDescriptor =
-        listSerializer.descriptor
-
-    override fun serialize(encoder: Encoder, value: List<T>) {
-        encoder.encodeSerializableValue(listSerializer, value)
-    }
-
-    override fun deserialize(decoder: Decoder): List<T> {
-        if (decoder !is JsonDecoder) {
-            throw SerializationException("This serializer can be used only with Json format")
-        }
-
-        val element = decoder.decodeJsonElement() as? JsonArray
-            ?: throw SerializationException("Expected JsonArray for List deserialization")
-
-        val out = ArrayList<T>(element.size)
-        for (e in element) {
-            try {
-                out += decoder.json.decodeFromJsonElement(elementSerializer, e)
-            } catch (_: SerializationException) {
-                // discard bad element quietly
-            }
-        }
-        return out
-    }
-}
-    `.trim()
+    'internal class DropBadElementListSerializer<T>(private val elementSerializer: KSerializer<T>) : KSerializer<List<T>> {'
   );
+  l('    val listSerializer = ListSerializer(elementSerializer)');
+  l();
+  l('    override val descriptor: SerialDescriptor =');
+  l('        listSerializer.descriptor');
+  l();
+  l('    override fun serialize(encoder: Encoder, value: List<T>) {');
+  l('        encoder.encodeSerializableValue(listSerializer, value)');
+  l('    }');
+  l();
+  l('    override fun deserialize(decoder: Decoder): List<T> {');
+  l('        if (decoder !is JsonDecoder) {');
+  l('            throw SerializationException("This serializer can be used only with Json format")');
+  l('        }');
+  l();
+  l('        val element = decoder.decodeJsonElement() as? JsonArray');
+  l('            ?: throw SerializationException("Expected JsonArray for List deserialization")');
+  l();
+  l('        val out = ArrayList<T>(element.size)');
+  l('        for (e in element) {');
+  l('            try {');
+  l('                out += decoder.json.decodeFromJsonElement(elementSerializer, e)');
+  l('            } catch (_: SerializationException) {');
+  l('                // discard bad element quietly');
+  l('            }');
+  l('        }');
+  l('        return out');
+  l('    }');
+  l('}');
   l();
   l(
-    `
-internal class TransformUnknownSegmentListSerializer(private val elementSerializer: KSerializer<IncomingSegment>) :
-    KSerializer<List<IncomingSegment>> {
-
-    val listSerializer = ListSerializer(elementSerializer)
-
-    override val descriptor: SerialDescriptor =
-        listSerializer.descriptor
-
-    override fun serialize(encoder: Encoder, value: List<IncomingSegment>) {
-        encoder.encodeSerializableValue(listSerializer, value)
-    }
-
-    override fun deserialize(decoder: Decoder): List<IncomingSegment> {
-        if (decoder !is JsonDecoder) {
-            throw SerializationException("This serializer can be used only with Json format")
-        }
-
-        val element = decoder.decodeJsonElement() as? JsonArray
-            ?: throw SerializationException("Expected JsonArray for List deserialization")
-
-        val out = ArrayList<IncomingSegment>(element.size)
-        for (e in element) {
-            out += try {
-                decoder.json.decodeFromJsonElement(elementSerializer, e)
-            } catch (_: SerializationException) {
-                IncomingSegment.Text(
-                    data = IncomingSegment.Text.Data(
-                        text = "[\${e.jsonObject["type"]!!.jsonPrimitive.content}]"
-                    )
-                )
-            }
-        }
-        return out
-    }
-}
-    `.trim()
+    'internal class TransformUnknownSegmentListSerializer(private val elementSerializer: KSerializer<IncomingSegment>) :'
   );
+  l('    KSerializer<List<IncomingSegment>> {');
+  l();
+  l('    val listSerializer = ListSerializer(elementSerializer)');
+  l();
+  l('    override val descriptor: SerialDescriptor =');
+  l('        listSerializer.descriptor');
+  l();
+  l('    override fun serialize(encoder: Encoder, value: List<IncomingSegment>) {');
+  l('        encoder.encodeSerializableValue(listSerializer, value)');
+  l('    }');
+  l();
+  l('    override fun deserialize(decoder: Decoder): List<IncomingSegment> {');
+  l('        if (decoder !is JsonDecoder) {');
+  l('            throw SerializationException("This serializer can be used only with Json format")');
+  l('        }');
+  l();
+  l('        val element = decoder.decodeJsonElement() as? JsonArray');
+  l('            ?: throw SerializationException("Expected JsonArray for List deserialization")');
+  l();
+  l('        val out = ArrayList<IncomingSegment>(element.size)');
+  l('        for (e in element) {');
+  l('            out += try {');
+  l('                decoder.json.decodeFromJsonElement(elementSerializer, e)');
+  l('            } catch (_: SerializationException) {');
+  l('                IncomingSegment.Text(');
+  l('                    data = IncomingSegment.Text.Data(');
+  l('                        text = "[${e.jsonObject["type"]!!.jsonPrimitive.content}]"');
+  l('                    )');
+  l('                )');
+  l('            }');
+  l('        }');
+  l('        return out');
+  l('    }');
+  l('}');
   l();
   l('// ####################################');
   l('// Common Structs');
@@ -408,15 +364,15 @@ internal class TransformUnknownSegmentListSerializer(private val elementSerializ
     l();
     category.apis.forEach((api) => {
       if (api.requestFields && api.requestFields.length > 0) {
-        l(renderIRObject(ir, `${toUpperCamelCase(api.endpoint)}Input`, api.requestFields, '', false));
+        l(renderIRObject(ir, `${snakeCaseToUpperCamelCase(api.endpoint)}Input`, api.requestFields, '', false));
       } else {
-        l(`typealias ${toUpperCamelCase(api.endpoint)}Input = ApiEmptyStruct`);
+        l(`typealias ${snakeCaseToUpperCamelCase(api.endpoint)}Input = ApiEmptyStruct`);
       }
       l();
       if (api.responseFields) {
-        l(renderIRObject(ir, `${toUpperCamelCase(api.endpoint)}Output`, api.responseFields, '', false));
+        l(renderIRObject(ir, `${snakeCaseToUpperCamelCase(api.endpoint)}Output`, api.responseFields, '', false));
       } else {
-        l(`typealias ${toUpperCamelCase(api.endpoint)}Output = ApiEmptyStruct`);
+        l(`typealias ${snakeCaseToUpperCamelCase(api.endpoint)}Output = ApiEmptyStruct`);
       }
       l();
     });
@@ -430,9 +386,9 @@ internal class TransformUnknownSegmentListSerializer(private val elementSerializ
     category.apis.forEach((api) => {
       l(`    /** ${api.description} */`);
       l(
-        `    object ${toUpperCamelCase(api.endpoint)} : ApiEndpoint<${toUpperCamelCase(
+        `    object ${snakeCaseToUpperCamelCase(api.endpoint)} : ApiEndpoint<${snakeCaseToUpperCamelCase(
           api.endpoint
-        )}Input, ${toUpperCamelCase(api.endpoint)}Output>("/${api.endpoint}")`
+        )}Input, ${snakeCaseToUpperCamelCase(api.endpoint)}Output>("/${api.endpoint}")`
       );
     });
   });

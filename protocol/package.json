@@ -1,0 +1,25 @@
+{
+  "name": "@saltify/milky-protocol",
+  "type": "module",
+  "version": "1.2.1",
+  "description": "Milky protocol definition in form of IR",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.mjs",
+    "typings": "dist/index.d.mts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown && tsx scripts/generate-json.ts > dist/protocol.json",
+    "prepack": "npm run build"
+  },
+  "keywords": [],
+  "author": "SaltifyDev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SaltifyDev/milky.git"
+  },
+  "license": "MIT"
+}

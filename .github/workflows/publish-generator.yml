@@ -1,0 +1,105 @@
+name: Publish generator package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - generator/package.json
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-generator
+  cancel-in-progress: false
+
+jobs:
+  detect-version-change:
+    name: Detect generator version change
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.compare.outputs.should_publish }}
+      current_version: ${{ steps.compare.outputs.current_version }}
+      previous_version: ${{ steps.compare.outputs.previous_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare package versions
+        id: compare
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          current_version="$(node -p "require('./generator/package.json').version")"
+          previous_version=""
+
+          if [ -n "${BEFORE_SHA:-}" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            if git cat-file -e "${BEFORE_SHA}:generator/package.json" 2>/dev/null; then
+              previous_version="$(git show "${BEFORE_SHA}:generator/package.json" | node -p "JSON.parse(require('node:fs').readFileSync(0, 'utf8')).version")"
+            fi
+          fi
+
+          should_publish=false
+          if [ -z "$previous_version" ] || [ "$previous_version" != "$current_version" ]; then
+            should_publish=true
+          fi
+
+          echo "previous_version=$previous_version" >> "$GITHUB_OUTPUT"
+          echo "current_version=$current_version" >> "$GITHUB_OUTPUT"
+          echo "should_publish=$should_publish" >> "$GITHUB_OUTPUT"
+
+          echo "Previous version: ${previous_version:-<missing>}"
+          echo "Current version: $current_version"
+          echo "Should publish: $should_publish"
+
+  publish:
+    name: Publish generator ${{ needs.detect-version-change.outputs.current_version }}
+    needs: detect-version-change
+    if: needs.detect-version-change.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Ensure npm is up to date
+        run: pnpm install -g npm@latest
+
+      - name: Publish generator package
+        shell: bash
+        working-directory: generator
+        env:
+          PACKAGE_VERSION: ${{ needs.detect-version-change.outputs.current_version }}
+        run: |
+          set -euo pipefail
+
+          npm_tag="latest"
+          if [[ "$PACKAGE_VERSION" == *-* ]]; then
+            npm_tag="rc"
+          fi
+
+          npm publish --provenance --access public --tag "$npm_tag"
