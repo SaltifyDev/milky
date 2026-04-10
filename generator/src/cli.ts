@@ -3,6 +3,7 @@
 import * as c from '@saltify/milky-common';
 import ir, { IR } from '@saltify/milky-protocol';
 import { command, run, string, positional, option, subcommands } from 'cmd-ts';
+import pkg from '../package.json';
 
 type GeneratorSpec = {
   canonicalName: string;
@@ -70,9 +71,11 @@ function serializeOutput(output: string | object): string {
 
 const cmd = subcommands({
   name: 'milkygen',
+  description: pkg.description,
   cmds: {
     generate: command({
       name: 'generate',
+      description: 'Generate a spec from Milky IR.',
       args: {
         generator: positional({
           type: string,
@@ -126,6 +129,14 @@ const cmd = subcommands({
         generators.forEach((gen) => {
           console.log(`  - ${gen.canonicalName}`);
         });
+      },
+    }),
+    version: command({
+      name: 'version',
+      description: 'Print the version of milkygen.',
+      args: {},
+      handler: () => {
+        console.log(pkg.version);
       },
     }),
   },
