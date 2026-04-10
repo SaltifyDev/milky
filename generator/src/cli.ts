@@ -91,6 +91,7 @@ const cmd = subcommands({
   cmds: {
     generate: command({
       name: 'generate',
+      aliases: ['g', 'gen'],
       description: 'Generate a spec from Milky IR.',
       args: {
         generator: positional({
@@ -149,6 +150,7 @@ const cmd = subcommands({
     }),
     list: command({
       name: 'list',
+      aliases: ['l'],
       description: 'List all available generators.',
       args: {},
       handler: () => {
@@ -171,6 +173,7 @@ const cmd = subcommands({
     }),
     version: command({
       name: 'version',
+      aliases: ['v'],
       description: 'Print the version of milkygen.',
       args: {},
       handler: () => {

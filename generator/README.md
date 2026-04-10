@@ -16,13 +16,9 @@ milkygen
 
 ## 命令
 
-### 查看可用 generator
-
-```
-milkygen list
-```
-
 ### 生成内容
+
+> 别名：`g`, `gen`
 
 ```
 milkygen generate <generator> [--output <file>] [--version <version>]
@@ -44,6 +40,21 @@ milkygen generate rust/serde --version 1.2.1
   - `latest`: 默认值，使用 npm `latest` 标签对应版本的协议定义。
   - 具体版本号: **只能使用 `1.2.1` 及以上版本**，因为协议定义在 `1.2.1` 版本中才正式发布。
   - `local`: 使用当前包依赖中的本地协议定义。不建议使用，因为可能与发布版本不一致。
+- `--cdn`: 指定从哪个 CDN 获取协议定义，默认为 `unpkg`。可用值请使用 `milkygen list-cdns` 命令查看。
+
+### 查看可用 generator
+
+> 别名：`l`
+
+```
+milkygen list
+```
+
+### 查看可用 CDN
+
+```
+milkygen list-cdns
+```
 
 ### 查看 CLI 版本
 
