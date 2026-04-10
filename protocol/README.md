@@ -16,10 +16,12 @@ npm install @saltify/milky-protocol
 import ir from '@saltify/milky-protocol';
 ```
 
-此外，也可以直接通过 CDN 获取 JSON 格式的协议定义：
+此外，也可以直接通过 CDN 获取 JSON 格式的协议定义，例如：
 
 ```
-https://cdn.jsdelivr.net/npm/@saltify/milky-protocol/dist/protocol.json
+https://unpkg.com/@saltify/milky-protocol@latest/dist/protocol.json
+https://esm.sh/@saltify/milky-protocol@latest/dist/protocol.json
+https://cdn.jsdelivr.net/npm/@saltify/milky-protocol@latest/dist/protocol.json
 ```
 
 ## Milky IR 介绍

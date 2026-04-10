@@ -5,10 +5,15 @@ import ir, { IR } from '@saltify/milky-protocol';
 import { command, run, string, positional, option, subcommands } from 'cmd-ts';
 import pkg from '../package.json';
 
-type GeneratorSpec = {
+interface GeneratorSpec {
   canonicalName: string;
   generate: (ir: IR) => string | object | Promise<string | object>;
-};
+}
+
+interface CDNSpec {
+  name: string;
+  generateUrl: (packageName: string, version: string) => string;
+}
 
 const generators: GeneratorSpec[] = [
   {
@@ -45,15 +50,26 @@ const generators: GeneratorSpec[] = [
   },
 ];
 
-async function resolveProtocolOfVersion(version: string): Promise<IR> {
-  if (version === 'latest') {
-    return await fetch('https://cdn.jsdelivr.net/npm/@saltify/milky-protocol/dist/protocol.json').then((res) =>
-      res.json()
-    );
-  } else if (version === 'local') {
+const cdns: CDNSpec[] = [
+  {
+    name: 'unpkg',
+    generateUrl: (packageName, version) => `https://unpkg.com/${packageName}@${version}/dist/protocol.json`,
+  },
+  {
+    name: 'esmsh',
+    generateUrl: (packageName, version) => `https://esm.sh/${packageName}@${version}/dist/protocol.json`,
+  },
+  {
+    name: 'jsdelivr',
+    generateUrl: (packageName, version) => `https://cdn.jsdelivr.net/npm/${packageName}@${version}/dist/protocol.json`,
+  },
+];
+
+async function resolveProtocolOfVersion(version: string, cdn: CDNSpec): Promise<IR> {
+  if (version === 'local') {
     return ir;
   } else {
-    const response = await fetch(`https://cdn.jsdelivr.net/npm/@saltify/milky-protocol@${version}/dist/protocol.json`);
+    const response = await fetch(cdn.generateUrl('@saltify/milky-protocol', version));
     if (!response.ok) {
       throw new Error(`Failed to fetch protocol of version ${version}: ${response.status} ${response.statusText}`);
     }
@@ -78,24 +94,29 @@ const cmd = subcommands({
       description: 'Generate a spec from Milky IR.',
       args: {
         generator: positional({
+          displayName: 'generator',
           type: string,
-          description: 'The canonical name of the generator to run. Use "list" to see all available generators.',
+          description: 'Name of the generator to run. Use "list" for all available generators.',
         }),
         output: option({
           type: string,
           long: 'output',
           short: 'o',
-          description: 'The output file path. If not specified, the generated spec will be printed to stdout.',
+          description: 'The output file path. The generator writes to stdout if not provided.',
           defaultValue: () => '',
         }),
         version: option({
           type: string,
           long: 'version',
           short: 'v',
-          description:
-            'The version of the Milky IR to use. ' +
-            'If not specified, the latest version (the version published with `latest` tag on npm) will be used.',
+          description: 'The version of the Milky IR to use. Latest stable version if not specified.',
           defaultValue: () => 'latest',
+        }),
+        cdn: option({
+          type: string,
+          long: 'cdn',
+          description: `The CDN to fetch the protocol definition from. "${cdns[0].name}" if not specified.`,
+          defaultValue: () => cdns[0].name,
         }),
       },
       handler: async (args) => {
@@ -105,7 +126,13 @@ const cmd = subcommands({
           console.error('Use "milkygen list" to see all available generators.');
           process.exit(1);
         }
-        const protocol = await resolveProtocolOfVersion(args.version);
+        const cdnSpec = cdns.find((c) => c.name === args.cdn);
+        if (!cdnSpec) {
+          console.error(`Unknown CDN: ${args.cdn}`);
+          console.error(`Use "milkygen list-cdns" to see all supported CDNs.`);
+          process.exit(1);
+        }
+        const protocol = await resolveProtocolOfVersion(args.version, cdnSpec);
         const content = serializeOutput(await spec.generate(protocol));
         if (args.output.length === 0) {
           process.stdout.write(content);
@@ -128,6 +155,17 @@ const cmd = subcommands({
         console.log('Available generators:');
         generators.forEach((gen) => {
           console.log(`  - ${gen.canonicalName}`);
+        });
+      },
+    }),
+    'list-cdns': command({
+      name: 'list-cdns',
+      description: 'List all supported CDNs to fetch protocol definitions from.',
+      args: {},
+      handler: () => {
+        console.log('Supported CDNs:');
+        cdns.forEach((cdn) => {
+          console.log(`  - ${cdn.name}`);
         });
       },
     }),
