@@ -465,17 +465,19 @@ export function generateRustSerdeSpec(ir: IR): string {
     lines.push(line);
   }
 
+  l(`#![allow(dead_code)]\n`);
   l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
   if (ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0) {
-    l('use serde::{Deserialize, Deserializer, Serialize};');
+    l('use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};');
   } else {
-    l('use serde::{Deserialize, Serialize};');
+    l('use serde::{Deserialize, Serialize, de::DeserializeOwned};');
   }
   l();
   l(`pub const MILKY_VERSION: &str = ${escapeRustString(ir.milkyVersion)};`);
   l(`pub const MILKY_PACKAGE_VERSION: &str = ${escapeRustString(ir.milkyPackageVersion)};`);
   l();
   l('#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]');
+  l(`#[serde(bound(serialize = "T: Serialize", deserialize = "T: Deserialize<'de>",))]`)
   l('pub struct ApiGeneralResponse<T> {');
   l('    #[serde(rename = "status")]');
   l('    pub status: String,');
@@ -489,6 +491,11 @@ export function generateRustSerdeSpec(ir: IR): string {
   l();
   l('#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]');
   l('pub struct ApiEmptyStruct {}');
+  l('impl From<()> for ApiEmptyStruct {');
+  l('    fn from(_: ()) -> Self {');
+  l('        Self {}');
+  l('    }');
+  l('}');
   l();
   l('// ####################################');
   l('// Common Structs');
@@ -620,8 +627,8 @@ export function generateRustSerdeSpec(ir: IR): string {
   l('// ####################################');
   l();
   l('pub trait ApiEndpoint {');
-  l('    type Input;');
-  l('    type Output;');
+  l('    type Input: Serialize;');
+  l('    type Output: DeserializeOwned;');
   l("    const PATH: &'static str;");
   l('}');
   l();
@@ -635,7 +642,7 @@ export function generateRustSerdeSpec(ir: IR): string {
       l(`impl ApiEndpoint for ${endpointName} {`);
       l(`    type Input = ${endpointName}Input;`);
       l(`    type Output = ${endpointName}Output;`);
-      l(`    const PATH: &'static str = ${escapeRustString(`/${api.endpoint}`)};`);
+      l(`    const NAME: &'static str = ${escapeRustString(`${api.endpoint}`)};`);
       l('}');
       l();
     });
