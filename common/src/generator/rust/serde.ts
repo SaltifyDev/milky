@@ -549,7 +549,7 @@ export function generateRustSerdeSpec(ir: IR): string {
 
   if (ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0) {
     const importLineIndex = lines.findIndex((line) => line.startsWith('use serde::{'));
-    lines[importLineIndex] = 'use serde::{Deserialize, Deserializer, Serialize};';
+    lines[importLineIndex] = 'use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};';
     l('// ####################################');
     l('// Serde Helpers');
     l('// ####################################');
