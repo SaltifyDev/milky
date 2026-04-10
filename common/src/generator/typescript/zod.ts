@@ -1,7 +1,10 @@
 import { IR, IRField } from '@saltify/milky-protocol';
-import { getTypeScriptTypeProjection, normalizeDerivedStructName, snakeCaseToPascalCase } from './common';
+import { getApiTypeNames } from '../shared/ir';
+import { normalizeDerivedStructName, snakeCaseToPascalCase } from '../shared/naming';
+import { createLineWriter } from '../shared/text';
+import { getTypeScriptTypeProjection } from './shared';
 
-const applyDropBadElementArrayStructs = ['GroupNotification'];
+const applyDropBadElementArrayStructNames = new Set(['GroupNotification']);
 
 const specialReplacements = new Map([
   [
@@ -20,40 +23,39 @@ const specialReplacements = new Map([
   ],
 ]);
 
-function useLines(): [string[], (line?: string) => void] {
-  const lines: string[] = [];
-  function l(line: string = '') {
-    lines.push(line);
-  }
-  return [lines, l];
+function formatTypeScriptLiteral(value: unknown): string {
+  return JSON.stringify(value).replace(/"/g, "'");
 }
 
-function getZodTypeSpec(ir: IR, field: IRField): string {
-  let typeSpec: string = 'z.unknown()';
+function getZodTypeSpec(
+  ir: IR,
+  field: IRField,
+  options: {
+    dropBadElementArrayStructNames?: ReadonlySet<string>;
+  } = {}
+): string {
+  let typeSpec = 'z.unknown()';
+
   if (field.fieldType === 'scalar') {
     if (field.dataType !== undefined) {
       typeSpec = `z${snakeCaseToPascalCase(field.dataType)}`;
+    } else if (field.scalarType === 'string') {
+      typeSpec = 'z.string()';
+    } else if (field.scalarType === 'bool') {
+      typeSpec = 'z.boolean()';
     } else {
-      if (field.scalarType === 'string') {
-        typeSpec = 'z.string()';
-      } else if (field.scalarType === 'bool') {
-        typeSpec = 'z.boolean()';
-      } else {
-        // is number
-        typeSpec = 'z.number().int().nonnegative()';
-      }
+      typeSpec = 'z.number().int().nonnegative()';
     }
   } else if (field.fieldType === 'enum') {
-    typeSpec = `z.enum([${field.values.map((v) => `'${v}'`).join(', ')}])`;
+    typeSpec = `z.enum([${field.values.map((value) => `'${value}'`).join(', ')}])`;
   } else {
-    // is ref type
     typeSpec = `z.lazy(() => ${field.refStructName})`;
   }
 
   if (field.isArray) {
     if (field.fieldType === 'ref') {
-      const referredStruct = ir.commonStructs.find((s) => s.name === field.refStructName)!;
-      if (applyDropBadElementArrayStructs.includes(referredStruct.name)) {
+      const referredStruct = ir.commonStructs.find((struct) => struct.name === field.refStructName)!;
+      if (options.dropBadElementArrayStructNames?.has(referredStruct.name)) {
         typeSpec = `zDropBadElementArray(${field.refStructName})`;
       } else {
         typeSpec = `z.array(${typeSpec})`;
@@ -63,11 +65,11 @@ function getZodTypeSpec(ir: IR, field: IRField): string {
     }
   }
 
-  // optional and default value are exclusive
   if (field.isOptional) {
     typeSpec += '.nullish()';
   } else if (field.defaultValue !== undefined) {
-    typeSpec += `.nullish().default(${JSON.stringify(field.defaultValue).replace(/"/g, "'")}).transform<${getTypeScriptTypeProjection(field)}>((val) => val ?? ${JSON.stringify(field.defaultValue).replace(/"/g, "'")})`;
+    const defaultValueLiteral = formatTypeScriptLiteral(field.defaultValue);
+    typeSpec += `.nullish().default(${defaultValueLiteral}).transform<${getTypeScriptTypeProjection(field)}>((val) => val ?? ${defaultValueLiteral})`;
   }
 
   return typeSpec;
@@ -82,7 +84,8 @@ function renderIRObject(
   unionTagFieldName?: string,
   unionTagValue?: string
 ): string {
-  const [lines, l] = useLines();
+  const writer = createLineWriter();
+  const l = writer.line;
 
   l('z.object({');
   if (unionTagFieldName && unionTagValue) {
@@ -93,7 +96,11 @@ function renderIRObject(
     if (specialReplacements.has(specialKey)) {
       l(specialReplacements.get(specialKey));
     } else {
-      l(`  ${field.name}: ${getZodTypeSpec(ir, field)}.describe('${field.description}'),`);
+      l(
+        `  ${field.name}: ${getZodTypeSpec(ir, field, {
+          dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
+        })}.describe('${field.description}'),`
+      );
     }
   });
   if (withDescription) {
@@ -102,28 +109,25 @@ function renderIRObject(
     l('})');
   }
 
-  return lines.join('\n');
+  return writer.toString();
 }
 
 export function generateTypeScriptZodSpec(ir: IR) {
-  const [lines, l] = useLines();
+  const writer = createLineWriter();
+  const l = writer.line;
 
   l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
-  l(
-    `
-import { z } from 'zod';
-
-export const milkyVersion = '${ir.milkyVersion}';
-export const milkyPackageVersion = '${ir.milkyPackageVersion}';
-
-export const zUin = z.number().int().min(10001).max(4294967295);
-
-export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(element: T) {
-  const schema = z.array(element.catch(null as never)).transform((val) => val.filter((item) => item !== null));
-  return schema as unknown as z.ZodPipe<z.ZodArray<z.ZodCatch<z.ZodLazy<T>>>, z.ZodArray<z.ZodLazy<T>>>;
-}
-    `.trim()
-  );
+  l("import { z } from 'zod';");
+  l();
+  l(`export const milkyVersion = '${ir.milkyVersion}';`);
+  l(`export const milkyPackageVersion = '${ir.milkyPackageVersion}';`);
+  l();
+  l('export const zUin = z.number().int().min(10001).max(4294967295);');
+  l();
+  l('export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(element: T) {');
+  l('  const schema = z.array(element.catch(null as never)).transform((val) => val.filter((item) => item !== null));');
+  l('  return schema as unknown as z.ZodPipe<z.ZodArray<z.ZodCatch<z.ZodLazy<T>>>, z.ZodArray<z.ZodLazy<T>>>;');
+  l('}');
   l();
   l('// ####################################');
   l('// Common Structs');
@@ -154,7 +158,9 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
         struct.derivedTypes.forEach((derived) => {
           const structName = normalizeDerivedStructName(struct.name, derived.tagValue) + 'Data';
           if (derived.derivingType === 'struct') {
-            l(`export const ${structName} = ${renderIRObject(ir, structName, derived.fields, derived.description, true)};`);
+            l(
+              `export const ${structName} = ${renderIRObject(ir, structName, derived.fields, derived.description, true)};`
+            );
             l(`export type ${structName} = z.infer<typeof ${structName}>;`);
             l();
             // add type aliases for Event
@@ -172,7 +178,11 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
           l('  z.object({');
           l(`    ${struct.tagFieldName}: z.literal('${derived.tagValue}'),`);
           struct.baseFields.forEach((field) => {
-            l(`    ${field.name}: ${getZodTypeSpec(ir, field)}.describe('${field.description}'),`);
+            l(
+              `    ${field.name}: ${getZodTypeSpec(ir, field, {
+                dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
+              })}.describe('${field.description}'),`
+            );
           });
           if (derived.derivingType === 'struct') {
             l(
@@ -208,23 +218,23 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
   l();
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((spec) => {
-      const pascalEndpoint = snakeCaseToPascalCase(spec.endpoint);
+      const typeNames = getApiTypeNames(spec.endpoint);
       if (spec.requestFields) {
         l(
-          `export const ${pascalEndpoint}Input = ` +
-            renderIRObject(ir, `${pascalEndpoint}Input`, spec.requestFields, spec.endpoint + ' 请求参数', true) +
+          `export const ${typeNames.inputName} = ` +
+            renderIRObject(ir, typeNames.inputName, spec.requestFields, spec.endpoint + ' 请求参数', true) +
             ';'
         );
-        l(`export type ${pascalEndpoint}Input = z.infer<typeof ${pascalEndpoint}Input>;`);
+        l(`export type ${typeNames.inputName} = z.infer<typeof ${typeNames.inputName}>;`);
         l();
       }
       if (spec.responseFields) {
         l(
-          `export const ${pascalEndpoint}Output = ` +
-            renderIRObject(ir, `${pascalEndpoint}Output`, spec.responseFields, spec.endpoint + ' 响应数据', true) +
+          `export const ${typeNames.outputName} = ` +
+            renderIRObject(ir, typeNames.outputName, spec.responseFields, spec.endpoint + ' 响应数据', true) +
             ';'
         );
-        l(`export type ${pascalEndpoint}Output = z.infer<typeof ${pascalEndpoint}Output>;`);
+        l(`export type ${typeNames.outputName} = z.infer<typeof ${typeNames.outputName}>;`);
         l();
       }
     });
@@ -245,10 +255,11 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
     l(`    name: '${category.name}',`);
     l('    apis: {');
     category.apis.forEach((spec) => {
+      const typeNames = getApiTypeNames(spec.endpoint);
       l(`      ${spec.endpoint}: {`);
       l(`        description: '${spec.description}',`);
-      l(`        requestSchema: ${spec.requestFields ? `${snakeCaseToPascalCase(spec.endpoint)}Input` : 'null'},`);
-      l(`        responseSchema: ${spec.responseFields ? `${snakeCaseToPascalCase(spec.endpoint)}Output` : 'null'},`);
+      l(`        requestSchema: ${spec.requestFields ? typeNames.inputName : 'null'},`);
+      l(`        responseSchema: ${spec.responseFields ? typeNames.outputName : 'null'},`);
       l('      },');
     });
     l('    },');
@@ -257,5 +268,5 @@ export function zDropBadElementArray<const T extends z.ZodDiscriminatedUnion>(el
   l('};');
   l();
 
-  return lines.join('\n');
+  return writer.toString();
 }

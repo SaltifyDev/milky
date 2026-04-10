@@ -1,25 +1,7 @@
 import { IR } from '@saltify/milky-protocol';
 import { z } from 'zod';
-import { generateTypeScriptZodSpec } from '../typescript/zod';
-import { importCodeAsModule, initRegistry } from '../common';
-import { transform } from 'sucrase';
-
-const preserveFullCapitalizedWords = ['csrf'];
-
-function snakeCaseToPascalCase(snakeCase: string): string {
-  return snakeCase
-    .split('_')
-    .map((part) =>
-      preserveFullCapitalizedWords.includes(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)
-    )
-    .join('');
-}
-
-function sanitizeSchema(schema: Record<string, unknown>) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { $schema, ...rest } = schema;
-  return rest;
-}
+import { getApiTypeNames } from '../shared/ir';
+import { initializeZodRegistry, loadGeneratedZodTypesModule, sanitizeGeneratedSchema } from '../shared/zod-runtime';
 
 function buildComponents() {
   const jsonSchemas = z.toJSONSchema(z.globalRegistry, {
@@ -30,7 +12,7 @@ function buildComponents() {
   }).schemas;
 
   const schemas = Object.fromEntries(
-    Object.entries(jsonSchemas ?? {}).map(([name, schema]) => [name, sanitizeSchema(schema)])
+    Object.entries(jsonSchemas ?? {}).map(([name, schema]) => [name, sanitizeGeneratedSchema(schema)])
   );
 
   schemas.ApiResponse = {
@@ -68,8 +50,9 @@ function buildPaths(ir: IR) {
 
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((spec) => {
-      const requestIdOrNull = spec.requestFields && `${snakeCaseToPascalCase(spec.endpoint)}Input`;
-      const responseIdOrNull = spec.responseFields && `${snakeCaseToPascalCase(spec.endpoint)}Output`;
+      const typeNames = getApiTypeNames(spec.endpoint);
+      const requestIdOrNull = spec.requestFields && typeNames.inputName;
+      const responseIdOrNull = spec.responseFields && typeNames.outputName;
 
       paths[`/api/${spec.endpoint}`] = {
         post: {
@@ -144,21 +127,9 @@ function buildWebhooks() {
   };
 }
 
-async function initTypesModule(ir: IR) {
-  const tsCode = generateTypeScriptZodSpec(ir);
-  const { code } = transform(tsCode, {
-    transforms: ['typescript'],
-  });
-  const codeWithCorrectImport = code.replace(
-    '\'zod\'',
-    `'${import.meta.resolve('zod')}'`
-  );
-  return await importCodeAsModule(codeWithCorrectImport);
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateOpenApiSpec(ir: IR, typesModule?: any) {
-  initRegistry(ir, typesModule ?? (await initTypesModule(ir)));
+  initializeZodRegistry(ir, typesModule ?? (await loadGeneratedZodTypesModule(ir)));
 
   return {
     openapi: '3.1.0',

@@ -1,27 +1,13 @@
 import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
-
-function toLowerCamelCase(s: string): string {
-  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-}
-
-function toUpperCamelCase(s: string): string {
-  const lower = toLowerCamelCase(s);
-  return lower.charAt(0).toUpperCase() + lower.slice(1);
-}
+import { collectArrayUnionRefs, collectUnionStructNames } from '../shared/ir';
+import { snakeCaseToUpperCamelCase } from '../shared/naming';
+import { formatDocComment } from '../shared/text';
 
 function toSnakeCase(s: string): string {
   return s
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .replace(/-/g, '_')
     .toLowerCase();
-}
-
-function formatDocComment(text: string, indent = ''): string[] {
-  const lines = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-  return lines.map((line) => `${indent}/// ${line}`);
 }
 
 function escapeRustString(str: string): string {
@@ -99,7 +85,7 @@ function getRustBaseType(field: IRField): string {
     return 'String';
   }
 
-  return toUpperCamelCase(field.refStructName);
+  return snakeCaseToUpperCamelCase(field.refStructName);
 }
 
 function getRustTypeSpec(field: IRField): string {
@@ -169,54 +155,6 @@ function toRustFieldName(name: string): string {
   return rustKeywords.has(name) ? `r#${name}` : name;
 }
 
-function collectUnionStructNames(ir: IR): Set<string> {
-  return new Set(ir.commonStructs.filter((struct) => struct.structType === 'union').map((struct) => struct.name));
-}
-
-function collectArrayUnionRefs(ir: IR, unionStructNames: Set<string>): Set<string> {
-  const arrayUnionRefs = new Set<string>();
-
-  const handleFields = (fields: IRField[]) => {
-    fields.forEach((field) => {
-      if (field.fieldType === 'ref' && field.isArray && unionStructNames.has(field.refStructName)) {
-        arrayUnionRefs.add(field.refStructName);
-      }
-    });
-  };
-
-  ir.commonStructs.forEach((struct) => {
-    if (struct.structType === 'simple') {
-      handleFields(struct.fields);
-      return;
-    }
-    if (struct.unionType === 'withData') {
-      handleFields(struct.baseFields);
-      struct.derivedTypes.forEach((derivedType) => {
-        if (derivedType.derivingType === 'struct') {
-          handleFields(derivedType.fields);
-        }
-      });
-      return;
-    }
-    struct.derivedStructs.forEach((derivedStruct) => {
-      handleFields(derivedStruct.fields);
-    });
-  });
-
-  ir.apiCategories.forEach((category) => {
-    category.apis.forEach((api) => {
-      if (api.requestFields) {
-        handleFields(api.requestFields);
-      }
-      if (api.responseFields) {
-        handleFields(api.responseFields);
-      }
-    });
-  });
-
-  return arrayUnionRefs;
-}
-
 function getArrayUnionDeserializeFn(field: IRField, unionStructNames: Set<string>): string | null {
   if (field.fieldType !== 'ref' || !field.isArray || field.defaultValue !== undefined) {
     return null;
@@ -233,7 +171,7 @@ function getArrayUnionDeserializeFn(field: IRField, unionStructNames: Set<string
 }
 
 function renderDropBadElementListHelpers(typeName: string): string[] {
-  const rustTypeName = toUpperCamelCase(typeName);
+  const rustTypeName = snakeCaseToUpperCamelCase(typeName);
   const snakeTypeName = toSnakeCase(typeName);
   return [
     `fn deserialize_drop_bad_${snakeTypeName}_list<'de, D>(deserializer: D) -> Result<Vec<${rustTypeName}>, D::Error>`,
@@ -350,13 +288,18 @@ function renderFieldLines(
   const rustFieldType = typeOverride ?? getRustTypeSpec(field);
 
   if (field.description) {
-    lines.push(...formatDocComment(field.description, indent));
+    lines.push(...formatDocComment(field.description, `${indent}/// `));
   }
 
   const serdeArgs = [`rename = ${escapeRustString(field.name)}`];
   const arrayUnionDeserializeFn = getArrayUnionDeserializeFn(field, ctx.unionStructNames);
   if (field.defaultValue !== undefined) {
-    const { defaultFnName, deserializeFnName } = ensureDefaultHelpers(ctx, helperParts, rustFieldType, field.defaultValue);
+    const { defaultFnName, deserializeFnName } = ensureDefaultHelpers(
+      ctx,
+      helperParts,
+      rustFieldType,
+      field.defaultValue
+    );
     serdeArgs.push(`default = "${defaultFnName}"`, `deserialize_with = "${deserializeFnName}"`);
   } else {
     if (arrayUnionDeserializeFn) {
@@ -376,7 +319,7 @@ function renderFieldLines(
 }
 
 function renderIRSimpleStruct(name: string, fields: IRField[], description: string, ctx: RenderContext): string {
-  const structName = toUpperCamelCase(name);
+  const structName = snakeCaseToUpperCamelCase(name);
   const lines: string[] = [];
 
   if (description) {
@@ -411,7 +354,7 @@ function renderIRUnionStruct(
   struct: IRPlainUnionStruct | IRNestedUnionStruct,
   ctx: RenderContext
 ): { union: string; extraDefs: string[] } {
-  const enumName = toUpperCamelCase(struct.name);
+  const enumName = snakeCaseToUpperCamelCase(struct.name);
   const lines: string[] = [];
   const extraDefs: string[] = [];
 
@@ -424,21 +367,27 @@ function renderIRUnionStruct(
 
   if (struct.unionType === 'withData') {
     struct.derivedTypes.forEach((derivedType, index) => {
-      const variantName = toUpperCamelCase(derivedType.tagValue);
+      const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
       const dataTypeName =
         derivedType.derivingType === 'ref'
-          ? toUpperCamelCase(derivedType.refStructName)
-          : `${enumName}${toUpperCamelCase(derivedType.tagValue)}Data`;
+          ? snakeCaseToUpperCamelCase(derivedType.refStructName)
+          : `${enumName}${snakeCaseToUpperCamelCase(derivedType.tagValue)}Data`;
       const dataFieldDescription = derivedType.description ? `${derivedType.description}数据` : '数据字段';
 
       if (derivedType.description) {
-        lines.push(...formatDocComment(derivedType.description, '    '));
+        lines.push(...formatDocComment(derivedType.description, '    /// '));
       }
       lines.push(`    #[serde(rename = ${escapeRustString(derivedType.tagValue)})]`);
       lines.push(`    ${variantName} {`);
       struct.baseFields.forEach((field) => {
-        renderFieldLines(field, ctx, [struct.name, derivedType.tagValue, field.name], '        ', undefined, false)
-          .forEach((line) => lines.push(line));
+        renderFieldLines(
+          field,
+          ctx,
+          [struct.name, derivedType.tagValue, field.name],
+          '        ',
+          undefined,
+          false
+        ).forEach((line) => lines.push(line));
       });
       renderFieldLines(
         {
@@ -467,10 +416,10 @@ function renderIRUnionStruct(
     });
   } else {
     struct.derivedStructs.forEach((derivedStruct, index) => {
-      const variantName = toUpperCamelCase(derivedStruct.tagValue);
+      const variantName = snakeCaseToUpperCamelCase(derivedStruct.tagValue);
 
       if (derivedStruct.description) {
-        lines.push(...formatDocComment(derivedStruct.description, '    '));
+        lines.push(...formatDocComment(derivedStruct.description, '    /// '));
       }
       lines.push(`    #[serde(rename = ${escapeRustString(derivedStruct.tagValue)})]`);
 
@@ -479,8 +428,14 @@ function renderIRUnionStruct(
       } else {
         lines.push(`    ${variantName} {`);
         derivedStruct.fields.forEach((field) => {
-          renderFieldLines(field, ctx, [struct.name, derivedStruct.tagValue, field.name], '        ', undefined, false)
-            .forEach((line) => lines.push(line));
+          renderFieldLines(
+            field,
+            ctx,
+            [struct.name, derivedStruct.tagValue, field.name],
+            '        ',
+            undefined,
+            false
+          ).forEach((line) => lines.push(line));
         });
         lines.push('    },');
       }
@@ -565,7 +520,7 @@ export function generateRustSerdeSpec(ir: IR): string {
     l(`// ---- ${category.name} ----`);
     l();
     category.apis.forEach((api) => {
-      const inputName = `${toUpperCamelCase(api.endpoint)}Input`;
+      const inputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Input`;
       const inputDescription = `${api.description} API 请求参数`;
       if (api.requestFields && api.requestFields.length > 0) {
         l(renderIRSimpleStruct(inputName, api.requestFields, inputDescription, ctx));
@@ -574,7 +529,7 @@ export function generateRustSerdeSpec(ir: IR): string {
       }
       l();
 
-      const outputName = `${toUpperCamelCase(api.endpoint)}Output`;
+      const outputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Output`;
       const outputDescription = `${api.description} API 响应数据`;
       if (api.responseFields && api.responseFields.length > 0) {
         l(renderIRSimpleStruct(outputName, api.responseFields, outputDescription, ctx));
@@ -608,7 +563,9 @@ export function generateRustSerdeSpec(ir: IR): string {
       l('    Ok(out)');
       l('}');
       l();
-      l("fn deserialize_optional_drop_bad_element_list<'de, D, T>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>");
+      l(
+        "fn deserialize_optional_drop_bad_element_list<'de, D, T>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>"
+      );
       l('where');
       l("    D: Deserializer<'de>,");
       l('    T: serde::de::DeserializeOwned,');
@@ -670,7 +627,7 @@ export function generateRustSerdeSpec(ir: IR): string {
   l();
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
-      const endpointName = toUpperCamelCase(api.endpoint);
+      const endpointName = snakeCaseToUpperCamelCase(api.endpoint);
       l(`/// ${api.description}`);
       l('#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]');
       l(`pub struct ${endpointName};`);

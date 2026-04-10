@@ -1,25 +1,17 @@
 import { IR } from '@saltify/milky-protocol';
-import { getTypeScriptTypeProjection, normalizeDerivedStructName, snakeCaseToPascalCase } from './common';
-
-function useLines(): [string[], (line?: string) => void] {
-  const lines: string[] = [];
-  function l(line: string = '') {
-    lines.push(line);
-  }
-  return [lines, l];
-}
+import { getApiTypeNames } from '../shared/ir';
+import { normalizeDerivedStructName } from '../shared/naming';
+import { createLineWriter } from '../shared/text';
+import { getTypeScriptTypeProjection } from './shared';
 
 export function generateTypeScriptStaticSpec(ir: IR): string {
-  const [lines, l] = useLines();
+  const writer = createLineWriter();
+  const l = writer.line;
 
   l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
   l();
-  l(
-    `
-export const milkyVersion = '${ir.milkyVersion}';
-export const milkyPackageVersion = '${ir.milkyPackageVersion}';
-    `.trim()
-  );
+  l(`export const milkyVersion = '${ir.milkyVersion}';`);
+  l(`export const milkyPackageVersion = '${ir.milkyPackageVersion}';`);
   l();
   l('// ####################################');
   l('// Common Structs');
@@ -101,32 +93,33 @@ export const milkyPackageVersion = '${ir.milkyPackageVersion}';
   l();
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
+      const typeNames = getApiTypeNames(api.endpoint);
       l(`/** ${api.description} API 请求参数 */`);
       if (api.requestFields !== undefined) {
-        l(`export interface ${snakeCaseToPascalCase(api.endpoint)}Request {`);
+        l(`export interface ${typeNames.requestName} {`);
         api.requestFields.forEach((field) => {
           l(`  /** ${field.description} */`);
           l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
         });
         l('}');
       } else {
-        l(`export type ${snakeCaseToPascalCase(api.endpoint)}Request = {};`);
+        l(`export type ${typeNames.requestName} = {};`);
       }
       l();
       l(`/** ${api.description} API 响应数据 */`);
       if (api.responseFields !== undefined) {
-        l(`export interface ${snakeCaseToPascalCase(api.endpoint)}Response {`);
+        l(`export interface ${typeNames.responseName} {`);
         api.responseFields.forEach((field) => {
           l(`  /** ${field.description} */`);
           l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
         });
         l('}');
       } else {
-        l(`export type ${snakeCaseToPascalCase(api.endpoint)}Response = {};`);
+        l(`export type ${typeNames.responseName} = {};`);
       }
       l();
     });
   });
 
-  return lines.join('\n');
+  return writer.toString();
 }
