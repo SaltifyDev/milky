@@ -1,17 +1,30 @@
-code, kbd, samp, pre {
-    font-family: SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+code,
+kbd,
+samp,
+pre {
+  font-family:
+    SFMono-Regular, 'SF Mono', 'JetBrains Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  letter-spacing: normal;
 }
 
 code.nextra-code {
-    font-size: 1em;
+  font-size: 1em;
 }
 
 .since-badge {
-    background-color: var(--x-color-slate-900);
-    color: var(--x-color-white);
+  background-color: var(--x-color-slate-900);
+  color: var(--x-color-white);
 }
 
 .dark .since-badge {
-    background-color: var(--x-color-white);
-    color: var(--x-color-slate-900);
+  background-color: var(--x-color-white);
+  color: var(--x-color-slate-900);
 }
