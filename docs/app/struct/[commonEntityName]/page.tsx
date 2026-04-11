@@ -6,7 +6,7 @@ import { Metadata } from 'next';
 
 const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
 
-const Wrapper = getMDXComponents().wrapper;
+const { h1: H1, wrapper: Wrapper } = getMDXComponents();
 
 type Props = {
   params: Promise<{ slug: string; commonEntityName: string }>;
@@ -59,12 +59,9 @@ export default async function Page(props: Props) {
         title: entity.description,
       }}
     >
-      <p
-        className="x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:mt-2 x:text-4xl"
-        style={{ fontSize: '2.25rem', marginBottom: '0.5em' }}
-      >
-        <b>{entity.description}</b> ({params.commonEntityName}) <SinceBadge version={entity.since} />
-      </p>
+      <H1 style={{ marginBottom: '0.5em' }}>
+        {entity.description} ({params.commonEntityName}) <SinceBadge version={entity.since} />
+      </H1>
       <StructRenderer struct={entity} />
     </Wrapper>
   );

@@ -1,6 +1,7 @@
 import { Link } from 'nextra-theme-docs';
 import { Table } from 'nextra/components';
 import { JSX } from 'react';
+import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import SinceBadge from './SinceBadge';
 import {
   IRField,
@@ -10,6 +11,8 @@ import {
   IRScalarField,
   IRStruct,
 } from '@saltify/milky-protocol';
+
+const { h2: H2 } = getMDXComponents();
 
 function renderMarkdownCode(text: string): JSX.Element {
   const codeRegex = /`([\s\S]*?)`/g;
@@ -127,13 +130,12 @@ function renderPlainUnionStruct(struct: IRPlainUnionStruct) {
     >
       <p>可能的类型如下：</p>
       {struct.derivedStructs.map((option) => (
-        <div id={`type-${option.tagValue}`} key={option.tagValue} style={{ marginTop: '2rem' }}>
-          <p
-            className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
-            style={{ fontSize: '1.75rem' }}
-          >
-            <b>{option.tagValue}</b> {option.description} <SinceBadge version={option.since} />
-          </p>
+        <div key={option.tagValue}>
+          <H2 id={`type-${option.tagValue}`}>
+            <span style={{ fontWeight: 'bold' }}>{option.tagValue}</span>{' '}
+            <span style={{ fontWeight: 'normal' }}>{option.description}</span>
+            <SinceBadge version={option.since} />
+          </H2>
           <Table style={{ marginTop: '1rem' }}>
             <thead>
               <Table.Tr>
@@ -197,13 +199,12 @@ function renderNestedUnionStruct(struct: IRNestedUnionStruct) {
       </Table>
       <p>data 在不同 {struct.tagFieldName} 下的具体类型如下：</p>
       {struct.derivedTypes.map((derived) => (
-        <div id={`type-${derived.tagValue}`} key={derived.tagValue} style={{ marginTop: '2rem' }}>
-          <p
-            className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
-            style={{ fontSize: '1.75rem' }}
-          >
-            <b>{derived.tagValue}</b> {derived.description} <SinceBadge version={derived.since} />
-          </p>
+        <div key={derived.tagValue}>
+          <H2 id={`type-${derived.tagValue}`}>
+            <span style={{ fontWeight: 'bold' }}>{derived.tagValue}</span>{' '}
+            <span style={{ fontWeight: 'normal' }}>{derived.description}</span>{' '}
+            <SinceBadge version={derived.since} />
+          </H2>
           {derived.derivingType === 'ref' ? (
             <p style={{ marginTop: '1rem' }}>
               参见 <Link href={`/struct/${derived.refStructName}`}>{derived.refStructName}</Link>

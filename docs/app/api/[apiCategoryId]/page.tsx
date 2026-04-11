@@ -6,7 +6,7 @@ import { Metadata } from 'next';
 
 const apiCategoryMap = new Map(ir.apiCategories.map((category) => [category.key, category]));
 
-const Wrapper = getMDXComponents().wrapper;
+const { h1: H1, h2: H2, wrapper: Wrapper } = getMDXComponents();
 
 type Props = {
   params: Promise<{ slug: string; apiCategoryId: string }>;
@@ -44,12 +44,7 @@ export default async function Page(props: Props) {
         title: apiCategory.name,
       }}
     >
-      <p
-        className="x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:mt-2 x:text-4xl"
-        style={{ fontSize: '2.25rem', marginBottom: '0.5em' }}
-      >
-        <b>{apiCategory.name}</b>
-      </p>
+      <H1 style={{ marginBottom: '0.5em' }}>{apiCategory.name}</H1>
       <div
         style={{
           display: 'flex',
@@ -60,20 +55,17 @@ export default async function Page(props: Props) {
       >
         {apiCategory.apis.map((spec) => (
           <div
-            id={spec.endpoint}
             key={spec.endpoint}
             style={{
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            <p
-              className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
-              style={{ fontSize: '1.75rem', marginBottom: '0.5em' }}
-            >
-              <b>{spec.endpoint}</b> {spec.description}
+            <H2 id={spec.endpoint} style={{ marginTop: 0, marginBottom: '0.5em' }}>
+              <span style={{ fontWeight: 'bold' }}>{spec.endpoint}</span>{' '}
+              <span style={{ fontWeight: 'normal' }}>{spec.description}</span>
               <SinceBadge version={spec.since} />
-            </p>
+            </H2>
             <p style={{ fontSize: '1.25rem', marginTop: '0.5em' }}>
               <b>输入参数</b>
             </p>
