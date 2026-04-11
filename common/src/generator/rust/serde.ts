@@ -198,11 +198,7 @@ function renderIncomingSegmentListHelpers(): string[] {
     '        .and_then(|object| object.get("type"))',
     '        .and_then(serde_json::Value::as_str)',
     '        .unwrap_or("unknown");',
-    '    IncomingSegment::Text {',
-    '        data: IncomingSegmentTextData {',
-    '            text: format!("[{}]", type_value),',
-    '        },',
-    '    }',
+    '    IncomingSegment::Text(format!("[{}]", type_value))',
     '}',
     '',
     "fn deserialize_incoming_segment_list<'de, D>(deserializer: D) -> Result<Vec<IncomingSegment>, D::Error>",
@@ -238,6 +234,92 @@ function renderIncomingSegmentListHelpers(): string[] {
     '    Ok(Some(out))',
     '}',
   ];
+}
+
+function renderSegmentSerdeHelpers(): string[] {
+  return [
+    'fn serialize_segment_with_data<S, T>(serializer: S, segment_type: &str, data: &T) -> Result<S::Ok, S::Error>',
+    'where',
+    '    S: Serializer,',
+    '    T: Serialize,',
+    '{',
+    '    serde_json::json!({',
+    '        "type": segment_type,',
+    '        "data": data,',
+    '    })',
+    '    .serialize(serializer)',
+    '}',
+    '',
+    'fn serialize_segment_with_field<S, T>(',
+    '    serializer: S,',
+    '    segment_type: &str,',
+    '    field_name: &str,',
+    '    value: &T,',
+    ') -> Result<S::Ok, S::Error>',
+    'where',
+    '    S: Serializer,',
+    '    T: Serialize,',
+    '{',
+    '    let mut object = serde_json::Map::with_capacity(2);',
+    '    object.insert("type".to_string(), serde_json::Value::String(segment_type.to_string()));',
+    '    object.insert(',
+    '        field_name.to_string(),',
+    '        serde_json::to_value(value).map_err(serde::ser::Error::custom)?,',
+    '    );',
+    '    serde_json::Value::Object(object).serialize(serializer)',
+    '}',
+    '',
+    'fn deserialize_segment_type<E>(value: &serde_json::Value) -> Result<&str, E>',
+    'where',
+    '    E: serde::de::Error,',
+    '{',
+    '    value',
+    '        .get("type")',
+    '        .and_then(serde_json::Value::as_str)',
+    '        .ok_or_else(|| E::missing_field("type"))',
+    '}',
+    '',
+    'fn deserialize_segment_data<E, T>(value: &serde_json::Value) -> Result<T, E>',
+    'where',
+    '    E: serde::de::Error,',
+    '    T: DeserializeOwned,',
+    '{',
+    '    let data = value',
+    '        .get("data")',
+    '        .cloned()',
+    '        .ok_or_else(|| E::missing_field("data"))?;',
+    '    serde_json::from_value(data).map_err(E::custom)',
+    '}',
+    '',
+    "fn deserialize_segment_field<E, T>(value: &serde_json::Value, field_name: &'static str) -> Result<T, E>",
+    'where',
+    '    E: serde::de::Error,',
+    '    T: DeserializeOwned,',
+    '{',
+    '    let field_value = value',
+    '        .get(field_name)',
+    '        .cloned()',
+    '        .ok_or_else(|| E::missing_field(field_name))?;',
+    '    serde_json::from_value(field_value).map_err(E::custom)',
+    '}',
+  ];
+}
+
+function isErgonomicSegmentUnionName(name: string): boolean {
+  return name === 'IncomingSegment' || name === 'OutgoingSegment';
+}
+
+function getSerdeUseLine(needsDeserializer: boolean, needsSerializer: boolean): string {
+  const imports = ['Deserialize'];
+  if (needsDeserializer) {
+    imports.push('Deserializer');
+  }
+  imports.push('Serialize');
+  if (needsSerializer) {
+    imports.push('Serializer');
+  }
+  imports.push('de::DeserializeOwned');
+  return `use serde::{${imports.join(', ')}};`;
 }
 
 interface RenderContext {
@@ -341,6 +423,19 @@ function renderIRSimpleStruct(name: string, fields: IRField[], description: stri
   return lines.join('\n');
 }
 
+function renderEmptyApiInputStruct(name: string, description: string): string {
+  const structName = snakeCaseToUpperCamelCase(name);
+  const lines: string[] = [];
+
+  if (description) {
+    lines.push(...formatDocComment(description));
+  }
+  lines.push('#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]');
+  lines.push(`pub struct ${structName} {}`);
+
+  return lines.join('\n');
+}
+
 function renderTypeAlias(name: string, target: string, description: string): string {
   const lines: string[] = [];
   if (description) {
@@ -350,10 +445,166 @@ function renderTypeAlias(name: string, target: string, description: string): str
   return lines.join('\n');
 }
 
+function getNestedUnionDataTypeName(
+  enumName: string,
+  derivedType: IRNestedUnionStruct['derivedTypes'][number]
+): string {
+  return derivedType.derivingType === 'ref'
+    ? snakeCaseToUpperCamelCase(derivedType.refStructName)
+    : `${enumName}${snakeCaseToUpperCamelCase(derivedType.tagValue)}Data`;
+}
+
+function isCopyField(field: IRField): boolean {
+  return field.fieldType === 'scalar' && field.scalarType !== 'string' && !field.isArray;
+}
+
+function renderFieldBindingExpr(field: IRField, bindingName: string): string {
+  return isCopyField(field) ? `*${bindingName}` : `${bindingName}.clone()`;
+}
+
+function renderErgonomicSegmentUnion(
+  struct: IRNestedUnionStruct,
+  ctx: RenderContext
+): { union: string; extraDefs: string[] } {
+  const enumName = snakeCaseToUpperCamelCase(struct.name);
+  const lines: string[] = [];
+  const extraDefs: string[] = [];
+
+  if (struct.description) {
+    lines.push(...formatDocComment(struct.description));
+  }
+  lines.push('#[derive(Debug, Clone, PartialEq)]');
+  lines.push(`pub enum ${enumName} {`);
+
+  struct.derivedTypes.forEach((derivedType) => {
+    const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
+    const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
+
+    if (derivedType.description) {
+      lines.push(...formatDocComment(derivedType.description, '    /// '));
+    }
+
+    if (derivedType.derivingType === 'struct' && derivedType.fields.length === 0) {
+      lines.push(`    ${variantName},`);
+    } else if (derivedType.derivingType === 'struct' && derivedType.fields.length === 1) {
+      lines.push(`    ${variantName}(${getRustTypeSpec(derivedType.fields[0])}),`);
+    } else {
+      lines.push(`    ${variantName}(${dataTypeName}),`);
+    }
+  });
+
+  lines.push('}');
+  lines.push('');
+  lines.push(`impl Serialize for ${enumName} {`);
+  lines.push('    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>');
+  lines.push('    where');
+  lines.push('        S: Serializer,');
+  lines.push('    {');
+  lines.push('        match self {');
+
+  struct.derivedTypes.forEach((derivedType) => {
+    const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
+    const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
+
+    if (derivedType.derivingType === 'struct' && derivedType.fields.length === 0) {
+      lines.push(`            ${enumName}::${variantName} => {`);
+      lines.push(
+        `                serialize_segment_with_data(serializer, ${escapeRustString(derivedType.tagValue)}, &${dataTypeName} {})`
+      );
+      lines.push('            }');
+      return;
+    }
+
+    if (derivedType.derivingType === 'struct' && derivedType.fields.length === 1) {
+      const field = derivedType.fields[0];
+      const fieldName = toRustFieldName(field.name);
+      const bindingName = fieldName;
+      const fieldValueExpr = renderFieldBindingExpr(field, bindingName);
+
+      lines.push(`            ${enumName}::${variantName}(${bindingName}) => serialize_segment_with_data(`);
+      lines.push('                serializer,');
+      lines.push(`                ${escapeRustString(derivedType.tagValue)},`);
+      lines.push(`                &${dataTypeName} { ${fieldName}: ${fieldValueExpr} },`);
+      lines.push('            ),');
+      return;
+    }
+
+    lines.push(
+      `            ${enumName}::${variantName}(data) => serialize_segment_with_data(serializer, ${escapeRustString(derivedType.tagValue)}, data),`
+    );
+  });
+
+  lines.push('        }');
+  lines.push('    }');
+  lines.push('}');
+  lines.push('');
+  lines.push(`impl<'de> Deserialize<'de> for ${enumName} {`);
+  lines.push("    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>");
+  lines.push('    where');
+  lines.push("        D: Deserializer<'de>,");
+  lines.push('    {');
+  lines.push('        let value = serde_json::Value::deserialize(deserializer)?;');
+  lines.push('        match deserialize_segment_type::<D::Error>(&value)? {');
+
+  struct.derivedTypes.forEach((derivedType) => {
+    const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
+    const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
+
+    if (derivedType.derivingType === 'struct' && derivedType.fields.length === 0) {
+      lines.push(`            ${escapeRustString(derivedType.tagValue)} => {`);
+      lines.push(`                let _: ${dataTypeName} = deserialize_segment_data(&value)?;`);
+      lines.push(`                Ok(Self::${variantName})`);
+      lines.push('            }');
+      return;
+    }
+
+    if (derivedType.derivingType === 'struct' && derivedType.fields.length === 1) {
+      const field = derivedType.fields[0];
+      const fieldName = toRustFieldName(field.name);
+
+      lines.push(
+        `            ${escapeRustString(derivedType.tagValue)} => Ok(Self::${variantName}(deserialize_segment_data::<D::Error, ${dataTypeName}>(&value)?.${fieldName})),`
+      );
+      return;
+    }
+
+    lines.push(
+      `            ${escapeRustString(derivedType.tagValue)} => Ok(Self::${variantName}(deserialize_segment_data(&value)?)),`
+    );
+  });
+
+  lines.push('            other => Err(serde::de::Error::unknown_variant(');
+  lines.push('                other,');
+  lines.push('                &[');
+  struct.derivedTypes.forEach((derivedType) => {
+    lines.push(`                    ${escapeRustString(derivedType.tagValue)},`);
+  });
+  lines.push('                ],');
+  lines.push('            )),');
+  lines.push('        }');
+  lines.push('    }');
+  lines.push('}');
+
+  struct.derivedTypes.forEach((derivedType) => {
+    if (derivedType.derivingType !== 'struct') {
+      return;
+    }
+    const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
+    const dataFieldDescription = derivedType.description ? `${derivedType.description}数据` : '数据字段';
+    extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, dataFieldDescription, ctx));
+  });
+
+  return { union: lines.join('\n'), extraDefs };
+}
+
 function renderIRUnionStruct(
   struct: IRPlainUnionStruct | IRNestedUnionStruct,
   ctx: RenderContext
 ): { union: string; extraDefs: string[] } {
+  if (struct.unionType === 'withData' && isErgonomicSegmentUnionName(struct.name)) {
+    return renderErgonomicSegmentUnion(struct, ctx);
+  }
+
   const enumName = snakeCaseToUpperCamelCase(struct.name);
   const lines: string[] = [];
   const extraDefs: string[] = [];
@@ -368,10 +619,7 @@ function renderIRUnionStruct(
   if (struct.unionType === 'withData') {
     struct.derivedTypes.forEach((derivedType, index) => {
       const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
-      const dataTypeName =
-        derivedType.derivingType === 'ref'
-          ? snakeCaseToUpperCamelCase(derivedType.refStructName)
-          : `${enumName}${snakeCaseToUpperCamelCase(derivedType.tagValue)}Data`;
+      const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
       const dataFieldDescription = derivedType.description ? `${derivedType.description}数据` : '数据字段';
 
       if (derivedType.description) {
@@ -453,6 +701,9 @@ function renderIRUnionStruct(
 export function generateRustSerdeSpec(ir: IR): string {
   const unionStructNames = collectUnionStructNames(ir);
   const arrayUnionRefs = collectArrayUnionRefs(ir, unionStructNames);
+  const hasErgonomicSegments = ir.commonStructs.some(
+    (struct) => struct.structType === 'union' && struct.unionType === 'withData' && isErgonomicSegmentUnionName(struct.name)
+  );
   const ctx: RenderContext = {
     defaultHelpers: [],
     helperNames: new Set<string>(),
@@ -467,11 +718,7 @@ export function generateRustSerdeSpec(ir: IR): string {
 
   l(`#![allow(dead_code)]\n`);
   l(`// Generated from Milky ${ir.milkyVersion} (${ir.milkyPackageVersion})`);
-  if (ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0) {
-    l('use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};');
-  } else {
-    l('use serde::{Deserialize, Serialize, de::DeserializeOwned};');
-  }
+  l(getSerdeUseLine(false, false));
   l();
   l(`pub const MILKY_VERSION: &str = ${escapeRustString(ir.milkyVersion)};`);
   l(`pub const MILKY_PACKAGE_VERSION: &str = ${escapeRustString(ir.milkyPackageVersion)};`);
@@ -532,7 +779,7 @@ export function generateRustSerdeSpec(ir: IR): string {
       if (api.requestFields && api.requestFields.length > 0) {
         l(renderIRSimpleStruct(inputName, api.requestFields, inputDescription, ctx));
       } else {
-        l(renderTypeAlias(inputName, 'ApiEmptyStruct', inputDescription));
+        l(renderEmptyApiInputStruct(inputName, inputDescription));
       }
       l();
 
@@ -547,13 +794,22 @@ export function generateRustSerdeSpec(ir: IR): string {
     });
   });
 
-  if (ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0) {
+  lines[2] = getSerdeUseLine(ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0 || hasErgonomicSegments, hasErgonomicSegments);
+
+  if (ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0 || hasErgonomicSegments) {
     const importLineIndex = lines.findIndex((line) => line.startsWith('use serde::{'));
-    lines[importLineIndex] = 'use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};';
+    lines[importLineIndex] = getSerdeUseLine(
+      ctx.needsDefaultDeserializer || arrayUnionRefs.size > 0 || hasErgonomicSegments,
+      hasErgonomicSegments
+    );
     l('// ####################################');
     l('// Serde Helpers');
     l('// ####################################');
     l();
+    if (hasErgonomicSegments) {
+      renderSegmentSerdeHelpers().forEach((line) => l(line));
+      l();
+    }
     if (arrayUnionRefs.size > 0) {
       l("fn deserialize_drop_bad_element_list<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>");
       l('where');
@@ -626,22 +882,17 @@ export function generateRustSerdeSpec(ir: IR): string {
   l('// API Endpoint Constants');
   l('// ####################################');
   l();
-  l('pub trait ApiEndpoint {');
-  l('    type Input: Serialize;');
+  l('pub trait ApiEndpoint: Serialize {');
   l('    type Output: DeserializeOwned;');
   l("    const NAME: &'static str;");
   l('}');
   l();
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
-      const endpointName = snakeCaseToUpperCamelCase(api.endpoint);
+      const endpointName = `${snakeCaseToUpperCamelCase(api.endpoint)}Input`;
       l(`/// ${api.description}`);
-      l('#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]');
-      l(`pub struct ${endpointName};`);
-      l();
       l(`impl ApiEndpoint for ${endpointName} {`);
-      l(`    type Input = ${endpointName}Input;`);
-      l(`    type Output = ${endpointName}Output;`);
+      l(`    type Output = ${snakeCaseToUpperCamelCase(api.endpoint)}Output;`);
       l(`    const NAME: &'static str = ${escapeRustString(`${api.endpoint}`)};`);
       l('}');
       l();
