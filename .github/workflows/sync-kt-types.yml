@@ -107,7 +107,7 @@ jobs:
 
           if [ -n "$(git status --porcelain)" ]; then
             git add .
-            git commit -m "chore(deps): Bump to Milky ${{ steps.milky-version.outputs.milky_version }}"
+            git commit -m "chore(deps): Bump to Milky ${{ steps.milky-version.outputs.milky_version }} [publish]"
             git push origin main
 
             git tag ${{ steps.milky-version.outputs.resolved_tag }}

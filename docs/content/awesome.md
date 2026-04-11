@@ -39,7 +39,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 Milky 的协议内容以 Milky IR 的形式发布在 npm 包 [@saltify/milky-protocol](https://www.npmjs.com/package/@saltify/milky-protocol) 中，提供了 Milky IR 的原始文件和 TypeScript 导出。Milky IR 本身为 JSON 格式的协议定义，包含了 Milky 协议的所有细节内容，具体格式与介绍见上述包的 README 文件。
 
-[@saltify/milky-generator](https://www.npmjs.com/package/@saltify/milky-generator) (MIT) 是基于 Milky IR 的代码生成 CLI，支持生成多种目标格式的类型定义，并且可以指定版本号，方便开发者根据需要生成不同版本的 Milky 协议定义。
+[milkygen](https://www.npmjs.com/package/milkygen) (MIT) 是基于 Milky IR 的代码生成 CLI，支持生成多种目标格式的类型定义，并且可以指定版本号，方便开发者根据需要生成不同版本的 Milky 协议定义。
 
 ### Type Definitions
 

@@ -45,7 +45,7 @@ jobs:
           NODE
 
   publish:
-    name: Publish ${{ matrix.package_dir }}
+    name: Publish ${{ matrix.package_dir }} ${{ needs.validate.outputs.package_version }}
     needs: validate
     runs-on: ubuntu-latest
     strategy:
