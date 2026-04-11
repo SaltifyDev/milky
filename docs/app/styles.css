@@ -5,3 +5,13 @@ code, kbd, samp, pre {
 code.nextra-code {
     font-size: 1em;
 }
+
+.since-badge {
+    background-color: var(--x-color-slate-900);
+    color: var(--x-color-white);
+}
+
+.dark .since-badge {
+    background-color: var(--x-color-white);
+    color: var(--x-color-slate-900);
+}

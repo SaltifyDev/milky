@@ -1,4 +1,5 @@
 import StructRenderer from '@/component/StructRenderer';
+import SinceBadge from '@/component/SinceBadge';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { ir } from '@saltify/milky-protocol';
 import { Metadata } from 'next';
@@ -36,12 +37,20 @@ export default async function Page(props: Props) {
           ? entity.unionType === 'plain'
             ? entity.derivedStructs.map((option) => ({
                 depth: 2,
-                value: option.description || option.tagValue,
+                value: (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25em' }}>
+                    {option.description || option.tagValue} <SinceBadge version={option.since} useSup={false} />
+                  </div>
+                ),
                 id: `type-${option.tagValue}`,
               }))
             : entity.derivedTypes.map((derived) => ({
                 depth: 2,
-                value: derived.description || derived.tagValue,
+                value: (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25em' }}>
+                    {derived.description || derived.tagValue} <SinceBadge version={derived.since} useSup={false} />
+                  </div>
+                ),
                 id: `type-${derived.tagValue}`,
               }))
           : []
@@ -54,7 +63,7 @@ export default async function Page(props: Props) {
         className="x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:mt-2 x:text-4xl"
         style={{ fontSize: '2.25rem', marginBottom: '0.5em' }}
       >
-        <b>{entity.description}</b> ({params.commonEntityName})
+        <b>{entity.description}</b> ({params.commonEntityName}) <SinceBadge version={entity.since} />
       </p>
       <StructRenderer struct={entity} />
     </Wrapper>

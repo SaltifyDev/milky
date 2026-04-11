@@ -12,7 +12,7 @@ export const friendApiCategory: IRApiCategory = category('friend', '好友 API',
   ]),
   api('delete_friend', '删除好友', [
     scalarField('user_id', '好友 QQ 号', 'int64', { dataType: 'uin' })
-  ]),
+  ], undefined, { since: '1.1' }),
   api('get_friend_requests', '获取好友请求列表', [
     scalarField('limit', '获取的最大请求数量', 'int32', { defaultValue: 20 }),
     scalarField('is_filtered', '`true` 表示只获取被过滤（由风险账号发起）的通知，`false` 表示只获取未被过滤的通知', 'bool', { defaultValue: false })

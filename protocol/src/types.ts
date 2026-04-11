@@ -5,12 +5,15 @@ export interface IR {
   apiCategories: IRApiCategory[];
 }
 
+export type IRMinorVersion = `${number}.${number}`;
+
 // IR for structs
 
 export interface IRStructBase<T extends string> {
   structType: T;
   name: string;
   description: string;
+  since?: IRMinorVersion;
 }
 
 export interface IRSimpleStruct extends IRStructBase<'simple'> {
@@ -22,12 +25,15 @@ export interface IRUnionStructBase<T extends string> extends IRStructBase<'union
   tagFieldName: string;
 }
 
+export interface IRPlainUnionDerivedStruct {
+  tagValue: string;
+  description: string;
+  fields: IRField[];
+  since?: IRMinorVersion;
+}
+
 export interface IRPlainUnionStruct extends IRUnionStructBase<'plain'> {
-  derivedStructs: {
-    tagValue: string;
-    description: string;
-    fields: IRField[];
-  }[];
+  derivedStructs: IRPlainUnionDerivedStruct[];
 }
 
 export interface IRNestedUnionStruct extends IRUnionStructBase<'withData'> {
@@ -39,6 +45,7 @@ export interface IRNestedUnionDerivedTypeBase<T extends string> {
   tagValue: string;
   description: string;
   derivingType: T;
+  since?: IRMinorVersion;
 }
 
 export interface IRNestedUnionDerivedStructType extends IRNestedUnionDerivedTypeBase<'struct'> {
@@ -64,6 +71,7 @@ export interface IRApiCategory {
 export interface IRApi {
   endpoint: string;
   description: string;
+  since?: IRMinorVersion;
   requestFields?: IRField[];
   responseFields?: IRField[];
 }
@@ -75,6 +83,7 @@ export interface IRFieldBase<T extends string> {
   name: string;
   dataType?: string;
   description: string;
+  since?: IRMinorVersion;
   isArray: boolean;
   isOptional: boolean;
   defaultValue?: unknown;

@@ -1,6 +1,7 @@
 import { Link } from 'nextra-theme-docs';
 import { Table } from 'nextra/components';
 import { JSX } from 'react';
+import SinceBadge from './SinceBadge';
 import {
   IRField,
   IRNestedUnionDerivedStructType,
@@ -8,7 +9,7 @@ import {
   IRPlainUnionStruct,
   IRScalarField,
   IRStruct,
-} from '@saltify/milky-common/src/ir/types';
+} from '@saltify/milky-protocol';
 
 function renderMarkdownCode(text: string): JSX.Element {
   const codeRegex = /`([\s\S]*?)`/g;
@@ -104,7 +105,10 @@ function renderFieldRow(field: IRField) {
   }
   return (
     <Table.Tr key={field.name}>
-      <Table.Td>{field.name}</Table.Td>
+      <Table.Td>
+        {field.name}
+        <SinceBadge version={field.since} />
+      </Table.Td>
       <Table.Td>{renderTypeName(field)}</Table.Td>
       <Table.Td>{renderMarkdownCode(description)}</Table.Td>
     </Table.Tr>
@@ -128,7 +132,7 @@ function renderPlainUnionStruct(struct: IRPlainUnionStruct) {
             className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
             style={{ fontSize: '1.75rem' }}
           >
-            <b>{option.tagValue}</b> {option.description}
+            <b>{option.tagValue}</b> {option.description} <SinceBadge version={option.since} />
           </p>
           <Table style={{ marginTop: '1rem' }}>
             <thead>
@@ -198,7 +202,7 @@ function renderNestedUnionStruct(struct: IRNestedUnionStruct) {
             className="x:text-slate-900 x:dark:text-slate-100 x:border-b nextra-border"
             style={{ fontSize: '1.75rem' }}
           >
-            <b>{derived.tagValue}</b> {derived.description}
+            <b>{derived.tagValue}</b> {derived.description} <SinceBadge version={derived.since} />
           </p>
           {derived.derivingType === 'ref' ? (
             <p style={{ marginTop: '1rem' }}>

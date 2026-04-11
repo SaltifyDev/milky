@@ -1,4 +1,5 @@
 import StructRenderer from '@/component/StructRenderer';
+import SinceBadge from '@/component/SinceBadge';
 import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { ir } from '@saltify/milky-protocol';
 import { Metadata } from 'next';
@@ -32,7 +33,11 @@ export default async function Page(props: Props) {
     <Wrapper
       toc={apiCategory.apis.map((spec) => ({
         depth: 2,
-        value: spec.description,
+        value: (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25em' }}>
+            {spec.description} <SinceBadge version={spec.since} useSup={false} />
+          </div>
+        ),
         id: spec.endpoint,
       }))}
       metadata={{
@@ -67,6 +72,7 @@ export default async function Page(props: Props) {
               style={{ fontSize: '1.75rem', marginBottom: '0.5em' }}
             >
               <b>{spec.endpoint}</b> {spec.description}
+              <SinceBadge version={spec.since} />
             </p>
             <p style={{ fontSize: '1.25rem', marginTop: '0.5em' }}>
               <b>输入参数</b>

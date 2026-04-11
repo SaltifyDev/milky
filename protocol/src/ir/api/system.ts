@@ -75,24 +75,24 @@ export const systemApiCategory: IRApiCategory = category('system', '系统 API',
   api('get_peer_pins', '获取置顶的好友和群列表', undefined, [
     refField('friends', '置顶的好友列表', 'FriendEntity', { isArray: true }),
     refField('groups', '置顶的群列表', 'GroupEntity', { isArray: true })
-  ]),
+  ], { since: '1.2' }),
   api('set_peer_pin', '设置好友或群的置顶状态', [
     enumField('message_scene', '要设置的会话的消息场景', ['friend', 'group', 'temp']),
     scalarField('peer_id', '要设置的好友 QQ 号或群号', 'int64', { dataType: 'uin' }),
     scalarField('is_pinned', '是否置顶, `false` 表示取消置顶', 'bool', { defaultValue: true })
-  ]),
+  ], undefined, { since: '1.2' }),
   api('set_avatar', '设置 QQ 账号头像', [
     scalarField('uri', '头像文件 URI，支持 `file://` `http(s)://` `base64://` 三种格式', 'string')
-  ]),
+  ], undefined, { since: '1.1' }),
   api('set_nickname', '设置 QQ 账号昵称', [
     scalarField('new_nickname', '新昵称', 'string')
-  ]),
+  ], undefined, { since: '1.1' }),
   api('set_bio', '设置 QQ 账号个性签名', [
     scalarField('new_bio', '新个性签名', 'string')
-  ]),
+  ], undefined, { since: '1.1' }),
   api('get_custom_face_url_list', '获取自定义表情 URL 列表', undefined, [
     scalarField('urls', '自定义表情 URL 列表', 'string', { isArray: true })
-  ]),
+  ], { since: '1.1' }),
   api('get_cookies', '获取 Cookies', [
     scalarField('domain', '需要获取 Cookies 的域名', 'string')
   ], [

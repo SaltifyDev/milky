@@ -21,7 +21,7 @@ const Event = nestedUnion('Event', '事件', 'event_type', [
     enumField('message_scene', '发生改变的会话的消息场景', ['friend', 'group', 'temp']),
     scalarField('peer_id', '发生改变的好友 QQ 号或群号', 'int64', { dataType: 'uin' }),
     scalarField('is_pinned', '是否被置顶, `false` 表示取消置顶', 'bool')
-  ]),
+  ], { since: '1.2' }),
   nestedUnionStructVariant('friend_request', '好友请求事件', [
     scalarField('initiator_id', '申请好友的用户 QQ 号', 'int64', { dataType: 'uin' }),
     scalarField('initiator_uid', '用户 UID', 'string'),
@@ -45,7 +45,7 @@ const Event = nestedUnion('Event', '事件', 'event_type', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('invitation_seq', '邀请序列号', 'int64'),
     scalarField('initiator_id', '邀请者 QQ 号', 'int64', { dataType: 'uin' }),
-    scalarField('source_group_id', '来源群号，如果是通过 QQ 群邀请', 'int64', { isOptional: true })
+    scalarField('source_group_id', '来源群号，如果是通过 QQ 群邀请', 'int64', { isOptional: true, since: '1.2' })
   ]),
   nestedUnionStructVariant('friend_nudge', '好友戳一戳事件', [
     scalarField('user_id', '好友 QQ 号', 'int64', { dataType: 'uin' }),
@@ -66,13 +66,13 @@ const Event = nestedUnion('Event', '事件', 'event_type', [
   nestedUnionStructVariant('group_admin_change', '群管理员变更事件', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('user_id', '发生变更的用户 QQ 号', 'int64', { dataType: 'uin' }),
-    scalarField('operator_id', '操作者 QQ 号', 'int64', { dataType: 'uin' }),
+    scalarField('operator_id', '操作者 QQ 号', 'int64', { dataType: 'uin', since: '1.1' }),
     scalarField('is_set', '是否被设置为管理员，`false` 表示被取消管理员', 'bool')
   ]),
   nestedUnionStructVariant('group_essence_message_change', '群精华消息变更事件', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('message_seq', '发生变更的消息序列号', 'int64'),
-    scalarField('operator_id', '操作者 QQ 号', 'int64', { dataType: 'uin' }),
+    scalarField('operator_id', '操作者 QQ 号', 'int64', { dataType: 'uin', since: '1.1' }),
     scalarField('is_set', '是否被设置为精华，`false` 表示被取消精华', 'bool')
   ]),
   nestedUnionStructVariant('group_member_increase', '群成员增加事件', [
@@ -96,7 +96,7 @@ const Event = nestedUnion('Event', '事件', 'event_type', [
     scalarField('user_id', '发送回应者 QQ 号', 'int64', { dataType: 'uin' }),
     scalarField('message_seq', '消息序列号', 'int64'),
     scalarField('face_id', '表情 ID', 'string'),
-    enumField('reaction_type', '收到的回应类型', ['face', 'emoji']),
+    enumField('reaction_type', '收到的回应类型', ['face', 'emoji'], { since: '1.2' }),
     scalarField('is_add', '是否为添加，`false` 表示取消回应', 'bool')
   ]),
   nestedUnionStructVariant('group_mute', '群禁言事件', [
@@ -146,11 +146,11 @@ const GroupEntity = struct('GroupEntity', '群实体', [
   scalarField('group_name', '群名称', 'string'),
   scalarField('member_count', '群成员数量', 'int32'),
   scalarField('max_member_count', '群容量', 'int32'),
-  scalarField('remark', '群备注', 'string'),
-  scalarField('created_time', '群创建时间，Unix 时间戳（秒）', 'int64'),
-  scalarField('description', '群简介', 'string'),
-  scalarField('question', '加群验证问题', 'string'),
-  scalarField('announcement', '群公告预览', 'string')
+  scalarField('remark', '群备注', 'string', { since: '1.2' }),
+  scalarField('created_time', '群创建时间，Unix 时间戳（秒）', 'int64', { since: '1.2' }),
+  scalarField('description', '群简介', 'string', { since: '1.2' }),
+  scalarField('question', '加群验证问题', 'string', { since: '1.2' }),
+  scalarField('announcement', '群公告预览', 'string', { since: '1.2' })
 ]);
 
 const GroupMemberEntity = struct('GroupMemberEntity', '群成员实体', [
@@ -278,7 +278,7 @@ const IncomingMessage = plainUnion('IncomingMessage', '接收消息', 'message_s
 ]);
 
 const IncomingForwardedMessage = struct('IncomingForwardedMessage', '接收转发消息', [
-  scalarField('message_seq', '消息序列号', 'int64'),
+  scalarField('message_seq', '消息序列号', 'int64', { since: '1.2' }),
   scalarField('sender_name', '发送者名称', 'string'),
   scalarField('avatar_url', '发送者头像 URL', 'string'),
   scalarField('time', '消息 Unix 时间戳（秒）', 'int64'),
@@ -303,19 +303,19 @@ const IncomingSegment = nestedUnion('IncomingSegment', '接收消息段', 'type'
   ]),
   nestedUnionStructVariant('mention', '提及消息段', [
     scalarField('user_id', '提及的 QQ 号', 'int64', { dataType: 'uin' }),
-    scalarField('name', '去掉 `@` 前缀的提及的名称', 'string')
+    scalarField('name', '去掉 `@` 前缀的提及的名称', 'string', { since: '1.2' })
   ]),
   nestedUnionStructVariant('mention_all', '提及全体消息段', []),
   nestedUnionStructVariant('face', '表情消息段', [
     scalarField('face_id', '表情 ID', 'string'),
-    scalarField('is_large', '是否为超级表情', 'bool')
+    scalarField('is_large', '是否为超级表情', 'bool', { since: '1.1' })
   ]),
   nestedUnionStructVariant('reply', '回复消息段', [
     scalarField('message_seq', '被引用的消息序列号', 'int64'),
-    scalarField('sender_id', '被引用的消息发送者 QQ 号', 'int64', { dataType: 'uin' }),
-    scalarField('sender_name', '被引用的消息发送者名称，仅在合并转发中能够获取', 'string', { isOptional: true }),
-    scalarField('time', '被引用的消息的 Unix 时间戳（秒）', 'int64'),
-    refField('segments', '被引用的消息内容', 'IncomingSegment', { isArray: true })
+    scalarField('sender_id', '被引用的消息发送者 QQ 号', 'int64', { dataType: 'uin', since: '1.2' }),
+    scalarField('sender_name', '被引用的消息发送者名称，仅在合并转发中能够获取', 'string', { isOptional: true, since: '1.2' }),
+    scalarField('time', '被引用的消息的 Unix 时间戳（秒）', 'int64', { since: '1.2' }),
+    refField('segments', '被引用的消息内容', 'IncomingSegment', { isArray: true, since: '1.2' })
   ]),
   nestedUnionStructVariant('image', '图片消息段', [
     scalarField('resource_id', '资源 ID', 'string'),
@@ -345,15 +345,15 @@ const IncomingSegment = nestedUnion('IncomingSegment', '接收消息段', 'type'
   ]),
   nestedUnionStructVariant('forward', '合并转发消息段', [
     scalarField('forward_id', '合并转发 ID', 'string'),
-    scalarField('title', '合并转发标题', 'string'),
-    scalarField('preview', '合并转发预览文本', 'string', { isArray: true }),
-    scalarField('summary', '合并转发摘要', 'string')
+    scalarField('title', '合并转发标题', 'string', { since: '1.1' }),
+    scalarField('preview', '合并转发预览文本', 'string', { isArray: true, since: '1.1' }),
+    scalarField('summary', '合并转发摘要', 'string', { since: '1.1' })
   ]),
   nestedUnionStructVariant('market_face', '市场表情消息段', [
-    scalarField('emoji_package_id', '市场表情包 ID', 'int32'),
-    scalarField('emoji_id', '市场表情 ID', 'string'),
-    scalarField('key', '市场表情 Key', 'string'),
-    scalarField('summary', '市场表情预览文本', 'string'),
+    scalarField('emoji_package_id', '市场表情包 ID', 'int32', { since: '1.1' }),
+    scalarField('emoji_id', '市场表情 ID', 'string', { since: '1.1' }),
+    scalarField('key', '市场表情 Key', 'string', { since: '1.1' }),
+    scalarField('summary', '市场表情预览文本', 'string', { since: '1.1' }),
     scalarField('url', '市场表情 URL', 'string')
   ]),
   nestedUnionStructVariant('light_app', '小程序消息段', [
@@ -401,14 +401,14 @@ const OutgoingSegment = nestedUnion('OutgoingSegment', '发送消息段', 'type'
   ]),
   nestedUnionStructVariant('forward', '合并转发消息段', [
     refField('messages', '合并转发消息内容', 'OutgoingForwardedMessage', { isArray: true }),
-    scalarField('title', '合并转发标题', 'string', { isOptional: true }),
-    scalarField('preview', '合并转发预览文本，若提供，至少 1 条，至多 4 条', 'string', { isArray: true, isOptional: true }),
-    scalarField('summary', '合并转发摘要', 'string', { isOptional: true }),
-    scalarField('prompt', '合并转发的预览外显文本，仅对移动端 QQ 有效', 'string', { isOptional: true })
+    scalarField('title', '合并转发标题', 'string', { isOptional: true, since: '1.2' }),
+    scalarField('preview', '合并转发预览文本，若提供，至少 1 条，至多 4 条', 'string', { isArray: true, isOptional: true, since: '1.2' }),
+    scalarField('summary', '合并转发摘要', 'string', { isOptional: true, since: '1.2' }),
+    scalarField('prompt', '合并转发的预览外显文本，仅对移动端 QQ 有效', 'string', { isOptional: true, since: '1.2' })
   ]),
   nestedUnionStructVariant('light_app', '小程序消息段', [
     scalarField('json_payload', '小程序 JSON 数据', 'string')
-  ])
+  ], { since: '1.2' })
 ]);
 
 export const commonStructs: IR['commonStructs'] = [

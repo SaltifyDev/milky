@@ -73,7 +73,7 @@ export const groupApiCategory: IRApiCategory = category('group', '群聊 API', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('message_seq', '要回应的消息序列号', 'int64'),
     scalarField('reaction', '发送的回应的表情 ID', 'string'),
-    enumField('reaction_type', '发送的回应类型', ['face', 'emoji'], { defaultValue: 'face' }),
+    enumField('reaction_type', '发送的回应类型', ['face', 'emoji'], { defaultValue: 'face', since: '1.2' }),
     scalarField('is_add', '是否添加表情，`false` 表示取消', 'bool', { defaultValue: true })
   ]),
   api('send_group_nudge', '发送群戳一戳', [
