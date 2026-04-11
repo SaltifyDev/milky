@@ -1,17 +1,23 @@
-# @saltify/milky-generator
+# milkygen
 
 Milky 代码生成 CLI，用于基于 Milky IR 生成不同目标格式的规范文件。
 
 ## 安装
 
 ```bash
-npm install -g @saltify/milky-generator
+npm install -g milkygen
 ```
 
 安装后可直接使用命令：
 
 ```bash
 milkygen
+```
+
+或直接使用 npx：
+
+```bash
+npx milkygen
 ```
 
 ## 命令
