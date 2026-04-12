@@ -8,4 +8,4 @@ updates:
   - package-ecosystem: "npm" # See the documentation for supported package ecosystems
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "monthly"
