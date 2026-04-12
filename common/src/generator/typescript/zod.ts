@@ -19,7 +19,7 @@ const specialReplacements = new Map([
     'OutgoingForwardSegmentData.messages',
     [
       '  get messages() {',
-      '    return z.array(z.lazy(() => OutgoingForwardMessage)).describe(\'转发消息内容\');',
+      '    return z.array(z.lazy(() => OutgoingForwardedMessage)).describe(\'转发消息内容\');',
       '  },',
     ].join('\n'),
   ],
