@@ -369,9 +369,7 @@ function renderFieldLines(
   const lines: string[] = [];
   const rustFieldType = typeOverride ?? getRustTypeSpec(field);
 
-  if (field.description) {
-    lines.push(...formatDocComment(field.description, `${indent}/// `));
-  }
+  lines.push(...formatDocComment(field.description, `${indent}/// `, field.since));
 
   const serdeArgs = [`rename = ${escapeRustString(field.name)}`];
   const arrayUnionDeserializeFn = getArrayUnionDeserializeFn(field, ctx.unionStructNames);
@@ -400,13 +398,17 @@ function renderFieldLines(
   return lines;
 }
 
-function renderIRSimpleStruct(name: string, fields: IRField[], description: string, ctx: RenderContext): string {
+function renderIRSimpleStruct(
+  name: string,
+  fields: IRField[],
+  description: string,
+  ctx: RenderContext,
+  since?: string
+): string {
   const structName = snakeCaseToUpperCamelCase(name);
   const lines: string[] = [];
 
-  if (description) {
-    lines.push(...formatDocComment(description));
-  }
+  lines.push(...formatDocComment(description, '/// ', since));
   lines.push('#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]');
 
   if (fields.length === 0) {
@@ -423,24 +425,20 @@ function renderIRSimpleStruct(name: string, fields: IRField[], description: stri
   return lines.join('\n');
 }
 
-function renderEmptyApiInputStruct(name: string, description: string): string {
+function renderEmptyApiInputStruct(name: string, description: string, since?: string): string {
   const structName = snakeCaseToUpperCamelCase(name);
   const lines: string[] = [];
 
-  if (description) {
-    lines.push(...formatDocComment(description));
-  }
+  lines.push(...formatDocComment(description, '/// ', since));
   lines.push('#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]');
   lines.push(`pub struct ${structName} {}`);
 
   return lines.join('\n');
 }
 
-function renderTypeAlias(name: string, target: string, description: string): string {
+function renderTypeAlias(name: string, target: string, description: string, since?: string): string {
   const lines: string[] = [];
-  if (description) {
-    lines.push(...formatDocComment(description));
-  }
+  lines.push(...formatDocComment(description, '/// ', since));
   lines.push(`pub type ${name} = ${target};`);
   return lines.join('\n');
 }
@@ -470,9 +468,7 @@ function renderErgonomicSegmentUnion(
   const lines: string[] = [];
   const extraDefs: string[] = [];
 
-  if (struct.description) {
-    lines.push(...formatDocComment(struct.description));
-  }
+  lines.push(...formatDocComment(struct.description, '/// ', struct.since));
   lines.push('#[derive(Debug, Clone, PartialEq)]');
   lines.push(`pub enum ${enumName} {`);
 
@@ -480,9 +476,7 @@ function renderErgonomicSegmentUnion(
     const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
     const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
 
-    if (derivedType.description) {
-      lines.push(...formatDocComment(derivedType.description, '    /// '));
-    }
+    lines.push(...formatDocComment(derivedType.description, '    /// ', derivedType.since));
 
     if (derivedType.derivingType === 'struct' && derivedType.fields.length === 0) {
       lines.push(`    ${variantName},`);
@@ -591,7 +585,7 @@ function renderErgonomicSegmentUnion(
     }
     const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
     const dataFieldDescription = derivedType.description ? `${derivedType.description}数据` : '数据字段';
-    extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, dataFieldDescription, ctx));
+    extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, dataFieldDescription, ctx, derivedType.since));
   });
 
   return { union: lines.join('\n'), extraDefs };
@@ -609,9 +603,7 @@ function renderIRUnionStruct(
   const lines: string[] = [];
   const extraDefs: string[] = [];
 
-  if (struct.description) {
-    lines.push(...formatDocComment(struct.description));
-  }
+  lines.push(...formatDocComment(struct.description, '/// ', struct.since));
   lines.push('#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]');
   lines.push(`#[serde(tag = ${escapeRustString(struct.tagFieldName)})]`);
   lines.push(`pub enum ${enumName} {`);
@@ -622,9 +614,7 @@ function renderIRUnionStruct(
       const dataTypeName = getNestedUnionDataTypeName(enumName, derivedType);
       const dataFieldDescription = derivedType.description ? `${derivedType.description}数据` : '数据字段';
 
-      if (derivedType.description) {
-        lines.push(...formatDocComment(derivedType.description, '    /// '));
-      }
+      lines.push(...formatDocComment(derivedType.description, '    /// ', derivedType.since));
       lines.push(`    #[serde(rename = ${escapeRustString(derivedType.tagValue)})]`);
       lines.push(`    ${variantName} {`);
       struct.baseFields.forEach((field) => {
@@ -655,7 +645,7 @@ function renderIRUnionStruct(
       lines.push('    },');
 
       if (derivedType.derivingType === 'struct') {
-        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, dataFieldDescription, ctx));
+        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, dataFieldDescription, ctx, derivedType.since));
       }
 
       if (index !== struct.derivedTypes.length - 1) {
@@ -666,9 +656,7 @@ function renderIRUnionStruct(
     struct.derivedStructs.forEach((derivedStruct, index) => {
       const variantName = snakeCaseToUpperCamelCase(derivedStruct.tagValue);
 
-      if (derivedStruct.description) {
-        lines.push(...formatDocComment(derivedStruct.description, '    /// '));
-      }
+      lines.push(...formatDocComment(derivedStruct.description, '    /// ', derivedStruct.since));
       lines.push(`    #[serde(rename = ${escapeRustString(derivedStruct.tagValue)})]`);
 
       if (derivedStruct.fields.length === 0) {
@@ -750,7 +738,7 @@ export function generateRustSerdeSpec(ir: IR): string {
   l();
   ir.commonStructs.forEach((struct) => {
     if (struct.structType === 'simple') {
-      l(renderIRSimpleStruct(struct.name, struct.fields, struct.description, ctx));
+      l(renderIRSimpleStruct(struct.name, struct.fields, struct.description, ctx, struct.since));
     } else {
       const rendered = renderIRUnionStruct(struct, ctx);
       l(rendered.union);
@@ -777,18 +765,18 @@ export function generateRustSerdeSpec(ir: IR): string {
       const inputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Input`;
       const inputDescription = `${api.description} API 请求参数`;
       if (api.requestFields && api.requestFields.length > 0) {
-        l(renderIRSimpleStruct(inputName, api.requestFields, inputDescription, ctx));
+        l(renderIRSimpleStruct(inputName, api.requestFields, inputDescription, ctx, api.since));
       } else {
-        l(renderEmptyApiInputStruct(inputName, inputDescription));
+        l(renderEmptyApiInputStruct(inputName, inputDescription, api.since));
       }
       l();
 
       const outputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Output`;
       const outputDescription = `${api.description} API 响应数据`;
       if (api.responseFields && api.responseFields.length > 0) {
-        l(renderIRSimpleStruct(outputName, api.responseFields, outputDescription, ctx));
+        l(renderIRSimpleStruct(outputName, api.responseFields, outputDescription, ctx, api.since));
       } else {
-        l(renderTypeAlias(outputName, 'ApiEmptyStruct', outputDescription));
+        l(renderTypeAlias(outputName, 'ApiEmptyStruct', outputDescription, api.since));
       }
       l();
     });
@@ -890,7 +878,7 @@ export function generateRustSerdeSpec(ir: IR): string {
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
       const endpointName = `${snakeCaseToUpperCamelCase(api.endpoint)}Input`;
-      l(`/// ${api.description}`);
+      formatDocComment(api.description, '/// ', api.since).forEach((line) => l(line));
       l(`impl ApiEndpoint for ${endpointName} {`);
       l(`    type Output = ${snakeCaseToUpperCamelCase(api.endpoint)}Output;`);
       l(`    const NAME: &'static str = ${escapeRustString(`${api.endpoint}`)};`);

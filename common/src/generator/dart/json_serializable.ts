@@ -120,9 +120,7 @@ function renderFieldLines(key: string, field: IRField, unionStructNames: Set<str
     }
   }
 
-  if (description) {
-    formatDocComment(description).forEach((line) => lines.push(line));
-  }
+  formatDocComment(description, '/// ', field.since).forEach((line) => lines.push(line));
   if (hasDefault) {
     lines.push(`@Default(${formatDartLiteral(resolveDefaultValue(field.defaultValue))})`);
   }
@@ -136,15 +134,14 @@ function renderIRSimpleStruct(
   name: string,
   fields: IRField[],
   description: string,
-  unionStructNames: Set<string>
+  unionStructNames: Set<string>,
+  since?: string
 ): string {
   const className = snakeCaseToUpperCamelCase(name);
   const entries = fields;
   const lines: string[] = [];
 
-  if (description) {
-    lines.push(...formatDocComment(description));
-  }
+  lines.push(...formatDocComment(description, '/// ', since));
   lines.push('@freezed');
   lines.push(`abstract class ${className} with _$${className} {`);
   if (entries.length === 0) {
@@ -165,6 +162,15 @@ function renderIRSimpleStruct(
   return lines.join('\n');
 }
 
+function renderTypeAlias(name: string, target: string, description: string, since?: string): string {
+  const lines: string[] = [];
+
+  lines.push(...formatDocComment(description, '/// ', since));
+  lines.push(`typedef ${name} = ${target};`);
+
+  return lines.join('\n');
+}
+
 function renderIRUnionStruct(
   struct: IRPlainUnionStruct | IRNestedUnionStruct,
   unionStructNames: Set<string>
@@ -175,9 +181,7 @@ function renderIRUnionStruct(
   const extraDefs: string[] = [];
   const discriminator = struct.tagFieldName;
 
-  if (struct.description) {
-    lines.push(...formatDocComment(struct.description));
-  }
+  lines.push(...formatDocComment(struct.description, '/// ', struct.since));
   lines.push(`@Freezed(unionKey: "${discriminator}")`);
   lines.push(`abstract class ${className} with _$${className} {`);
 
@@ -192,9 +196,10 @@ function renderIRUnionStruct(
         dataTypeName = snakeCaseToUpperCamelCase(derivedType.refStructName);
       } else {
         dataTypeName = `${className}${snakeCaseToUpperCamelCase(variantValue)}Data`;
-        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, '', unionStructNames));
+        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, derivedType.description, unionStructNames, derivedType.since));
       }
 
+      lines.push(...formatDocComment(derivedType.description, '  /// ', derivedType.since));
       lines.push(`  @FreezedUnionValue("${variantValue}")`);
       lines.push(`  const factory ${className}.${variantConstructor}({`);
       struct.baseFields.forEach((field) => {
@@ -224,6 +229,7 @@ function renderIRUnionStruct(
       const variantConstructor = snakeCaseToLowerCamelCase(variantValue);
       const variantClassName = `${className}${snakeCaseToUpperCamelCase(variantValue)}`;
 
+      lines.push(...formatDocComment(derivedStruct.description, '  /// ', derivedStruct.since));
       lines.push(`  @FreezedUnionValue("${variantValue}")`);
       lines.push(`  const factory ${className}.${variantConstructor}({`);
       derivedStruct.fields.forEach((field) => {
@@ -299,7 +305,7 @@ export function generateDartJsonSerializableSpec(ir: IR): string {
   l();
   ir.commonStructs.forEach((struct) => {
     if (struct.structType === 'simple') {
-      l(renderIRSimpleStruct(struct.name, struct.fields, struct.description, unionStructNames));
+      l(renderIRSimpleStruct(struct.name, struct.fields, struct.description, unionStructNames, struct.since));
     } else {
       const rendered = renderIRUnionStruct(struct, unionStructNames);
       l(rendered.union);
@@ -325,18 +331,18 @@ export function generateDartJsonSerializableSpec(ir: IR): string {
     category.apis.forEach((api) => {
       const inputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Input`;
       if (api.requestFields && api.requestFields.length > 0) {
-        l(renderIRSimpleStruct(inputName, api.requestFields, '', unionStructNames));
+        l(renderIRSimpleStruct(inputName, api.requestFields, `${api.description} API 请求参数`, unionStructNames, api.since));
       } else {
-        l(`typedef ${inputName} = ApiEmptyStruct;`);
+        l(renderTypeAlias(inputName, 'ApiEmptyStruct', `${api.description} API 请求参数`, api.since));
       }
       l();
       const outputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Output`;
       if (api.responseFields && api.responseFields.length > 0) {
-        l(renderIRSimpleStruct(outputName, api.responseFields, '', unionStructNames));
+        l(renderIRSimpleStruct(outputName, api.responseFields, `${api.description} API 响应数据`, unionStructNames, api.since));
       } else if (api.responseFields) {
-        l(`typedef ${outputName} = ApiEmptyStruct;`);
+        l(renderTypeAlias(outputName, 'ApiEmptyStruct', `${api.description} API 响应数据`, api.since));
       } else {
-        l(`typedef ${outputName} = ApiEmptyStruct;`);
+        l(renderTypeAlias(outputName, 'ApiEmptyStruct', `${api.description} API 响应数据`, api.since));
       }
       l();
     });
@@ -354,7 +360,7 @@ export function generateDartJsonSerializableSpec(ir: IR): string {
   l();
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
-      l(`  /// ${api.description}`);
+      formatDocComment(api.description, '  /// ', api.since).forEach((line) => l(line));
       l(`  static final ${snakeCaseToLowerCamelCase(api.endpoint)} = ApiEndpoint(`);
       l(`    "/${api.endpoint}",`);
       l(`    ${snakeCaseToUpperCamelCase(api.endpoint)}Input.fromJson,`);

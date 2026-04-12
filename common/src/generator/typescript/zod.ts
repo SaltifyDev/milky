@@ -9,17 +9,19 @@ const applyDropBadElementArrayStructNames = new Set(['GroupNotification']);
 const specialReplacements = new Map([
   [
     'IncomingReplySegmentData.segments',
-    '  ' +
-      `get segments() {
-    return z.array(z.lazy(() => IncomingSegment)).describe('回复消息内容');
-  },`.trim(),
+    [
+      '  get segments() {',
+      '    return z.array(z.lazy(() => IncomingSegment)).describe(\'回复消息内容\');',
+      '  },',
+    ].join('\n'),
   ],
   [
     'OutgoingForwardSegmentData.messages',
-    '  ' +
-      `get messages() {
-    return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('合并转发消息内容');
-  },`.trim(),
+    [
+      '  get messages() {',
+      '    return z.array(z.lazy(() => OutgoingForwardMessage)).describe(\'转发消息内容\');',
+      '  },',
+    ].join('\n'),
   ],
 ]);
 

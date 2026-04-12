@@ -1,7 +1,7 @@
 import { IR } from '@saltify/milky-protocol';
 import { getApiTypeNames } from '../shared/ir';
 import { normalizeDerivedStructName } from '../shared/naming';
-import { createLineWriter } from '../shared/text';
+import { createLineWriter, formatBlockDocComment } from '../shared/text';
 import { getTypeScriptTypeProjection } from './shared';
 
 export function generateTypeScriptStaticSpec(ir: IR): string {
@@ -19,10 +19,10 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
   l();
   ir.commonStructs.forEach((struct) => {
     if (struct.structType === 'simple') {
-      l(`/** ${struct.description} */`);
+      formatBlockDocComment(struct.description, struct.since).forEach((line) => l(line));
       l(`export interface ${struct.name} {`);
       struct.fields.forEach((field) => {
-        l(`  /** ${field.description} */`);
+        formatBlockDocComment(field.description, field.since, '  ').forEach((line) => l(line));
         l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
       });
       l('}');
@@ -30,18 +30,18 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
       // union
       if (struct.unionType === 'plain') {
         struct.derivedStructs.forEach((derivedStruct) => {
-          l(`/** ${derivedStruct.description} */`);
+          formatBlockDocComment(derivedStruct.description, derivedStruct.since).forEach((line) => l(line));
           l(`export interface ${normalizeDerivedStructName(struct.name, derivedStruct.tagValue)} {`);
           l(`  /** 数据类型区分字段，表示自身为${derivedStruct.description} */`);
           l(`  ${struct.tagFieldName}: '${derivedStruct.tagValue}';`);
           derivedStruct.fields.forEach((field) => {
-            l(`  /** ${field.description} */`);
+            formatBlockDocComment(field.description, field.since, '  ').forEach((line) => l(line));
             l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
           });
           l('}');
           l();
         });
-        l(`/** ${struct.description} */`);
+        formatBlockDocComment(struct.description, struct.since).forEach((line) => l(line));
         l(`export type ${struct.name} =`);
         struct.derivedStructs.forEach((derivedStruct, index) => {
           l(
@@ -51,11 +51,11 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
       } else {
         // with data property
         struct.derivedTypes.forEach((derivedType) => {
-          l(`/** ${derivedType.description} */`);
+          formatBlockDocComment(derivedType.description, derivedType.since).forEach((line) => l(line));
           if (derivedType.derivingType === 'struct') {
             l(`export interface ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}Data {`);
             derivedType.fields.forEach((field) => {
-              l(`  /** ${field.description} */`);
+              formatBlockDocComment(field.description, field.since, '  ').forEach((line) => l(line));
               l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
             });
             l('}');
@@ -67,14 +67,14 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
           }
           // add type aliases for Event
           if (struct.name === 'Event') {
-            l(`/** ${derivedType.description} */`);
+            formatBlockDocComment(derivedType.description, derivedType.since).forEach((line) => l(line));
             l(
               `export type ${normalizeDerivedStructName(struct.name, derivedType.tagValue)} = ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}Data;`
             );
           }
           l();
         });
-        l(`/** ${struct.description} */`);
+        formatBlockDocComment(struct.description, struct.since).forEach((line) => l(line));
         l(`export type ${struct.name} =`);
         struct.derivedTypes.forEach((derivedType, index) => {
           l('  | {');
@@ -94,11 +94,11 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
       const typeNames = getApiTypeNames(api.endpoint);
-      l(`/** ${api.description} API 请求参数 */`);
+      formatBlockDocComment(`${api.description} API 请求参数`, api.since).forEach((line) => l(line));
       if (api.requestFields !== undefined) {
         l(`export interface ${typeNames.inputName} {`);
         api.requestFields.forEach((field) => {
-          l(`  /** ${field.description} */`);
+          formatBlockDocComment(field.description, field.since, '  ').forEach((line) => l(line));
           l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
         });
         l('}');
@@ -106,11 +106,11 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
         l(`export type ${typeNames.inputName} = {};`);
       }
       l();
-      l(`/** ${api.description} API 响应数据 */`);
+      formatBlockDocComment(`${api.description} API 响应数据`, api.since).forEach((line) => l(line));
       if (api.responseFields !== undefined) {
         l(`export interface ${typeNames.outputName} {`);
         api.responseFields.forEach((field) => {
-          l(`  /** ${field.description} */`);
+          formatBlockDocComment(field.description, field.since, '  ').forEach((line) => l(line));
           l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
         });
         l('}');
@@ -126,7 +126,7 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
     l(`  ${category.key}: {`);
     category.apis.forEach((api) => {
       const typeNames = getApiTypeNames(api.endpoint);
-      l(`    /** ${api.description} */`);
+      formatBlockDocComment(api.description, api.since, '    ').forEach((line) => l(line));
       l(`    ${api.endpoint}: {`);
       l(`      request: ${typeNames.inputName};`);
       l(`      response: ${typeNames.outputName};`);

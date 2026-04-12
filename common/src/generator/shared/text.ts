@@ -25,10 +25,37 @@ export function indentLines(text: string, indent: string = '    '): string {
     .join('\n');
 }
 
-export function formatDocComment(text: string, prefix = '/// '): string[] {
-  return text
+function getDocLines(text: string | undefined, since?: string): string[] {
+  const lines = (text ?? '')
     .split('\n')
     .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map((line) => `${prefix}${line}`);
+    .filter((line) => line.length > 0);
+
+  if (since !== undefined) {
+    lines.push(`@since ${since}`);
+  }
+
+  return lines;
+}
+
+export function formatDocText(text: string | undefined, since?: string): string {
+  return getDocLines(text, since).join('\n');
+}
+
+export function formatDocComment(text: string | undefined, prefix = '/// ', since?: string): string[] {
+  return getDocLines(text, since).map((line) => `${prefix}${line}`);
+}
+
+export function formatBlockDocComment(text: string | undefined, since?: string, indent = ''): string[] {
+  const lines = getDocLines(text, since);
+
+  if (lines.length === 0) {
+    return [];
+  }
+
+  if (lines.length === 1) {
+    return [`${indent}/** ${lines[0]} */`];
+  }
+
+  return [`${indent}/**`, ...lines.map((line) => `${indent} * ${line}`), `${indent} */`];
 }
