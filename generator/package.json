@@ -1,7 +1,7 @@
 {
   "name": "milkygen",
   "type": "module",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Milky codegen CLI",
   "bin": {
     "milkygen": "dist/cli.mjs"
