@@ -11,7 +11,7 @@
     "@typescript/native-preview": "^7.0.0-dev.20260412.1",
     "eslint": "^9.39.2",
     "globals": "^17.5.0",
-    "tsdown": "^0.21.2",
+    "tsdown": "^0.21.7",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.58.0"
