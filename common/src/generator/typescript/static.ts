@@ -52,35 +52,34 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
         // with data property
         struct.derivedTypes.forEach((derivedType) => {
           formatBlockDocComment(derivedType.description, derivedType.since).forEach((line) => l(line));
+          l(`export interface ${normalizeDerivedStructName(struct.name, derivedType.tagValue)} {`);
+          l(`  /** 数据类型区分字段，表示自身为${derivedType.description} */`);
+          l(`  ${struct.tagFieldName}: '${derivedType.tagValue}';`);
+          struct.baseFields.forEach((field) => {
+            formatBlockDocComment(field.description, field.since, '  ').forEach((line) => l(line));
+            l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
+          });
+
           if (derivedType.derivingType === 'struct') {
-            l(`export interface ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}Data {`);
+            l(`  /** 数据内容 */`);
+            l(`  data: {`);
             derivedType.fields.forEach((field) => {
-              formatBlockDocComment(field.description, field.since, '  ').forEach((line) => l(line));
-              l(`  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
+              formatBlockDocComment(field.description, field.since, '    ').forEach((line) => l(line));
+              l(`    ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptTypeProjection(field)};`);
             });
-            l('}');
+            l('  }');
           } else {
             // ref type
-            l(
-              `export type ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}Data = ${derivedType.refStructName};`
-            );
+            l(`  /** 数据内容 */`);
+            l(`  data: ${derivedType.refStructName};`);
           }
-          // add type aliases for Event
-          if (struct.name === 'Event') {
-            formatBlockDocComment(derivedType.description, derivedType.since).forEach((line) => l(line));
-            l(
-              `export type ${normalizeDerivedStructName(struct.name, derivedType.tagValue)} = ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}Data;`
-            );
-          }
+          l('}');
           l();
         });
         formatBlockDocComment(struct.description, struct.since).forEach((line) => l(line));
         l(`export type ${struct.name} =`);
         struct.derivedTypes.forEach((derivedType, index) => {
-          l('  | {');
-          l(`      ${struct.tagFieldName}: '${derivedType.tagValue}';`);
-          l(`      data: ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}Data;`);
-          l(`    }${index === struct.derivedTypes.length - 1 ? ';' : ''}`);
+          l(`  | ${normalizeDerivedStructName(struct.name, derivedType.tagValue)}${index === struct.derivedTypes.length - 1 ? ';' : ''}`);
         });
       }
     }
