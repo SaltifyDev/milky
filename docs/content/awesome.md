@@ -28,6 +28,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Python** - [milky-python-sdk](https://pypi.org/project/milky-python-sdk/) (MIT)
 - **Rust** - [milky-rust-sdk](https://crates.io/crates/milky-rust-sdk) (MIT **or** Apache 2.0)
 - **.NET** - [Milky.Net.Client](https://www.nuget.org/packages/Milky.Net.Client) (MIT)
+- **.NET** - [Sora](https://www.nuget.org/packages/HoshikawaKaguya.Sora) (Apache 2.0)
 - **Go** - [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk) (MIT)
 - **Kotlin** - [saltify-core](https://central.sonatype.com/artifact/org.ntqqrev/saltify-core) (MIT)
 
