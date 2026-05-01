@@ -2,7 +2,7 @@ import type { IR, IRField } from '@saltify/milky-protocol';
 
 import { getApiTypeNames } from '../shared/ir';
 import { normalizeDerivedStructName, snakeCaseToPascalCase } from '../shared/naming';
-import { createLineWriter } from '../shared/text';
+import { createLineWriter, indentLines } from '../shared/text';
 import { getTypeScriptTypeProjection } from './shared';
 
 const applyDropBadElementArrayStructNames = new Set(['GroupNotification']);
@@ -10,17 +10,11 @@ const applyDropBadElementArrayStructNames = new Set(['GroupNotification']);
 const specialReplacements = new Map([
   [
     'IncomingReplySegmentData.segments',
-    ['  get segments() {', "    return z.array(z.lazy(() => IncomingSegment)).describe('回复消息内容');", '  },'].join(
-      '\n',
-    ),
+    "  get segments() { return z.array(IncomingSegment).describe('回复消息内容'); },",
   ],
   [
     'OutgoingForwardSegmentData.messages',
-    [
-      '  get messages() {',
-      "    return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('转发消息内容');",
-      '  },',
-    ].join('\n'),
+    "  get messages() { return z.array(OutgoingForwardedMessage).describe('转发消息内容'); },",
   ],
 ]);
 
@@ -162,45 +156,44 @@ export function generateTypeScriptZodSpec(ir: IR) {
         struct.derivedTypes.forEach((derived) => {
           const structName = `${normalizeDerivedStructName(struct.name, derived.tagValue)}Data`;
           if (derived.derivingType === 'struct') {
-            l(
-              `export const ${structName} = ${renderIRObject(ir, structName, derived.fields, derived.description, true)};`,
-            );
-            l(`export type ${structName} = z.infer<typeof ${structName}>;`);
-            l();
-            // add type aliases for Event
-            if (struct.name === 'Event') {
-              l(`export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = ${structName};`);
+            l(`export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.object({`);
+            l(`  ${struct.tagFieldName}: z.literal('${derived.tagValue}'),`);
+            struct.baseFields.forEach((field) => {
               l(
-                `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${structName}>;`,
+                `  ${field.name}: ${getZodTypeSpec(ir, field, {
+                  dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
+                })}.describe('${field.description}'),`
               );
-              l();
-            }
+            });
+            l(
+              `  data: ${indentLines(renderIRObject(ir, structName, derived.fields, derived.description, false), '  ').trimStart()},`
+            );
+            l(`}).describe('${derived.description}');`);
+            l(
+              `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`
+            );
+            l();
+          } else {
+            l(`export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.object({`);
+            l(`  ${struct.tagFieldName}: z.literal('${derived.tagValue}'),`);
+            struct.baseFields.forEach((field) => {
+              l(
+                `  ${field.name}: ${getZodTypeSpec(ir, field, {
+                  dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
+                })}.describe('${field.description}'),`
+              );
+            });
+            l(`  data: z.lazy(() => ${derived.refStructName}).describe('${derived.description}'),`);
+            l(`}).describe('${derived.description}');`);
+            l(
+              `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`
+            );
+            l();
           }
         });
         l(`export const ${struct.name} = z.discriminatedUnion('${struct.tagFieldName}', [`);
-        struct.derivedTypes.forEach((derived, index) => {
-          l('  z.object({');
-          l(`    ${struct.tagFieldName}: z.literal('${derived.tagValue}'),`);
-          struct.baseFields.forEach((field) => {
-            l(
-              `    ${field.name}: ${getZodTypeSpec(ir, field, {
-                dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
-              })}.describe('${field.description}'),`,
-            );
-          });
-          if (derived.derivingType === 'struct') {
-            l(
-              `    data: ${normalizeDerivedStructName(struct.name, derived.tagValue)}Data.describe('${derived.description}'),`,
-            );
-            l(`  }).describe('${derived.description}'),`);
-          } else {
-            // ref type
-            l(`    data: z.lazy(() => ${derived.refStructName}).describe('${derived.description}'),`);
-            l(`  }).describe('${derived.description}'),`);
-          }
-          if (index !== struct.derivedTypes.length - 1) {
-            l();
-          }
+        struct.derivedTypes.forEach((derived) => {
+          l(`  ${normalizeDerivedStructName(struct.name, derived.tagValue)},`);
         });
       }
       if (struct.name === 'IncomingSegment') {
