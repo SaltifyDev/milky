@@ -1,4 +1,4 @@
-import { ir } from "@saltify/milky-protocol";
+import { ir } from '@saltify/milky-protocol';
 
 export const dynamic = 'force-static';
 

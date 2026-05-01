@@ -1,4 +1,4 @@
-import { api, category, enumField, refField, scalarField } from '../../builder';
+import { api, category, refField, scalarField } from '../../builder';
 import type { IRApiCategory } from '../../types';
 
 export const fileApiCategory: IRApiCategory = category('file', '文件 API', [

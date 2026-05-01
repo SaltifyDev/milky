@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Code, Pre } from 'nextra/components';
-import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { Link } from 'nextra-theme-docs';
+import { useEffect, useMemo, useState } from 'react';
+
+import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 
 type FetchState = {
   content: string;
@@ -51,7 +52,7 @@ export default function RawPreviewClient() {
   });
   const pathWithOrigin = useMemo(() => {
     if (typeof window === 'undefined') return '';
-    return new URL(window.location.origin + `/raw/${rawPath}`).toString();
+    return new URL(`${window.location.origin}/raw/${rawPath}`).toString();
   }, [rawPath]);
   const [contentCopySuccess, setContentCopySuccess] = useState<boolean | null>(null);
   const [pathCopySuccess, setPathCopySuccess] = useState<boolean | null>(null);

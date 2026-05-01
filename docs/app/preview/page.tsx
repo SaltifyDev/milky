@@ -1,6 +1,7 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
+
 import RawPreviewClient from '@/component/RawPreviewClient';
-import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Milky | 原始文件预览',

@@ -1,9 +1,9 @@
-import { IR } from '@saltify/milky-protocol';
+import type { IR } from '@saltify/milky-protocol';
 import { z } from 'zod';
-import { initializeZodRegistry, loadGeneratedZodTypesModule } from '../shared/zod-runtime';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function generateJsonSchema(ir: IR, typesModule?: any) {
+import { initializeZodRegistry, loadGeneratedZodTypesModule, type ZodTypesModule } from '../shared/zod-runtime';
+
+export async function generateJsonSchema(ir: IR, typesModule?: ZodTypesModule) {
   initializeZodRegistry(ir, typesModule ?? (await loadGeneratedZodTypesModule(ir)));
 
   return {

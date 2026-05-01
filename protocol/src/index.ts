@@ -1,7 +1,7 @@
-import { commonStructs } from './ir/common';
-import { apiCategories } from './ir/api';
-import { IR } from './types';
 import pkg from '../package.json';
+import { apiCategories } from './ir/api';
+import { commonStructs } from './ir/common';
+import type { IR } from './types';
 
 export * from './types';
 

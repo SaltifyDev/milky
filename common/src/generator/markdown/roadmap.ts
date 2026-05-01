@@ -1,4 +1,4 @@
-import { IRPlainUnionStruct, IRNestedUnionStruct, IR } from '@saltify/milky-protocol';
+import type { IR, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
 
 function findUnionStruct(ir: IR, name: string): IRPlainUnionStruct | IRNestedUnionStruct {
   const struct = ir.commonStructs.find((candidate) => candidate.name === name);
@@ -11,7 +11,7 @@ function findUnionStruct(ir: IR, name: string): IRPlainUnionStruct | IRNestedUni
 }
 
 function getUnionVariants(
-  struct: IRPlainUnionStruct | IRNestedUnionStruct
+  struct: IRPlainUnionStruct | IRNestedUnionStruct,
 ): { tagValue: string; description: string }[] {
   if (struct.unionType === 'withData') {
     return struct.derivedTypes.map((derivedType) => ({

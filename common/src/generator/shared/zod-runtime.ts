@@ -1,17 +1,18 @@
-import { IR } from '@saltify/milky-protocol';
-import { z } from 'zod';
+import type { IR } from '@saltify/milky-protocol';
 import { transform } from 'sucrase';
+import { z } from 'zod';
+
 import { generateTypeScriptZodSpec } from '../typescript/zod';
 import { getApiTypeNames } from './ir';
 
-const dynamicImport = new Function('specifier', 'return import(specifier);') as (
-  specifier: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-) => Promise<Record<string, any>>;
+export type ZodTypesModule = Record<string, z.ZodType>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function importCodeAsModule(code: string): Promise<Record<string, any>> {
-  return await dynamicImport('data:text/javascript,' + encodeURIComponent(code));
+const dynamicImport = new Function('specifier', 'return import(specifier);') as (
+  specifier: string,
+) => Promise<ZodTypesModule>;
+
+export async function importCodeAsModule(code: string): Promise<ZodTypesModule> {
+  return await dynamicImport(`data:text/javascript,${encodeURIComponent(code)}`);
 }
 
 export async function loadGeneratedZodTypesModule(ir: IR) {
@@ -23,7 +24,7 @@ export async function loadGeneratedZodTypesModule(ir: IR) {
   return await importCodeAsModule(codeWithCorrectImport);
 }
 
-export function initializeZodRegistry(ir: IR, typesModule: Record<string, z.ZodType>) {
+export function initializeZodRegistry(ir: IR, typesModule: ZodTypesModule) {
   z.globalRegistry._idmap.clear();
 
   ir.commonStructs.forEach((struct) => {
@@ -75,7 +76,6 @@ export function initializeZodRegistry(ir: IR, typesModule: Record<string, z.ZodT
 }
 
 export function sanitizeGeneratedSchema(schema: Record<string, unknown>) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { $schema, ...rest } = schema;
   return rest;
 }

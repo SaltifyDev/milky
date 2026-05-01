@@ -1,4 +1,14 @@
-import { enumField, nestedUnionRefVariant, nestedUnion, nestedUnionStructVariant, plainUnion, plainUnionStructVariant, refField, scalarField, struct } from '../builder';
+import {
+  enumField,
+  nestedUnion, 
+  nestedUnionRefVariant, 
+  nestedUnionStructVariant, 
+  plainUnion, 
+  plainUnionStructVariant,
+  refField,
+  scalarField,
+  struct, 
+} from '../builder';
 import type { IR } from '../types';
 
 const Event = nestedUnion('Event', '事件', 'event_type', [

@@ -12,6 +12,6 @@
     "isolatedModules": true,
     "declaration": true,
     "strict": true,
-    "noFallthroughCasesInSwitch": true,
+    "noFallthroughCasesInSwitch": true
   }
 }

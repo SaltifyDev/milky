@@ -1,4 +1,5 @@
-import { IR, IRField } from '@saltify/milky-protocol';
+import type { IR, IRField } from '@saltify/milky-protocol';
+
 import { getApiTypeNames } from '../shared/ir';
 import { normalizeDerivedStructName, snakeCaseToPascalCase } from '../shared/naming';
 import { createLineWriter } from '../shared/text';
@@ -9,17 +10,15 @@ const applyDropBadElementArrayStructNames = new Set(['GroupNotification']);
 const specialReplacements = new Map([
   [
     'IncomingReplySegmentData.segments',
-    [
-      '  get segments() {',
-      '    return z.array(z.lazy(() => IncomingSegment)).describe(\'回复消息内容\');',
-      '  },',
-    ].join('\n'),
+    ['  get segments() {', "    return z.array(z.lazy(() => IncomingSegment)).describe('回复消息内容');", '  },'].join(
+      '\n',
+    ),
   ],
   [
     'OutgoingForwardSegmentData.messages',
     [
       '  get messages() {',
-      '    return z.array(z.lazy(() => OutgoingForwardedMessage)).describe(\'转发消息内容\');',
+      "    return z.array(z.lazy(() => OutgoingForwardedMessage)).describe('转发消息内容');",
       '  },',
     ].join('\n'),
   ],
@@ -34,7 +33,7 @@ function getZodTypeSpec(
   field: IRField,
   options: {
     dropBadElementArrayStructNames?: ReadonlySet<string>;
-  } = {}
+  } = {},
 ): string {
   let typeSpec = 'z.unknown()';
 
@@ -56,7 +55,10 @@ function getZodTypeSpec(
 
   if (field.isArray) {
     if (field.fieldType === 'ref') {
-      const referredStruct = ir.commonStructs.find((struct) => struct.name === field.refStructName)!;
+      const referredStruct = ir.commonStructs.find((struct) => struct.name === field.refStructName);
+      if (referredStruct === undefined) {
+        throw new Error(`Unknown struct: ${field.refStructName}`);
+      }
       if (options.dropBadElementArrayStructNames?.has(referredStruct.name)) {
         typeSpec = `zDropBadElementArray(${field.refStructName})`;
       } else {
@@ -84,7 +86,7 @@ function renderIRObject(
   description: string,
   withDescription: boolean = true,
   unionTagFieldName?: string,
-  unionTagValue?: string
+  unionTagValue?: string,
 ): string {
   const writer = createLineWriter();
   const l = writer.line;
@@ -101,7 +103,7 @@ function renderIRObject(
       l(
         `  ${field.name}: ${getZodTypeSpec(ir, field, {
           dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
-        })}.describe('${field.description}'),`
+        })}.describe('${field.description}'),`,
       );
     }
   });
@@ -144,10 +146,10 @@ export function generateTypeScriptZodSpec(ir: IR) {
       if (struct.unionType === 'plain') {
         struct.derivedStructs.forEach((derived) => {
           l(
-            `export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = ${renderIRObject(ir, struct.name, derived.fields, derived.description, true, struct.tagFieldName, derived.tagValue)};`
+            `export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = ${renderIRObject(ir, struct.name, derived.fields, derived.description, true, struct.tagFieldName, derived.tagValue)};`,
           );
           l(
-            `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`
+            `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`,
           );
           l();
         });
@@ -158,10 +160,10 @@ export function generateTypeScriptZodSpec(ir: IR) {
       } else {
         // with data property
         struct.derivedTypes.forEach((derived) => {
-          const structName = normalizeDerivedStructName(struct.name, derived.tagValue) + 'Data';
+          const structName = `${normalizeDerivedStructName(struct.name, derived.tagValue)}Data`;
           if (derived.derivingType === 'struct') {
             l(
-              `export const ${structName} = ${renderIRObject(ir, structName, derived.fields, derived.description, true)};`
+              `export const ${structName} = ${renderIRObject(ir, structName, derived.fields, derived.description, true)};`,
             );
             l(`export type ${structName} = z.infer<typeof ${structName}>;`);
             l();
@@ -169,7 +171,7 @@ export function generateTypeScriptZodSpec(ir: IR) {
             if (struct.name === 'Event') {
               l(`export const ${normalizeDerivedStructName(struct.name, derived.tagValue)} = ${structName};`);
               l(
-                `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${structName}>;`
+                `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${structName}>;`,
               );
               l();
             }
@@ -183,12 +185,12 @@ export function generateTypeScriptZodSpec(ir: IR) {
             l(
               `    ${field.name}: ${getZodTypeSpec(ir, field, {
                 dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
-              })}.describe('${field.description}'),`
+              })}.describe('${field.description}'),`,
             );
           });
           if (derived.derivingType === 'struct') {
             l(
-              `    data: ${normalizeDerivedStructName(struct.name, derived.tagValue)}Data.describe('${derived.description}'),`
+              `    data: ${normalizeDerivedStructName(struct.name, derived.tagValue)}Data.describe('${derived.description}'),`,
             );
             l(`  }).describe('${derived.description}'),`);
           } else {
@@ -224,8 +226,8 @@ export function generateTypeScriptZodSpec(ir: IR) {
       if (spec.requestFields) {
         l(
           `export const ${typeNames.inputName} = ` +
-            renderIRObject(ir, typeNames.inputName, spec.requestFields, spec.endpoint + ' 请求参数', true) +
-            ';'
+            renderIRObject(ir, typeNames.inputName, spec.requestFields, `${spec.endpoint} 请求参数`, true) +
+            ';',
         );
         l(`export type ${typeNames.inputName} = z.infer<typeof ${typeNames.inputName}>;`);
         l();
@@ -233,8 +235,8 @@ export function generateTypeScriptZodSpec(ir: IR) {
       if (spec.responseFields) {
         l(
           `export const ${typeNames.outputName} = ` +
-            renderIRObject(ir, typeNames.outputName, spec.responseFields, spec.endpoint + ' 响应数据', true) +
-            ';'
+            renderIRObject(ir, typeNames.outputName, spec.responseFields, `${spec.endpoint} 响应数据`, true) +
+            ';',
         );
         l(`export type ${typeNames.outputName} = z.infer<typeof ${typeNames.outputName}>;`);
         l();

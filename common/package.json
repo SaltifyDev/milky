@@ -9,10 +9,5 @@
     "@saltify/milky-protocol": "workspace:*",
     "sucrase": "^3.35.1",
     "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.58.1",
-    "@typescript-eslint/parser": "^8.58.1",
-    "eslint-config-prettier": "^10.1.8"
   }
 }

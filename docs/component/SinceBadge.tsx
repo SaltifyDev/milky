@@ -1,4 +1,4 @@
-import { JSX } from 'react';
+import type { JSX } from 'react';
 
 export default function SinceBadge(props: { version?: string; useSup?: boolean }): JSX.Element | null {
   if (!props.version) {

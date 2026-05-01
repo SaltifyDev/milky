@@ -1,8 +1,10 @@
-import StructRenderer from '@/component/StructRenderer';
-import SinceBadge from '@/component/SinceBadge';
-import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { ir } from '@saltify/milky-protocol';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import SinceBadge from '@/component/SinceBadge';
+import StructRenderer from '@/component/StructRenderer';
+import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 
 const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
 
@@ -15,7 +17,10 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const struct = commonStructMap.get(params.commonEntityName)!;
+  const struct = commonStructMap.get(params.commonEntityName);
+  if (struct === undefined) {
+    notFound();
+  }
   return {
     title: `Milky | ${struct.description} (${params.commonEntityName})`,
   };
@@ -29,7 +34,10 @@ export function generateStaticParams() {
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const entity = commonStructMap.get(params.commonEntityName)!;
+  const entity = commonStructMap.get(params.commonEntityName);
+  if (entity === undefined) {
+    notFound();
+  }
   return (
     <Wrapper
       toc={

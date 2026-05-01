@@ -1,13 +1,13 @@
-import { LastUpdated, Layout, Navbar } from 'nextra-theme-docs';
 import { getPageMap } from 'nextra/page-map';
+import { LastUpdated, Layout, Navbar } from 'nextra-theme-docs';
 import 'nextra-theme-docs/style.css';
 import './styles.css';
-import icon216 from '@/assets/icon216.png';
-
-import { Banner, Head, Search } from 'nextra/components';
-import { Metadata } from 'next';
-import Image from 'next/image';
 import { ir } from '@saltify/milky-protocol';
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import { Banner, Head, Search } from 'nextra/components';
+
+import icon216 from '@/assets/icon216.png';
 
 const commonStructMap = new Map(ir.commonStructs.map((struct) => [struct.name, struct]));
 

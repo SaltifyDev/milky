@@ -1,4 +1,5 @@
-import { IR, IRField, IRPlainUnionStruct } from '@saltify/milky-protocol';
+import type { IR, IRField, IRPlainUnionStruct } from '@saltify/milky-protocol';
+
 import { snakeCaseToPascalCase } from './naming';
 
 export function getApiTypeNames(endpoint: string) {
@@ -73,7 +74,7 @@ function visitAllFieldCollections(ir: IR, visit: (fields: IRField[]) => void) {
 
 export function collectArrayUnionRefs(
   ir: IR,
-  unionStructNames: Set<string> = collectUnionStructNames(ir)
+  unionStructNames: Set<string> = collectUnionStructNames(ir),
 ): Set<string> {
   const arrayUnionRefs = new Set<string>();
 
@@ -97,7 +98,7 @@ export function getPlainUnionCommonFields(struct: IRPlainUnionStruct): IRField[]
 
   for (let index = 1; index < struct.derivedStructs.length; index++) {
     commonFields = commonFields.filter((field) =>
-      struct.derivedStructs[index].fields.some((candidate) => isSameField(field, candidate))
+      struct.derivedStructs[index].fields.some((candidate) => isSameField(field, candidate)),
     );
   }
 

@@ -1,4 +1,5 @@
-import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+import type { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+
 import { getPlainUnionCommonFields } from '../shared/ir';
 import { snakeCaseToLowerCamelCase, snakeCaseToUpperCamelCase } from '../shared/naming';
 import { formatBlockDocComment, indentLines } from '../shared/text';
@@ -56,17 +57,21 @@ function renderIRObject(
   since?: string,
   includeDesc = true,
   additionalAnnotations: string[] = [],
-  overrideFields: Set<string> = new Set()
+  overrideFields: Set<string> = new Set(),
 ): string {
   const lines: string[] = [];
   function l(line: string = '') {
     lines.push(line);
   }
   if (includeDesc) {
-    formatBlockDocComment(description, since).forEach((line) => l(line));
+    formatBlockDocComment(description, since).forEach((line) => {
+      l(line);
+    });
   }
   l('@Serializable');
-  additionalAnnotations.forEach((annotation) => l(annotation));
+  additionalAnnotations.forEach((annotation) => {
+    l(annotation);
+  });
   if (fields.length > 0) {
     l(`data class ${snakeCaseToUpperCamelCase(name)}(`);
     fields.forEach((field) => {
@@ -74,14 +79,16 @@ function renderIRObject(
       const defaultValue = field.defaultValue !== undefined ? JSON.stringify(field.defaultValue) : null;
       const overridePrefix = needsOverride ? 'override ' : '';
 
-      formatBlockDocComment(field.description, field.since, '    ').forEach((line) => l(line));
+      formatBlockDocComment(field.description, field.since, '    ').forEach((line) => {
+        l(line);
+      });
 
       renderFieldAnnotations(ir, field, l);
 
       l(
         `    @SerialName("${field.name}")${
           defaultValue ? ` @LiteralDefault("${escapeString(defaultValue)}")` : ''
-        } ${overridePrefix}val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, needsOverride)},`
+        } ${overridePrefix}val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, needsOverride)},`,
       );
     });
     l(')');
@@ -94,7 +101,9 @@ function renderIRObject(
 function renderTypeAlias(name: string, target: string, description: string, since?: string): string {
   const lines: string[] = [];
 
-  formatBlockDocComment(description, since).forEach((line) => lines.push(line));
+  formatBlockDocComment(description, since).forEach((line) => {
+    lines.push(line);
+  });
   lines.push(`typealias ${name} = ${target}`);
 
   return lines.join('\n');
@@ -110,7 +119,9 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
     lines[lines.length - 1] += line;
   }
 
-  formatBlockDocComment(struct.description, struct.since).forEach((line) => l(line));
+  formatBlockDocComment(struct.description, struct.since).forEach((line) => {
+    l(line);
+  });
   l('@Serializable');
 
   l(`@JsonClassDiscriminator("${struct.tagFieldName}")`);
@@ -129,7 +140,9 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
   if (commonFields.length > 0) {
     commonFields.forEach((field) => {
       commonFieldNames.add(field.name);
-      formatBlockDocComment(field.description, field.since, '    ').forEach((line) => l(line));
+      formatBlockDocComment(field.description, field.since, '    ').forEach((line) => {
+        l(line);
+      });
       l(`    abstract val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)}`);
     });
     l();
@@ -140,17 +153,21 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       const variantName = snakeCaseToUpperCamelCase(derivedType.tagValue);
       const dataTypeName =
         derivedType.derivingType === 'ref' ? snakeCaseToUpperCamelCase(derivedType.refStructName) : 'Data';
-      formatBlockDocComment(derivedType.description, derivedType.since, '    ').forEach((line) => l(line));
+      formatBlockDocComment(derivedType.description, derivedType.since, '    ').forEach((line) => {
+        l(line);
+      });
       l('    @Serializable');
       l(`    @SerialName("${derivedType.tagValue}")`);
       l(`    data class ${variantName}(`);
       struct.baseFields.forEach((field) => {
-        formatBlockDocComment(field.description, field.since, '        ').forEach((line) => l(line));
+        formatBlockDocComment(field.description, field.since, '        ').forEach((line) => {
+          l(line);
+        });
 
         renderFieldAnnotations(ir, field, l);
 
         l(
-          `        @SerialName("${field.name}") override val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)},`
+          `        @SerialName("${field.name}") override val ${snakeCaseToLowerCamelCase(field.name)}: ${getKotlinTypeSpec(field, true)},`,
         );
       });
       l(`        /** 数据字段 */`);
@@ -185,7 +202,12 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
       if (isStruct || targetFields.length > 0) {
         a(' {');
         if (isStruct) {
-          l(indentLines(renderIRObject(ir, 'Data', derivedType.fields, derivedType.description, derivedType.since), '        '));
+          l(
+            indentLines(
+              renderIRObject(ir, 'Data', derivedType.fields, derivedType.description, derivedType.since),
+              '        ',
+            ),
+          );
           l();
         }
 
@@ -213,9 +235,11 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
     });
   } else {
     struct.derivedStructs.forEach((derivedStruct, index) => {
-      formatBlockDocComment(derivedStruct.description, derivedStruct.since, '    ').forEach((line) => l(line));
+      formatBlockDocComment(derivedStruct.description, derivedStruct.since, '    ').forEach((line) => {
+        l(line);
+      });
       l(
-        indentLines(
+        `${indentLines(
           renderIRObject(
             ir,
             derivedStruct.tagValue,
@@ -224,10 +248,10 @@ function renderIRUnionStruct(ir: IR, struct: IRPlainUnionStruct | IRNestedUnionS
             undefined,
             false,
             [`@SerialName("${derivedStruct.tagValue}")`],
-            commonFieldNames
+            commonFieldNames,
           ),
-          '    '
-        ) + ` : ${snakeCaseToUpperCamelCase(name)}()`
+          '    ',
+        )} : ${snakeCaseToUpperCamelCase(name)}()`,
       );
       if (index !== struct.derivedStructs.length - 1) {
         l();
@@ -268,7 +292,7 @@ export function generateKotlinxSerializationSpec(ir: IR): string {
   l('}');
   l();
   l(
-    'internal class DropBadElementListSerializer<T>(private val elementSerializer: KSerializer<T>) : KSerializer<List<T>> {'
+    'internal class DropBadElementListSerializer<T>(private val elementSerializer: KSerializer<T>) : KSerializer<List<T>> {',
   );
   l('    val listSerializer = ListSerializer(elementSerializer)');
   l();
@@ -300,7 +324,7 @@ export function generateKotlinxSerializationSpec(ir: IR): string {
   l('}');
   l();
   l(
-    'internal class TransformUnknownSegmentListSerializer(private val elementSerializer: KSerializer<IncomingSegment>) :'
+    'internal class TransformUnknownSegmentListSerializer(private val elementSerializer: KSerializer<IncomingSegment>) :',
   );
   l('    KSerializer<List<IncomingSegment>> {');
   l();
@@ -375,8 +399,8 @@ export function generateKotlinxSerializationSpec(ir: IR): string {
             `${snakeCaseToUpperCamelCase(api.endpoint)}Input`,
             api.requestFields,
             `${api.description} API 请求参数`,
-            api.since
-          )
+            api.since,
+          ),
         );
       } else {
         l(
@@ -384,8 +408,8 @@ export function generateKotlinxSerializationSpec(ir: IR): string {
             `${snakeCaseToUpperCamelCase(api.endpoint)}Input`,
             'ApiEmptyStruct',
             `${api.description} API 请求参数`,
-            api.since
-          )
+            api.since,
+          ),
         );
       }
       l();
@@ -396,8 +420,8 @@ export function generateKotlinxSerializationSpec(ir: IR): string {
             `${snakeCaseToUpperCamelCase(api.endpoint)}Output`,
             api.responseFields,
             `${api.description} API 响应数据`,
-            api.since
-          )
+            api.since,
+          ),
         );
       } else {
         l(
@@ -405,8 +429,8 @@ export function generateKotlinxSerializationSpec(ir: IR): string {
             `${snakeCaseToUpperCamelCase(api.endpoint)}Output`,
             'ApiEmptyStruct',
             `${api.description} API 响应数据`,
-            api.since
-          )
+            api.since,
+          ),
         );
       }
       l();
@@ -419,11 +443,13 @@ export function generateKotlinxSerializationSpec(ir: IR): string {
   l('sealed class ApiEndpoint<T : Any, R : Any>(val path: String) {');
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
-      formatBlockDocComment(api.description, api.since, '    ').forEach((line) => l(line));
+      formatBlockDocComment(api.description, api.since, '    ').forEach((line) => {
+        l(line);
+      });
       l(
         `    object ${snakeCaseToUpperCamelCase(api.endpoint)} : ApiEndpoint<${snakeCaseToUpperCamelCase(
-          api.endpoint
-        )}Input, ${snakeCaseToUpperCamelCase(api.endpoint)}Output>("/${api.endpoint}")`
+          api.endpoint,
+        )}Input, ${snakeCaseToUpperCamelCase(api.endpoint)}Output>("/${api.endpoint}")`,
       );
     });
   });

@@ -2,18 +2,18 @@
   "name": "milky",
   "scripts": {
     "prepare": "tsx generator/src/cli.ts generate typescript/zod -v local -o types/src/index.g.ts",
-    "docs:dev": "pnpm --filter @saltify/milky-docs dev"
+    "docs:dev": "pnpm --filter @saltify/milky-docs dev",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "format": "biome format --write ."
   },
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@biomejs/biome": "^2.4.13",
     "@typescript/native-preview": "^7.0.0-dev.20260412.1",
-    "eslint": "^9.39.2",
-    "globals": "^17.5.0",
     "tsdown": "^0.21.7",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.58.0"
+    "typescript": "^5.9.3"
   }
 }

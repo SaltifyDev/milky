@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import * as c from '@saltify/milky-common';
-import ir, { IR } from '@saltify/milky-protocol';
-import { command, run, string, positional, option, subcommands } from 'cmd-ts';
+import ir, { type IR } from '@saltify/milky-protocol';
+import { command, option, positional, run, string, subcommands } from 'cmd-ts';
+
 import pkg from '../package.json';
 
 interface GeneratorSpec {
@@ -139,8 +140,8 @@ const cmd = subcommands({
           process.stdout.write(content);
           process.exit(0);
         } else {
-          const fs = await import('fs/promises');
-          const path = await import('path');
+          const fs = await import('node:fs/promises');
+          const path = await import('node:path');
           const resolvedOutputFile = path.resolve(process.cwd(), args.output);
           await fs.mkdir(path.dirname(resolvedOutputFile), { recursive: true });
           await fs.writeFile(resolvedOutputFile, content);

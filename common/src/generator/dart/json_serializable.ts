@@ -1,4 +1,5 @@
-import { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+import type { IR, IRField, IRNestedUnionStruct, IRPlainUnionStruct } from '@saltify/milky-protocol';
+
 import { collectArrayUnionRefs, collectUnionStructNames } from '../shared/ir';
 import { snakeCaseToLowerCamelCase, snakeCaseToUpperCamelCase } from '../shared/naming';
 import { formatDocComment } from '../shared/text';
@@ -120,7 +121,9 @@ function renderFieldLines(key: string, field: IRField, unionStructNames: Set<str
     }
   }
 
-  formatDocComment(description, '/// ', field.since).forEach((line) => lines.push(line));
+  formatDocComment(description, '/// ', field.since).forEach((line) => {
+    lines.push(line);
+  });
   if (hasDefault) {
     lines.push(`@Default(${formatDartLiteral(resolveDefaultValue(field.defaultValue))})`);
   }
@@ -135,7 +138,7 @@ function renderIRSimpleStruct(
   fields: IRField[],
   description: string,
   unionStructNames: Set<string>,
-  since?: string
+  since?: string,
 ): string {
   const className = snakeCaseToUpperCamelCase(name);
   const entries = fields;
@@ -173,7 +176,7 @@ function renderTypeAlias(name: string, target: string, description: string, sinc
 
 function renderIRUnionStruct(
   struct: IRPlainUnionStruct | IRNestedUnionStruct,
-  unionStructNames: Set<string>
+  unionStructNames: Set<string>,
 ): { union: string; extraDefs: string[] } {
   const name = struct.name;
   const className = snakeCaseToUpperCamelCase(name);
@@ -196,7 +199,15 @@ function renderIRUnionStruct(
         dataTypeName = snakeCaseToUpperCamelCase(derivedType.refStructName);
       } else {
         dataTypeName = `${className}${snakeCaseToUpperCamelCase(variantValue)}Data`;
-        extraDefs.push(renderIRSimpleStruct(dataTypeName, derivedType.fields, derivedType.description, unionStructNames, derivedType.since));
+        extraDefs.push(
+          renderIRSimpleStruct(
+            dataTypeName,
+            derivedType.fields,
+            derivedType.description,
+            unionStructNames,
+            derivedType.since,
+          ),
+        );
       }
 
       lines.push(...formatDocComment(derivedType.description, '  /// ', derivedType.since));
@@ -331,14 +342,30 @@ export function generateDartJsonSerializableSpec(ir: IR): string {
     category.apis.forEach((api) => {
       const inputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Input`;
       if (api.requestFields && api.requestFields.length > 0) {
-        l(renderIRSimpleStruct(inputName, api.requestFields, `${api.description} API 请求参数`, unionStructNames, api.since));
+        l(
+          renderIRSimpleStruct(
+            inputName,
+            api.requestFields,
+            `${api.description} API 请求参数`,
+            unionStructNames,
+            api.since,
+          ),
+        );
       } else {
         l(renderTypeAlias(inputName, 'ApiEmptyStruct', `${api.description} API 请求参数`, api.since));
       }
       l();
       const outputName = `${snakeCaseToUpperCamelCase(api.endpoint)}Output`;
       if (api.responseFields && api.responseFields.length > 0) {
-        l(renderIRSimpleStruct(outputName, api.responseFields, `${api.description} API 响应数据`, unionStructNames, api.since));
+        l(
+          renderIRSimpleStruct(
+            outputName,
+            api.responseFields,
+            `${api.description} API 响应数据`,
+            unionStructNames,
+            api.since,
+          ),
+        );
       } else if (api.responseFields) {
         l(renderTypeAlias(outputName, 'ApiEmptyStruct', `${api.description} API 响应数据`, api.since));
       } else {
@@ -360,7 +387,9 @@ export function generateDartJsonSerializableSpec(ir: IR): string {
   l();
   ir.apiCategories.forEach((category) => {
     category.apis.forEach((api) => {
-      formatDocComment(api.description, '  /// ', api.since).forEach((line) => l(line));
+      formatDocComment(api.description, '  /// ', api.since).forEach((line) => {
+        l(line);
+      });
       l(`  static final ${snakeCaseToLowerCamelCase(api.endpoint)} = ApiEndpoint(`);
       l(`    "/${api.endpoint}",`);
       l(`    ${snakeCaseToUpperCamelCase(api.endpoint)}Input.fromJson,`);

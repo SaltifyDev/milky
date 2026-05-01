@@ -1,7 +1,13 @@
-import { IR } from '@saltify/milky-protocol';
+import type { IR } from '@saltify/milky-protocol';
 import { z } from 'zod';
+
 import { getApiTypeNames } from '../shared/ir';
-import { initializeZodRegistry, loadGeneratedZodTypesModule, sanitizeGeneratedSchema } from '../shared/zod-runtime';
+import {
+  initializeZodRegistry,
+  loadGeneratedZodTypesModule,
+  sanitizeGeneratedSchema,
+  type ZodTypesModule,
+} from '../shared/zod-runtime';
 
 function buildComponents() {
   const jsonSchemas = z.toJSONSchema(z.globalRegistry, {
@@ -12,7 +18,7 @@ function buildComponents() {
   }).schemas;
 
   const schemas = Object.fromEntries(
-    Object.entries(jsonSchemas ?? {}).map(([name, schema]) => [name, sanitizeGeneratedSchema(schema)])
+    Object.entries(jsonSchemas ?? {}).map(([name, schema]) => [name, sanitizeGeneratedSchema(schema)]),
   );
 
   schemas.ApiResponse = {
@@ -127,8 +133,7 @@ function buildWebhooks() {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function generateOpenApiSpec(ir: IR, typesModule?: any) {
+export async function generateOpenApiSpec(ir: IR, typesModule?: ZodTypesModule) {
   initializeZodRegistry(ir, typesModule ?? (await loadGeneratedZodTypesModule(ir)));
 
   return {

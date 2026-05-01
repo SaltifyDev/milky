@@ -1,8 +1,10 @@
-import StructRenderer from '@/component/StructRenderer';
-import SinceBadge from '@/component/SinceBadge';
-import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { ir } from '@saltify/milky-protocol';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import SinceBadge from '@/component/SinceBadge';
+import StructRenderer from '@/component/StructRenderer';
+import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 
 const apiCategoryMap = new Map(ir.apiCategories.map((category) => [category.key, category]));
 
@@ -16,7 +18,7 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   return {
-    title: `Milky | ${apiCategoryMap.get(params.apiCategoryId)!.name}`,
+    title: `Milky | ${apiCategoryMap.get(params.apiCategoryId)?.name}`,
   };
 }
 
@@ -28,7 +30,10 @@ export function generateStaticParams() {
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const apiCategory = apiCategoryMap.get(params.apiCategoryId)!;
+  const apiCategory = apiCategoryMap.get(params.apiCategoryId);
+  if (apiCategory === undefined) {
+    notFound();
+  }
   return (
     <Wrapper
       toc={apiCategory.apis.map((spec) => ({

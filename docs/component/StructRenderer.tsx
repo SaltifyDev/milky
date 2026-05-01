@@ -1,9 +1,4 @@
-import { Link } from 'nextra-theme-docs';
-import { Table } from 'nextra/components';
-import { JSX } from 'react';
-import { useMDXComponents as getMDXComponents } from '@/mdx-components';
-import SinceBadge from './SinceBadge';
-import {
+import type {
   IRField,
   IRNestedUnionDerivedStructType,
   IRNestedUnionStruct,
@@ -11,16 +6,22 @@ import {
   IRScalarField,
   IRStruct,
 } from '@saltify/milky-protocol';
+import { Table } from 'nextra/components';
+import { Link } from 'nextra-theme-docs';
+import type { JSX } from 'react';
+
+import { useMDXComponents as getMDXComponents } from '@/mdx-components';
+import SinceBadge from './SinceBadge';
 
 const { h2: H2 } = getMDXComponents();
 
 function renderMarkdownCode(text: string): JSX.Element {
   const codeRegex = /`([\s\S]*?)`/g;
-  const result = [];
+  const result: Array<JSX.Element | string> = [];
   let lastIndex = 0;
-  let match;
+  let match = codeRegex.exec(text);
 
-  while ((match = codeRegex.exec(text)) !== null) {
+  while (match !== null) {
     const precedingText = text.slice(lastIndex, match.index);
     if (precedingText) {
       result.push(precedingText);
@@ -29,9 +30,10 @@ function renderMarkdownCode(text: string): JSX.Element {
     result.push(
       <code className="nextra-code" key={match.index}>
         {codeContent}
-      </code>
+      </code>,
     );
     lastIndex = match.index + match[0].length;
+    match = codeRegex.exec(text);
   }
 
   const remainingText = text.slice(lastIndex);
@@ -202,8 +204,7 @@ function renderNestedUnionStruct(struct: IRNestedUnionStruct) {
         <div key={derived.tagValue}>
           <H2 id={`type-${derived.tagValue}`}>
             <span style={{ fontWeight: 'bold' }}>{derived.tagValue}</span>{' '}
-            <span style={{ fontWeight: 'normal' }}>{derived.description}</span>{' '}
-            <SinceBadge version={derived.since} />
+            <span style={{ fontWeight: 'normal' }}>{derived.description}</span> <SinceBadge version={derived.since} />
           </H2>
           {derived.derivingType === 'ref' ? (
             <p style={{ marginTop: '1rem' }}>

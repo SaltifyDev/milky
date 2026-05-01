@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "biome check .",
     "postbuild": "pagefind --site .next/server/app --output-path out/_pagefind"
   },
   "dependencies": {
@@ -20,13 +20,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.5",
-    "@next/eslint-plugin-next": "^16.2.3",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "eslint-config-next": "^16.2.3",
-    "eslint-plugin-react-hooks": "^7.0.1",
     "pagefind": "^1.5.2"
   }
 }

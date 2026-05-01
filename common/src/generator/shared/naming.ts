@@ -13,7 +13,7 @@ export function snakeCaseToPascalCase(value: string): string {
   return value
     .split('_')
     .map((part) =>
-      preserveFullCapitalizedWords.has(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)
+      preserveFullCapitalizedWords.has(part) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1),
     )
     .join('');
 }
