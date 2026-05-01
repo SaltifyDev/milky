@@ -23,7 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "zod": "^4.3.6"
+    "zod": "^4.4.1"
   },
   "devDependencies": {
     "@saltify/milky-protocol": "workspace:*"

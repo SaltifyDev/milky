@@ -33,8 +33,8 @@ importers:
         specifier: ^3.35.1
         version: 3.35.1
       zod:
-        specifier: ^4.3.6
-        version: 4.3.6
+        specifier: ^4.4.1
+        version: 4.4.1
 
   docs:
     dependencies:
@@ -63,8 +63,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
       zod:
-        specifier: ^4.3.6
-        version: 4.3.6
+        specifier: ^4.4.1
+        version: 4.4.1
     devDependencies:
       '@types/node':
         specifier: ^24.12.2
@@ -99,8 +99,8 @@ importers:
   types:
     dependencies:
       zod:
-        specifier: ^4.3.6
-        version: 4.3.6
+        specifier: ^4.4.1
+        version: 4.4.1
     devDependencies:
       '@saltify/milky-protocol':
         specifier: workspace:*
@@ -2651,8 +2651,8 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+  zod@4.4.1:
+    resolution: {integrity: sha512-a6ENMBBGZBsnlSebQ/eKCguSBeGKSf4O7BPnqVPmYGtpBYI7VSqoVqw+QcB7kPRjbqPwhYTpFbVj/RqNz/CT0Q==}
 
   zustand@5.0.9:
     resolution: {integrity: sha512-ALBtUj0AfjJt3uNRQoL1tL2tMvj6Gp/6e39dnfT6uzpelGru8v1tPOGBzayOWbPJvujM8JojDk3E1LxeFisBNg==}
@@ -4883,7 +4883,7 @@ snapshots:
       react-compiler-runtime: 19.1.0-rc.3(react@19.2.5)
       react-dom: 19.2.5(react@19.2.5)
       scroll-into-view-if-needed: 3.1.0
-      zod: 4.3.6
+      zod: 4.4.1
       zustand: 5.0.9(@types/react@19.2.14)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))
     transitivePeerDependencies:
       - '@types/react'
@@ -4933,7 +4933,7 @@ snapshots:
       unist-util-visit: 5.0.0
       unist-util-visit-children: 3.0.0
       yaml: 2.8.2
-      zod: 4.3.6
+      zod: 4.4.1
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -5654,7 +5654,7 @@ snapshots:
 
   yaml@2.8.2: {}
 
-  zod@4.3.6: {}
+  zod@4.4.1: {}
 
   zustand@5.0.9(@types/react@19.2.14)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5)):
     optionalDependencies:
