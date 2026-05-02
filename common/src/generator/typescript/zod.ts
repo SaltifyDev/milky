@@ -162,15 +162,15 @@ export function generateTypeScriptZodSpec(ir: IR) {
               l(
                 `  ${field.name}: ${getZodTypeSpec(ir, field, {
                   dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
-                })}.describe('${field.description}'),`
+                })}.describe('${field.description}'),`,
               );
             });
             l(
-              `  data: ${indentLines(renderIRObject(ir, structName, derived.fields, derived.description, false), '  ').trimStart()},`
+              `  data: ${indentLines(renderIRObject(ir, structName, derived.fields, derived.description, false), '  ').trimStart()},`,
             );
             l(`}).describe('${derived.description}');`);
             l(
-              `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`
+              `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`,
             );
             l();
           } else {
@@ -180,13 +180,13 @@ export function generateTypeScriptZodSpec(ir: IR) {
               l(
                 `  ${field.name}: ${getZodTypeSpec(ir, field, {
                   dropBadElementArrayStructNames: applyDropBadElementArrayStructNames,
-                })}.describe('${field.description}'),`
+                })}.describe('${field.description}'),`,
               );
             });
             l(`  data: z.lazy(() => ${derived.refStructName}).describe('${derived.description}'),`);
             l(`}).describe('${derived.description}');`);
             l(
-              `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`
+              `export type ${normalizeDerivedStructName(struct.name, derived.tagValue)} = z.infer<typeof ${normalizeDerivedStructName(struct.name, derived.tagValue)}>;`,
             );
             l();
           }
