@@ -96,6 +96,10 @@ const Event = nestedUnion('Event', '事件', 'event_type', [
     scalarField('user_id', '发生变更的用户 QQ 号', 'int64', { dataType: 'uin' }),
     scalarField('operator_id', '管理员 QQ 号，如果是管理员踢出', 'int64', { isOptional: true })
   ]),
+  nestedUnionStructVariant('group_disband', '群解散事件', [
+    scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
+    scalarField('operator_id', '操作者 QQ 号', 'int64', { dataType: 'uin' })
+  ], { since: '1.3' }),
   nestedUnionStructVariant('group_name_change', '群名称变更事件', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('new_group_name', '新的群名称', 'string'),
