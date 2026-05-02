@@ -383,6 +383,7 @@ const IncomingSegment = nestedUnion('IncomingSegment', '接收消息段', 'type'
 const OutgoingForwardedMessage = struct('OutgoingForwardedMessage', '发送转发消息', [
   scalarField('user_id', '发送者 QQ 号', 'int64', { dataType: 'uin' }),
   scalarField('sender_name', '发送者名称', 'string'),
+  scalarField('time', '消息 Unix 时间戳（秒）', 'int64', { isOptional: true, since: '1.3' }),
   refField('segments', '消息段列表', 'OutgoingSegment', { isArray: true })
 ]);
 
