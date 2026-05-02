@@ -137,8 +137,16 @@ const cmd = subcommands({
         const protocol = await resolveProtocolOfVersion(args.version, cdnSpec);
         const content = serializeOutput(await spec.generate(protocol));
         if (args.output.length === 0) {
-          process.stdout.write(content);
-          process.exit(0);
+          await new Promise<void>((resolve, reject) => {
+            const stdout = process.stdout;
+            stdout.write(content, (err) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          });
         } else {
           const fs = await import('node:fs/promises');
           const path = await import('node:path');
