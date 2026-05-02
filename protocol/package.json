@@ -1,7 +1,7 @@
 {
   "name": "@saltify/milky-protocol",
   "type": "module",
-  "version": "1.2.2",
+  "version": "1.3.0-rc.1",
   "description": "Milky protocol definition in form of IR",
   "main": "src/index.ts",
   "publishConfig": {
