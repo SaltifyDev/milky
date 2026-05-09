@@ -229,7 +229,7 @@ export function generateTypeScriptZodSpec(ir: IR) {
             renderIRObject(ir, typeNames.inputName, spec.requestFields, `${spec.endpoint} 请求参数`, true) +
             ';',
         );
-        l(`export type ${typeNames.inputName} = z.infer<typeof ${typeNames.inputName}>;`);
+        l(`export type ${typeNames.inputName} = z.input<typeof ${typeNames.inputName}>;`);
         l();
       }
       if (spec.responseFields) {
@@ -238,7 +238,7 @@ export function generateTypeScriptZodSpec(ir: IR) {
             renderIRObject(ir, typeNames.outputName, spec.responseFields, `${spec.endpoint} 响应数据`, true) +
             ';',
         );
-        l(`export type ${typeNames.outputName} = z.infer<typeof ${typeNames.outputName}>;`);
+        l(`export type ${typeNames.outputName} = z.output<typeof ${typeNames.outputName}>;`);
         l();
       }
     });
