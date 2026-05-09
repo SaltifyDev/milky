@@ -53,6 +53,10 @@ export const fileApiCategory: IRApiCategory = category('file', '文件 API', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('file_id', '文件 ID', 'string')
   ]),
+  api('persist_group_file', '转存群文件为永久文件', [
+    scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
+    scalarField('file_id', '文件 ID', 'string')
+  ], undefined, { since: '1.3' }),
   api('create_group_folder', '创建群文件夹', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('folder_name', '文件夹名称', 'string')
