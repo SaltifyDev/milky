@@ -44,9 +44,6 @@ importers:
       '@saltify/milky-protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@saltify/milky-types':
-        specifier: workspace:*
-        version: link:../types
       next:
         specifier: ^16.2.4
         version: 16.2.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -95,16 +92,6 @@ importers:
         version: 0.15.0
 
   protocol: {}
-
-  types:
-    dependencies:
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
-    devDependencies:
-      '@saltify/milky-protocol':
-        specifier: workspace:*
-        version: link:../protocol
 
 packages:
 

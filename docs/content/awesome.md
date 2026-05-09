@@ -46,10 +46,8 @@ Milky 的协议内容以 Milky IR 的形式发布在 npm 包 [@saltify/milky-pro
 
 以下是由 Milky 社区提供的类型定义包，可以在项目中直接引用。虽然没有直接提供实现或对接功能，但可以帮助开发者快速编写 Milky 协议的实现或 SDK。
 
-- **TypeScript** - [@saltify/milky-types](https://www.npmjs.com/package/@saltify/milky-types) (MIT)
 - **.NET** - [Milky.Net.Model](https://www.nuget.org/packages/Milky.Net.Model) (MIT)
 - **Rust** - [milky-types](https://crates.io/crates/milky-types) (MIT **or** Apache 2.0)
-- **Kotlin** - [milky-kt-types](https://central.sonatype.com/artifact/org.ntqqrev/milky-kt-types) (MIT)
 
 ### 原始文件与实用资源
 

@@ -11,7 +11,6 @@
   "dependencies": {
     "@saltify/milky-common": "workspace:*",
     "@saltify/milky-protocol": "workspace:*",
-    "@saltify/milky-types": "workspace:*",
     "next": "^16.2.4",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
