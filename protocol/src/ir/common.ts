@@ -400,7 +400,7 @@ const OutgoingSegment = nestedUnion('OutgoingSegment', '发送消息段', 'type'
   nestedUnionStructVariant('mention_all', '提及全体消息段', []),
   nestedUnionStructVariant('face', '表情消息段', [
     scalarField('face_id', '表情 ID', 'string'),
-    scalarField('is_large', '是否为超级表情', 'bool', { defaultValue: false })
+    scalarField('is_large', '是否为超级表情', 'bool', { defaultValue: false, since: '1.1' })
   ]),
   nestedUnionStructVariant('reply', '回复消息段', [
     scalarField('message_seq', '被引用的消息序列号', 'int64')
