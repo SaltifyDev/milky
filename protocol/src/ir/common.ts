@@ -377,6 +377,9 @@ const IncomingSegment = nestedUnion('IncomingSegment', '接收消息段', 'type'
   nestedUnionStructVariant('xml', 'XML 消息段', [
     scalarField('service_id', '服务 ID', 'int32'),
     scalarField('xml_payload', 'XML 数据', 'string')
+  ]),
+  nestedUnionStructVariant('markdown', 'Markdown 消息段', [
+    scalarField('content', 'Markdown 内容', 'string')
   ])
 ]);
 
