@@ -166,6 +166,22 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
   });
   l('}');
   l();
+  l('export interface ApiEndpoints {');
+  ir.apiCategories.forEach((category) => {
+    category.apis.forEach((api) => {
+      const typeNames = getApiTypeNames(api.endpoint);
+      formatBlockDocComment(api.description, api.since, '  ').forEach((line) => {
+        l(line);
+      });
+      l(`  /** ${api.description} */`);
+      l(`  '${api.endpoint}': {`);
+      l(`    request: ${typeNames.inputName};`);
+      l(`    response: ${typeNames.outputName};`);
+      l('  };');
+    });
+  });
+  l('}');
+  l();
 
   return writer.toString();
 }

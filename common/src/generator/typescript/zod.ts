@@ -264,6 +264,18 @@ export function generateTypeScriptZodSpec(ir: IR) {
   });
   l('};');
   l();
+  l('export const zodApiEndpoints = {');
+  ir.apiCategories.forEach((category) => {
+    category.apis.forEach((spec) => {
+      l(`  ${spec.endpoint}: {`);
+      l(`    description: '${spec.description}',`);
+      l(`    requestSchema: ${spec.requestFields ? getApiTypeNames(spec.endpoint).inputName : 'null'},`);
+      l(`    responseSchema: ${spec.responseFields ? getApiTypeNames(spec.endpoint).outputName : 'null'},`);
+      l('   },');
+    });
+  });
+  l('};');
+  l();
 
   return writer.toString();
 }
