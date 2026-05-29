@@ -1,6 +1,10 @@
 import type { IRField } from '@saltify/milky-protocol';
 
 export function getTypeScriptTypeProjection(field: IRField): string {
+  if (field.isOptional) {
+    return `${getTypeScriptTypeProjection({ ...field, isOptional: false })} | null | undefined`;
+  }
+
   if (field.fieldType === 'scalar') {
     if (field.scalarType === 'string') {
       if (field.isArray) {
