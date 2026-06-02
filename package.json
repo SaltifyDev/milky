@@ -13,7 +13,7 @@
     "@biomejs/biome": "^2.4.13",
     "@typescript/native-preview": "^7.0.0-dev.20260412.1",
     "tsdown": "^0.21.7",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3"
   }
 }
