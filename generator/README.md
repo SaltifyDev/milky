@@ -35,7 +35,7 @@ milkygen generate <generator> [--output <file>] [--version <version>]
 ```bash
 milkygen generate openapi
 milkygen generate json-schema -o ./dist/schema.json
-milkygen generate typescript/zod -version latest --output ./generated/schema.ts
+milkygen generate typescript/zod --version latest --output ./generated/schema.ts
 milkygen generate rust/serde --version 1.2.1
 ```
 
