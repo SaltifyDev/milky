@@ -16,28 +16,30 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 
 以下项目提供了 Milky 协议的简便对接方式，帮助 Bot 应用开发者快速接入 Milky 协议。
 
-### 作为框架适配器发布
+- **TypeScript**
+  - [koishi-plugin-adapter-milky](https://github.com/idranme/koishi-plugin-adapter-milky) (MIT) - 参考 [Koishi](https://koishi.chat/) 的文档
+  - [karin-plugin-adapter-milky](https://github.com/KarinJS/karin-plugin-adapter-milky) (MIT) - 参考 [Karin](https://karinjs.com/) 的文档
+  - [@saltify/milky-tea](https://github.com/SaltifyDev/milky-tea) (MIT)
+  - [@fraqjs/fraq](https://github.com/fraqjs/fraq) (MIT)
+- **Python**
+  - [nonebot-adapter-milky](https://github.com/nonebot/adapter-milky) (MIT) - 参考 [NoneBot](https://nonebot.dev/) 的文档
+  - [milky-python-sdk](https://github.com/notnotype/milky-python-sdk) (MIT)
+- **Rust**
+  - [milky-rust-sdk](https://github.com/hanasa2023/vivian-rs) (MIT **or** Apache 2.0)
+  - [Kovi](https://github.com/ThriceCola/Kovi) (MIT)
+- **.NET**
+  - [Milky.Net.Client](https://github.com/frg2089/Milky.Net) (MIT)
+  - [Sora](https://github.com/Hoshikawa-Kaguya/Sora) (Apache 2.0)
+- **Go**
+  - [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk) (MIT)
+- **Kotlin**
+  - [saltify-core](https://github.com/SaltifyDev/saltify) (MIT)
 
-- **NoneBot** - [adapter-milky](https://github.com/nonebot/adapter-milky) (MIT)
-- **Koishi** - [koishi-plugin-adapter-milky](https://github.com/idranme/koishi-plugin-adapter-milky) (MIT)
-- **Karin** - [karin-plugin-adapter-milky](https://github.com/KarinJS/karin-plugin-adapter-milky) (MIT)
-
-### 作为依赖库发布
-
-- **Node.js** - [@saltify/milky-tea](https://www.npmjs.com/package/@saltify/milky-tea) (MIT)
-- **Python** - [milky-python-sdk](https://pypi.org/project/milky-python-sdk/) (MIT)
-- **Rust** - [milky-rust-sdk](https://crates.io/crates/milky-rust-sdk) (MIT **or** Apache 2.0)
-- **Rust** - [Kovi](https://github.com/ThriceCola/Kovi) (MIT)
-- **.NET** - [Milky.Net.Client](https://www.nuget.org/packages/Milky.Net.Client) (MIT)
-- **.NET** - [Sora](https://www.nuget.org/packages/HoshikawaKaguya.Sora) (Apache 2.0)
-- **Go** - [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk) (MIT)
-- **Kotlin** - [saltify-core](https://central.sonatype.com/artifact/org.ntqqrev/saltify-core) (MIT)
-
-### 作为独立项目发布
+## 其他项目
 
 - [yuyubot](https://github.com/xiaoyu19960507/yuyubot) (Unlicense)
 
-## 其他项目
+### 协议定义与生成工具
 
 Milky 的协议内容以 Milky IR 的形式发布在 npm 包 [@saltify/milky-protocol](https://www.npmjs.com/package/@saltify/milky-protocol) 中，提供了 Milky IR 的原始文件和 TypeScript 导出。Milky IR 本身为 JSON 格式的协议定义，包含了 Milky 协议的所有细节内容，具体格式与介绍见上述包的 README 文件。
 
