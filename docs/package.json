@@ -12,16 +12,16 @@
     "@saltify/milky-common": "workspace:*",
     "@saltify/milky-protocol": "workspace:*",
     "@saltify/milky-types": "workspace:*",
-    "next": "^16.2.4",
+    "next": "^16.2.7",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^24.12.2",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
     "pagefind": "^1.5.2"
   }
