@@ -24,6 +24,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Python**
   - [nonebot-adapter-milky](https://github.com/nonebot/adapter-milky) (MIT) - 参考 [NoneBot](https://nonebot.dev/) 的文档
   - [milky-python-sdk](https://github.com/notnotype/milky-python-sdk) (MIT)
+  - [satori-python-adapter-milky](https://github.com/RF-Tar-Railt/satori-python/tree/main/src/satori/adapters/milky) (MIT)
 - **Rust**
   - [milky-rust-sdk](https://github.com/hanasa2023/vivian-rs) (MIT **or** Apache 2.0)
   - [Kovi](https://github.com/ThriceCola/Kovi) (MIT)
