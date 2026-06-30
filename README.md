@@ -9,12 +9,13 @@ QQ 机器人应用接口标准🥛🐧
 ✨ *Illustrated by [夏寂](https://www.mihuashi.com/profiles/1335589)* ✨
 
 [![Featured in LagrangeV2](https://img.shields.io/badge/Featured_in-LagrangeV2-magenta?style=for-the-badge)](https://github.com/LagrangeDev/LagrangeV2)
-[![Featured in Acidify](https://img.shields.io/badge/Featured_in-Acidify-purple?style=for-the-badge)](https://github.com/LagrangeDev/acidify)
+[![Featured in Acidify](https://img.shields.io/badge/Featured_in-Acidify-orange?style=for-the-badge)](https://github.com/LagrangeDev/acidify)
 [![Featured in LuckyLilliaBot](https://img.shields.io/badge/Featured_in-LuckyLilliaBot-cyan?style=for-the-badge)](https://github.com/LLOneBot/LLOneBot)
 
 [![Featured in NoneBot2](https://img.shields.io/badge/Featured_in-NoneBot2-red?style=for-the-badge)](https://github.com/nonebot/adapter-milky)
-[![Featured in Koishi](https://img.shields.io/badge/Featured_in-Koishi-blue?style=for-the-badge)](https://github.com/idranme/koishi-plugin-adapter-milky)
+[![Featured in Koishi](https://img.shields.io/badge/Featured_in-Koishi-purple?style=for-the-badge)](https://github.com/idranme/koishi-plugin-adapter-milky)
 [![Featured in Karin](https://img.shields.io/badge/Featured_in-Karin-green?style=for-the-badge)](https://github.com/KarinJS/karin-plugin-adapter-milky)
+[![Featured in Entari](https://img.shields.io/badge/Featured_in-Entari-blue?style=for-the-badge)](https://github.com/RF-Tar-Railt/satori-python/tree/main/src/satori/adapters/milky)
 
 </div>
 
