@@ -271,7 +271,7 @@ export function generateTypeScriptZodSpec(ir: IR) {
       l(`    description: '${spec.description}',`);
       l(`    requestSchema: ${spec.requestFields ? getApiTypeNames(spec.endpoint).inputName : 'null'},`);
       l(`    responseSchema: ${spec.responseFields ? getApiTypeNames(spec.endpoint).outputName : 'null'},`);
-      l('   },');
+      l('  },');
     });
   });
   l('};');
