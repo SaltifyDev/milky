@@ -276,7 +276,6 @@ export function generateTypeScriptStaticSpec(ir: IR): string {
       formatBlockDocComment(api.description, api.since, '  ').forEach((line) => {
         l(line);
       });
-      l(`  /** ${api.description} */`);
       l(`  '${api.endpoint}': {`);
       l(`    request: ${typeNames.inputName};`);
       l(`    request_ZodInput: ${getZodInputTypeName(typeNames.inputName)};`);
