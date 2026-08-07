@@ -21,7 +21,7 @@ export const fileApiCategory: IRApiCategory = category('file', '文件 API', [
     scalarField('user_id', '好友 QQ 号', 'int64', { dataType: 'uin' }),
     scalarField('file_id', '文件 ID', 'string'),
     scalarField('file_hash', '文件的 TriSHA1 哈希值', 'string'),
-    scalarField('is_self_send', '是否为自己发送的文件', 'bool', { defaultValue: false })
+    scalarField('is_self_send', '是否为自己发送的文件', 'bool', { defaultValue: false, since: '1.3' })
   ], [
     scalarField('download_url', '文件下载链接', 'string')
   ]),

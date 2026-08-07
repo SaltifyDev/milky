@@ -380,7 +380,7 @@ const IncomingSegment = nestedUnion('IncomingSegment', '接收消息段', 'type'
   ]),
   nestedUnionStructVariant('markdown', 'Markdown 消息段', [
     scalarField('content', 'Markdown 内容', 'string')
-  ])
+  ], { since: '1.3' })
 ]);
 
 const OutgoingForwardedMessage = struct('OutgoingForwardedMessage', '发送转发消息', [
