@@ -10,9 +10,9 @@
   "license": "MIT",
   "packageManager": "pnpm@11.9.0",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
-    "tsdown": "^0.22.3",
-    "tsx": "^4.22.4",
+    "@biomejs/biome": "^2.5.7",
+    "tsdown": "^0.22.14",
+    "tsx": "^4.23.8",
     "typescript": "^6.0.3"
   }
 }
