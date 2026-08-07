@@ -41,6 +41,7 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - [yuyubot](https://github.com/xiaoyu19960507/yuyubot) (Unlicense)
 - [miraita](https://github.com/entanex/miraita) (GPL-3.0)
 - [milky2onebot](https://github.com/molanp/milky2onebot) (MIT)
+- [MewUI](https://github.com/USTC-XeF2/mew-ui) (MIT)
 
 ### 协议定义与生成工具
 
