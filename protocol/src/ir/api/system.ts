@@ -21,7 +21,7 @@ export const systemApiCategory: IRApiCategory = category('system', '系统 API',
       'harmony',
       'watch'
     ]),
-    scalarField('milky_version', '协议端实现的 Milky 协议版本，目前为 "1.2"', 'string')
+    scalarField('milky_version', '协议端实现的 Milky 协议版本，目前为 "1.3"', 'string')
   ]),
   api('get_user_profile', '获取用户个人信息', [
     scalarField('user_id', '用户 QQ 号', 'int64', { dataType: 'uin' })

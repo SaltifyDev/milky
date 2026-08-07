@@ -23,7 +23,7 @@
   "devDependencies": {
     "@saltify/milky-common": "workspace:*",
     "@saltify/milky-protocol": "workspace:*",
-    "@types/node": "^24.12.2",
+    "@types/node": "^24.13.3",
     "cmd-ts": "^0.15.0"
   }
 }

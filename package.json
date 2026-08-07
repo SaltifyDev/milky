@@ -1,7 +1,7 @@
 {
   "name": "milky",
   "scripts": {
-    "prepare": "tsx generator/src/cli.ts generate typescript/zod -v local -o types/src/index.g.ts",
+    "prepare": "tsx generator/src/cli.ts generate typescript/zod -v local -o docs/zod-types.g.ts",
     "docs:dev": "pnpm --filter @saltify/milky-docs dev",
     "check": "biome check .",
     "check:fix": "biome check --write .",
@@ -10,9 +10,9 @@
   "license": "MIT",
   "packageManager": "pnpm@11.9.0",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
-    "tsdown": "^0.22.3",
-    "tsx": "^4.22.4",
+    "@biomejs/biome": "^2.5.7",
+    "tsdown": "^0.22.14",
+    "tsx": "^4.23.8",
     "typescript": "^6.0.3"
   }
 }

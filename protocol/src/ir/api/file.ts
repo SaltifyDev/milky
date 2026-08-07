@@ -20,7 +20,8 @@ export const fileApiCategory: IRApiCategory = category('file', '文件 API', [
   api('get_private_file_download_url', '获取私聊文件下载链接', [
     scalarField('user_id', '好友 QQ 号', 'int64', { dataType: 'uin' }),
     scalarField('file_id', '文件 ID', 'string'),
-    scalarField('file_hash', '文件的 TriSHA1 哈希值', 'string')
+    scalarField('file_hash', '文件的 TriSHA1 哈希值', 'string'),
+    scalarField('is_self_send', '是否为自己发送的文件', 'bool', { defaultValue: false, since: '1.3' })
   ], [
     scalarField('download_url', '文件下载链接', 'string')
   ]),
@@ -53,6 +54,10 @@ export const fileApiCategory: IRApiCategory = category('file', '文件 API', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('file_id', '文件 ID', 'string')
   ]),
+  api('persist_group_file', '转存群文件为永久文件', [
+    scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
+    scalarField('file_id', '文件 ID', 'string')
+  ], undefined, { since: '1.3' }),
   api('create_group_folder', '创建群文件夹', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('folder_name', '文件夹名称', 'string')

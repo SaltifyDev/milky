@@ -1,5 +1,25 @@
 # 更新日志
 
+## 1.3.0
+
+> Released on 2026-08-07
+
+### API 更改
+
+- 增加将群文件转存为永久的 API `persist_group_file` via #132
+- 给 `get_private_file_download_url` API 增加字段 `is_self_send`（默认值：false）表示文件是否由本人发送 via #149
+
+### 数据结构更改
+
+- 给 `OutgoingForwardedMessage` 增加了 `time` (optional) 字段 via #116
+- 增加了 `group_disband` 事件以表示群解散 via #134
+- 增加了接收的 `markdown` 消息段，包含字段 `content` 表示 Markdown 内容 via #135
+
+### 其他更改
+
+- 给发送的 `face` 消息段的 `is_large` 字段补齐了 since 属性 via @USTC-XeF2
+- **移除了 `@saltify/milky-types` 包**，如有使用 Zod 类型定义的需求，请在网站自行拷贝代码，或使用 `milkygen` CLI。
+
 ## 1.2.0
 
 > Released on 2026-04-06

@@ -96,6 +96,10 @@ const Event = nestedUnion('Event', '事件', 'event_type', [
     scalarField('user_id', '发生变更的用户 QQ 号', 'int64', { dataType: 'uin' }),
     scalarField('operator_id', '管理员 QQ 号，如果是管理员踢出', 'int64', { isOptional: true })
   ]),
+  nestedUnionStructVariant('group_disband', '群解散事件', [
+    scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
+    scalarField('operator_id', '操作者 QQ 号', 'int64', { dataType: 'uin' })
+  ], { since: '1.3' }),
   nestedUnionStructVariant('group_name_change', '群名称变更事件', [
     scalarField('group_id', '群号', 'int64', { dataType: 'uin' }),
     scalarField('new_group_name', '新的群名称', 'string'),
@@ -373,12 +377,16 @@ const IncomingSegment = nestedUnion('IncomingSegment', '接收消息段', 'type'
   nestedUnionStructVariant('xml', 'XML 消息段', [
     scalarField('service_id', '服务 ID', 'int32'),
     scalarField('xml_payload', 'XML 数据', 'string')
-  ])
+  ]),
+  nestedUnionStructVariant('markdown', 'Markdown 消息段', [
+    scalarField('content', 'Markdown 内容', 'string')
+  ], { since: '1.3' })
 ]);
 
 const OutgoingForwardedMessage = struct('OutgoingForwardedMessage', '发送转发消息', [
   scalarField('user_id', '发送者 QQ 号', 'int64', { dataType: 'uin' }),
   scalarField('sender_name', '发送者名称', 'string'),
+  scalarField('time', '消息 Unix 时间戳（秒）', 'int64', { isOptional: true, since: '1.3' }),
   refField('segments', '消息段列表', 'OutgoingSegment', { isArray: true })
 ]);
 
@@ -392,7 +400,7 @@ const OutgoingSegment = nestedUnion('OutgoingSegment', '发送消息段', 'type'
   nestedUnionStructVariant('mention_all', '提及全体消息段', []),
   nestedUnionStructVariant('face', '表情消息段', [
     scalarField('face_id', '表情 ID', 'string'),
-    scalarField('is_large', '是否为超级表情', 'bool', { defaultValue: false })
+    scalarField('is_large', '是否为超级表情', 'bool', { defaultValue: false, since: '1.1' })
   ]),
   nestedUnionStructVariant('reply', '回复消息段', [
     scalarField('message_seq', '被引用的消息序列号', 'int64')
