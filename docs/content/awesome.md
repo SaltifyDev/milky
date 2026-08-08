@@ -24,17 +24,17 @@ Milky 作为一个新生的应用接口标准，得到了来自社区的广泛�
 - **Python**
   - [nonebot-adapter-milky](https://github.com/nonebot/adapter-milky) (MIT) - 参考 [NoneBot](https://nonebot.dev/) 的文档
   - [milky-python-sdk](https://github.com/notnotype/milky-python-sdk) (MIT)
-  - [satori-python-adapter-milky](https://github.com/RF-Tar-Railt/satori-python/tree/main/src/satori/adapters/milky) (MIT)
+  - [satori-python-adapter-milky](https://github.com/RF-Tar-Railt/satori-python/tree/main/src/satori/adapters/milky) (MIT) - 参考 [Entari](https://arclet.top/tutorial/entari/) 的文档
 - **Rust**
   - [milky-rust-sdk](https://github.com/hanasa2023/vivian-rs) (MIT **or** Apache 2.0)
-  - [Kovi](https://github.com/ThriceCola/Kovi) (MIT)
+  - [kovi-milky](https://github.com/ThriceCola/Kovi) (MIT) - 参考 [Kovi](https://kovi.thricecola.com/) 的文档
 - **.NET**
   - [Milky.Net.Client](https://github.com/frg2089/Milky.Net) (MIT)
-  - [Sora](https://github.com/Hoshikawa-Kaguya/Sora) (Apache 2.0)
+  - [HoshikawaKaguya.Sora](https://github.com/Hoshikawa-Kaguya/Sora) (Apache 2.0)
 - **Go**
   - [Milky-go-sdk](https://github.com/Szzrain/Milky-go-sdk) (MIT)
 - **Kotlin**
-  - [saltify-core](https://github.com/SaltifyDev/saltify) (MIT)
+  - [saltify-core](https://github.com/SaltifyDev/saltify) (MIT) - 参考 [Saltify](https://saltify.ntqqrev.org/) 的文档
 
 ## 其他项目
 
