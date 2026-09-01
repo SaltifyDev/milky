@@ -14,13 +14,13 @@
     "next": "^16.2.7",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
-    "react": "^19.2.7",
+    "react": "^19.2.8",
     "react-dom": "^19.2.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^24.12.2",
-    "@types/react": "^19.2.16",
+    "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.3",
     "pagefind": "^1.5.2"
   }
